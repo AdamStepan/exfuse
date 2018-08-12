@@ -328,19 +328,11 @@ inode_address ex_dir_set_inode(struct ex_inode *dir, struct ex_inode *ino) {
 
     size_t entry_address = 0;
     struct ex_dir_entry *entry = NULL;
-    char *block = NULL;
 
-    for(size_t block_no = 0; block_no < EX_DIRECT_BLOCKS; block_no++) {
+    foreach_inode_block(dir, block) {
+        foreach_block_entry(block, ientry) {
 
-        block_address block_addr = dir->blocks[block_no];
-
-        block = ex_read_device(block_addr, EX_BLOCK_SIZE);
-
-        size_t entries_per_block = EX_BLOCK_SIZE / sizeof(struct ex_dir_entry);
-
-        for(size_t i = 0; i < entries_per_block; i += sizeof(struct ex_dir_entry)) {
-
-            entry = (struct ex_dir_entry *)&(block[i]);
+            entry = ientry;
 
             info("free=%i, magic=%i", entry->free, entry->magic);
 
@@ -348,13 +340,12 @@ inode_address ex_dir_set_inode(struct ex_inode *dir, struct ex_inode *ino) {
                 continue;
             }
 
-            info("finded: block=%ld, i=%ld", block_no, i);
+            info("finded: block=%ld, i=%ld", block_no, ientry_no);
 
-            entry_address = block_addr + (i * sizeof(struct ex_dir_entry));
+            entry_address = block_addr + (ientry_no * sizeof(struct ex_dir_entry));
             goto update_entry;
-        }
 
-        free(block);
+        }
     }
 
     info("unable to find space for inode");
@@ -390,24 +381,13 @@ void ex_inode_deallocate_blocks(struct ex_inode *inode) {
 }
 
 struct ex_inode *ex_dir_remove_inode(struct ex_inode *dir, const char *name) {
-    // free entry in dir blocks
-    // free blocks of inode
 
     struct ex_inode *inode = NULL;
-    char *block = NULL;
 
-    // ex_print_inode(dir);
+    foreach_inode_block(dir, block) {
+        foreach_block_entry(block, entry) {
 
-    for(size_t block_no = 0; block_no < EX_DIRECT_BLOCKS; block_no++) {
-        block_address block_addr = dir->blocks[block_no];
-        block = ex_read_device(block_addr, EX_BLOCK_SIZE);
-
-        size_t entries_per_block = EX_BLOCK_SIZE / sizeof(struct ex_dir_entry);
-
-        for(size_t i = 0; i < entries_per_block; i += sizeof(struct ex_dir_entry)) {
-
-            struct ex_dir_entry *entry = (struct ex_dir_entry *)&(block[i]);
-            size_t entry_address = block_addr + (i * sizeof(struct ex_dir_entry));
+            size_t entry_address = block_addr + (entry_no * sizeof(struct ex_dir_entry));
 
             if(entry->free || strcmp(entry->name, name) != 0) {
                 continue;
@@ -424,8 +404,6 @@ struct ex_inode *ex_dir_remove_inode(struct ex_inode *dir, const char *name) {
 
             goto done;
         }
-
-        free(block);
     }
 
     info("unable to remove inode: %s", name);
@@ -444,25 +422,15 @@ struct ex_inode **ex_dir_get_inodes(struct ex_inode *ino) {
     struct ex_inode **inodes = ex_malloc(sizeof(struct ex_inode *) * 16);
     size_t inode_no = 0;
 
-    for(size_t block_no = 0; block_no < EX_DIRECT_BLOCKS; block_no++) {
-        block_address block_addr = ino->blocks[block_no];
-        char *block = ex_read_device(block_addr, EX_BLOCK_SIZE);
-
-        size_t entries_per_block = EX_BLOCK_SIZE / sizeof(struct ex_dir_entry);
-
-        for(size_t i = 0; i < entries_per_block; i += sizeof(struct ex_dir_entry)) {
-
-            struct ex_dir_entry *entry = (struct ex_dir_entry *)&(block[i]);
+    foreach_inode_block(ino, block) {
+        foreach_block_entry(block, entry) {
 
             if(entry->free || entry->magic != EX_DIR_MAGIC1) {
                 continue;
             }
 
             inodes[inode_no++] = ex_inode_load(entry->address);
-            // ex_print_inode(inodes[inode_no-1]);
         }
-
-        free(block);
     }
 
     return inodes;
@@ -470,32 +438,20 @@ struct ex_inode **ex_dir_get_inodes(struct ex_inode *ino) {
 
 inode_address ex_dir_get_inode(struct ex_inode *ino, const char *name) {
 
-    struct ex_dir_entry *entry = NULL;
-    char *block = NULL;
-    size_t x = 0;
+    inode_address address = 0;
 
-    for(size_t block_no = 0; block_no < EX_DIRECT_BLOCKS; block_no++) {
-
-        block_address block_addr = ino->blocks[block_no];
-        block = ex_read_device(block_addr, EX_BLOCK_SIZE);
-
-        size_t entries_per_block = EX_BLOCK_SIZE / sizeof(struct ex_dir_entry);
-
-        for(size_t i = 0; i < entries_per_block; i += sizeof(struct ex_dir_entry)) {
-
-            entry = (struct ex_dir_entry *)&(block[i]);
+    foreach_inode_block(ino, block) {
+        foreach_block_entry(block, entry) {
 
             if(entry->free || entry->magic != EX_DIR_MAGIC1) {
                 continue;
             }
 
             if(strcmp(entry->name, name) == 0) {
+                address = entry->address;
                 goto finded;
             }
-
         }
-
-        free(block);
     }
 
     info("inode=%ld does not contain=%s", ino->address, name);
@@ -503,9 +459,8 @@ inode_address ex_dir_get_inode(struct ex_inode *ino, const char *name) {
     return 0;
 
 finded:
-    x = entry->address;
     free(block);
-    return x;
+    return address;
 }
 
 void ex_inode_write(struct ex_inode *ino, size_t off, const char *data, size_t amount) {

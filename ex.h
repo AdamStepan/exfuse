@@ -54,8 +54,9 @@ struct ex_inode {
     // size of file metadata (struct ex_inode) if inode is directory
     size_t size;
 
-    // if an inode is file content is saved here
-    // if an inode is directory ex_dir_entries are sved here
+    // if an inode is file content is saved here in these blocks
+    // if an inode is directory ex_dir_entries are saved in these blocks
+    // every block is EX_DIRECT_BLOCKS size
     block_address blocks[EX_DIRECT_BLOCKS];
 };
 
@@ -104,5 +105,20 @@ struct ex_inode *ex_inode_load(inode_address ino_addr);
 block_address ex_allocate_block(void);
 void ex_print_super_block(const struct ex_super_block *block);
 
+#define foreach_inode_block(inode, block) \
+    block_address block##_addr = 0; \
+    char *block = NULL; \
+    for(size_t block##_no = 0; \
+            block##_no < EX_DIRECT_BLOCKS && \
+            (block##_addr = inode->blocks[block##_no], block ? free(block): 1,\
+            block = ex_read_device(block##_addr, EX_BLOCK_SIZE), 1); \
+            block##_no++) \
+
+#define foreach_block_entry(block, entry) \
+    struct ex_dir_entry *entry = NULL; \
+    for(size_t entry##_no = 0; \
+            entry##_no < EX_BLOCK_SIZE / sizeof(struct ex_dir_entry) && \
+            (entry = (struct ex_dir_entry *)&block[entry##_no], 1); \
+            entry##_no += sizeof(struct ex_dir_entry))
 
 #endif /* EX_H */
