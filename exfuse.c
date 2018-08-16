@@ -203,7 +203,12 @@ static struct fuse_operations operations = {
     .utimens=do_utimens
 };
 
+__attribute__((constructor))
+static void init_fuse(void) { ex_init(); }
+
+__attribute__((destructor))
+static void deinit_fuse(void) { ex_deinit(); }
+
 int main(int argc, char **argv) {
-    ex_init();
     return fuse_main(argc, argv, &operations, NULL);
 }

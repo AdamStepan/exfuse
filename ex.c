@@ -53,7 +53,7 @@ int ex_device_open(const char *device_name) {
     device_fd = open(device_name, O_RDWR);
 
     if(device_fd == -1) {
-        warn("%s", device_name);
+        err(errno, "%s", device_name);
     }
 
     info("device is open: fd=%d", device_fd);
@@ -83,6 +83,7 @@ void *ex_read_device(size_t off, size_t amount) {
 }
 
 void ex_write_device(size_t off, const char *data, size_t amount) {
+
     int fd = ex_get_device_fd();
 
     off_t offset = lseek(fd, off, SEEK_SET);
@@ -99,6 +100,7 @@ void ex_write_device(size_t off, const char *data, size_t amount) {
 }
 
 block_address ex_allocate_block(void) {
+
     char *bitmap = ex_read_device(super_block->bitmap,
                                   super_block->bitmap_size);
     size_t free_block_pos = 0;
@@ -176,7 +178,6 @@ struct ex_inode *ex_inode_create(char *name, uint16_t mode) {
         inode->blocks[i] = addr;
 
         ex_write_device(addr, block_free, EX_BLOCK_SIZE);
-
     }
 
     ex_write_device(address, (void *)inode, sizeof(struct ex_inode));
@@ -205,7 +206,7 @@ void ex_device_populate(size_t size) {
     info("populating device: size=%lu, blocks=%lu", size, size / EX_BLOCK_SIZE);
     info("super_block: block end=%lu", sizeof(struct ex_super_block));
 
-    // every byte in bitmal represent 8 pages
+    // every byte in bitmap represent 8 pages
     size_t bitmap_size = size / (EX_BLOCK_SIZE * 8);
 
     info("super_block: bitmap size=%lu", bitmap_size);
@@ -466,6 +467,7 @@ finded:
 void ex_inode_write(struct ex_inode *ino, size_t off, const char *data, size_t amount) {
 
     info("off=%lu, amount=%lu", off, amount);
+
     if(off + amount > ino->size) {
         ino->size += (off + amount) - ino->size;
     }
