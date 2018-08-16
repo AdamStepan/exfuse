@@ -1,0 +1,13 @@
+language: c
+compiler:
+    - clang
+    - gcc
+os: linux
+install:
+    - sudo apt-get install pkg-config
+    - sudo apt-get install libfuse2 libfuse-dev
+branches:
+  only:
+    - master
+script:
+  - make

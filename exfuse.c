@@ -1,6 +1,6 @@
 #define FUSE_USE_VERSION 30
 
-#include <fuse.h>
+#include <linux/stat.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <libgen.h>
+#include <fuse.h>
 #include <ex.h>
 
 static int do_create(const char *path, mode_t mode, struct fuse_file_info *fi) {

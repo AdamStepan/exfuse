@@ -1,15 +1,15 @@
 CC=gcc
-CFLAGS=$(shell pkg-config fuse --cflags) -Wall -I. -ggdb
+CFLAGS=$(shell pkg-config fuse --cflags) -Wall -I. -ggdb -std=c11
 LDFLAGS=$(shell pkg-config fuse --libs)
 
 exfuse: exfuse.c ex.o
-	${CC} ${CFLAGS} ${LDFLAGS} ex.o -o $@ $<
+	${CC} $< ${CFLAGS} ${LDFLAGS} ex.o -o $@
 
 ex.o: ex.c ex.h
 	${CC} ${CFLAGS} ${LDFLAGS} -c $<
 
 ex: ex.c ex.h
-	${CC} ${CFLAGS} ${LDFLAGS} -I. -D_MAIN -o $@ $<
+	${CC} $< ${CFLAGS} ${LDFLAGS} -I. -D_MAIN -o $@
 
 mount: exfuse
 	if [ ! -d mp ]; then\
