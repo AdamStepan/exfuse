@@ -150,6 +150,20 @@ void ex_print_inode(const struct ex_inode *inode) {
 
 }
 
+void ex_inode_allocate_blocks(struct ex_inode *inode) {
+
+   static const char FREE_BLOCK[EX_BLOCK_SIZE] = {'a'};
+
+   for(size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
+
+        block_address addr = ex_allocate_block();
+
+        inode->blocks[i] = addr;
+
+        ex_write_device(addr, FREE_BLOCK, sizeof(FREE_BLOCK));
+    }
+}
+
 struct ex_inode *ex_inode_create(char *name, uint16_t mode) {
 
     inode_address address = ex_allocate_block();
@@ -160,6 +174,7 @@ struct ex_inode *ex_inode_create(char *name, uint16_t mode) {
     inode->parent_inode = 0;
     inode->mtime = time(0);
     inode->address = address;
+    strcpy(inode->name, name);
 
     if(mode & S_IFDIR) {
         inode->size = sizeof(struct ex_inode);
@@ -167,20 +182,9 @@ struct ex_inode *ex_inode_create(char *name, uint16_t mode) {
         inode->size = 0;
     }
 
-    strcpy(inode->name, name);
+    ex_inode_allocate_blocks(inode);
 
-    char block_free[EX_BLOCK_SIZE];
-    memset(block_free, 'a', EX_BLOCK_SIZE);
-
-    for(size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
-        block_address addr = ex_allocate_block();
-
-        inode->blocks[i] = addr;
-
-        ex_write_device(addr, block_free, EX_BLOCK_SIZE);
-    }
-
-    ex_write_device(address, (void *)inode, sizeof(struct ex_inode));
+    ex_write_device(inode->address, (void *)inode, sizeof(struct ex_inode));
 
     return inode;
 }
@@ -315,6 +319,7 @@ void ex_print_struct_sizes(void) {
 }
 
 ex_block *ex_block_read(block_address addr) {
+
     int fd = ex_get_device_fd();
 
     ex_block *block = ex_malloc(sizeof(ex_block));
