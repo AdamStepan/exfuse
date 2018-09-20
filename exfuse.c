@@ -13,38 +13,43 @@
 #include <fuse.h>
 #include <ex.h>
 
-static int do_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
-    info("path=%s, mode=%#o", path, mode);
+static int do_create(const char *pathname, mode_t mode, struct fuse_file_info *fi) {
 
-    char *name = basename((char *)path);
-    struct ex_inode *inode = ex_inode_create(name, mode);
+    int rv = 0;
 
-    ex_dir_set_inode(root, inode);
+    struct ex_path *dirpath = ex_make_dir_path(pathname);
+    struct ex_path *path = ex_make_path(pathname);
 
-    free(inode);
+    struct ex_inode *destdir = ex_dir_find(root, dirpath);
 
-    return 0;
+    if(!destdir) {
+        rv = -ENOENT;
+        goto free_destdir;
+    }
+
+    struct ex_inode *inode = ex_inode_create(path->basename, mode);
+
+    // TODO: we need to dealocate blocks if we cannot place inode to destdir
+    ex_dir_set_inode(destdir, inode);
+    ex_free_inode(inode);
+
+free_destdir:
+    ex_free_inode(destdir);
+    ex_free_path(path);
+    ex_free_path(dirpath);
+
+    return rv;
 }
 
-static int do_getattr(const char *path, struct stat *st) {
+static int do_getattr(const char *pathname, struct stat *st) {
 
-    info("path=%s", path);
-
-    struct ex_inode *inode = NULL;
-
-    if(!strcmp(path, root->name)) {
-        inode = root;
-    } else {
-        char *name = basename((char *)path);
-        inode = ex_dir_load_inode(root, name);
-    }
+    struct ex_path *path = ex_make_path(pathname);
+    struct ex_inode *inode = ex_dir_find(root, path);
 
     if(!inode) {
-        info("unknown inode: %s, returning ENONENT", path);
+        ex_free_path(path);
         return -ENOENT;
     }
-
-    ex_print_inode(inode);
 
     st->st_nlink = inode->mode & S_IFDIR ? 2 : 1;
     st->st_size = inode->size;
@@ -55,74 +60,109 @@ static int do_getattr(const char *path, struct stat *st) {
     st->st_gid = getgid();
     st->st_atime = st->st_ctime = time(NULL);
 
+    ex_free_path(path);
+    ex_free_inode(inode);
+
     return 0;
 }
 
-static int do_unlink(const char *path) {
+static int do_unlink(const char *pathname) {
 
-    info("path=%s", path);
+    int rv = 0;
 
-    char *name = basename((char *)path);
-    struct ex_inode *inode = ex_dir_remove_inode(root, name);
+    struct ex_path *dirpath = ex_make_dir_path(pathname);
+    struct ex_inode *dir = ex_dir_find(root, dirpath);
 
-    if(!inode) {
-        return -ENOENT;
+    if(!dir) {
+        rv = -ENOENT;
+        goto free_dir;
     }
 
-    info("removed");
-    free(inode);
+    struct ex_path *path = ex_make_path(pathname);
+    struct ex_inode *inode = ex_dir_remove_inode(dir, path->basename);
 
-    return 0;
+    if(!inode) {
+        rv = -ENOENT;
+        goto free_all;
+    }
+
+free_all:
+    ex_free_path(path);
+    ex_free_inode(inode);
+
+free_dir:
+    ex_free_path(dirpath);
+    ex_free_inode(dir);
+
+    return rv;
 }
 
-static int do_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
+static int do_readdir(const char *pathname, void *buffer, fuse_fill_dir_t filler,
                       off_t offset, struct fuse_file_info *_) {
 
-    info("path=%s", path);
+    int rv = 0;
+
+    struct ex_path *path = ex_make_path(pathname);
+    struct ex_inode *inode = ex_dir_find(root, path);
+
+    if(!inode) {
+        rv = -ENOENT;
+        goto free_inode;
+    }
+
+    struct ex_inode **inodes = ex_dir_get_inodes(inode);
+    assert(inodes);
 
     filler(buffer, ".", NULL, 0);
     filler(buffer, "..", NULL, 0);
 
-    if(strcmp(path, root->name)) {
-        return 0;
-    }
-
-    struct ex_inode **inodes = ex_dir_get_inodes(root);
-    assert(inodes);
-
     for(size_t i = 0; inodes[i]; i++) {
+        info("ino=%s", inodes[i]->name);
         filler(buffer, inodes[i]->name, NULL, 0);
         free(inodes[i]);
     }
 
     free(inodes);
 
-    return 0;
+free_inode:
+    ex_free_inode(inode);
+    ex_free_path(path);
+
+    return rv;
 }
 
-static int do_read(const char *path, char *buffer, size_t size,
+static int do_read(const char *pathname, char *buffer, size_t size,
                    off_t offset, struct fuse_file_info *fi) {
 
-    info("path=%s, offset=%lu, size=%lu", path, offset, size);
+    info("path=%s, offset=%lu, size=%lu", pathname, offset, size);
 
-    char *name = basename((char *)path);
-    struct ex_inode * inode = ex_dir_load_inode(root, name);
+    int rv = 0;
+
+    struct ex_path *path = ex_make_path(pathname);
+    struct ex_inode *inode = ex_dir_find(root, path);
+
     if(!inode) {
-        return -ENOENT;
+        rv = -ENOENT;
+        goto free_inode;
     }
 
     char *data = ex_inode_read(inode, offset, size);
-    size_t readed = strlen(data);
+    rv = strlen(data);
 
-    memcpy(buffer, data, readed);
+    memcpy(buffer, data, rv);
 
     free(data);
 
-    return readed;
+free_inode:
+    ex_free_inode(inode);
+    ex_free_path(path);
+
+    return rv;
 }
 
 static int do_write(const char *path, const char *buf, size_t size,
                     off_t offset, struct fuse_file_info *_) {
+
     info("path=%s, off=%jd, size=%lu", path, offset, size);
 
     char *name = basename((char *)path);
@@ -138,59 +178,40 @@ static int do_write(const char *path, const char *buf, size_t size,
 };
 
 static int do_open(const char *path, struct fuse_file_info *fi) {
-
-    info("path=%s, flags=%o", path, fi->flags);
-
     return 0;
 }
 
-void print_permissions(const char *prefix, uint8_t mode) {
-    printf("%s=%c%c%c ", prefix,
-        mode & 0x4 ? 'r' : '-',
-        mode & 0x2 ? 'w' : '-',
-        mode & 0x1 ? 'x' : '-');
+static int do_mkdir(const char *pathname, mode_t mode) {
+
+    int rv = 0;
+
+    struct ex_path *destpath = ex_make_dir_path(pathname);
+    struct ex_inode *destdir = ex_dir_find(root, destpath);
+
+    if(!destdir) {
+        rv = -ENOENT;
+        goto free_inode;
+    }
+
+    struct ex_path *dirpath = ex_make_path(pathname);
+    struct ex_inode *dir = ex_inode_create(dirpath->basename, mode | S_IFDIR);
+
+    ex_dir_set_inode(destdir, dir);
+
+    ex_free_path(dirpath);
+    ex_free_inode(dir);
+
+free_inode:
+    ex_free_inode(destdir);
+    ex_free_path(destpath);
+
+    return rv;
 }
 
-void print_mode(mode_t m) {
-
-    if(m & S_IFDIR)
-        printf("dir");
-
-    if(m & S_ISUID)
-        printf("suid ");
-
-    if(m & S_ISGID)
-        printf("sgid ");
-
-    if(m & S_ISVTX)
-        printf("sticky ");
-
-    print_permissions("other", m & 7);
-    print_permissions("group", (m >> 3) & 7);
-    print_permissions("user", (m >> 6) & 7);
-
-    printf("\n");
-}
-
-static int do_mkdir(const char *name, mode_t mode) {
-    print_mode(mode);
-    info("name=%s, mode_t=%#o", name, mode);
-
-    char *dname = basename((char *)name);
-
-    struct ex_inode *dir = ex_inode_create(dname, mode | S_IFDIR);
-    ex_dir_set_inode(root, dir);
-
-    free(dir);
-
-    return 0;
-};
-
-int do_utimens(const char *n, const struct timespec tv[2]) {
+static int do_utimens(const char *n, const struct timespec tv[2]) {
     // XXX: implement utimensat (2)
     return 0;
 }
-
 
 static struct fuse_operations operations = {
     .getattr=do_getattr,
@@ -201,7 +222,7 @@ static struct fuse_operations operations = {
     .write=do_write,
     .unlink=do_unlink,
     .mkdir=do_mkdir,
-    .utimens=do_utimens
+    .utimens=do_utimens,
 };
 
 __attribute__((constructor))

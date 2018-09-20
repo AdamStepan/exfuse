@@ -1,7 +1,9 @@
 #ifndef EX_H
 #define EX_H
 
-#define _GNU_SOURCE
+#ifndef _GNU_SOURCE
+#   define _GNU_SOURCE
+#endif
 
 #include <stdio.h>
 #include <unistd.h>
@@ -14,15 +16,23 @@
 #include <err.h>
 #include <errno.h>
 #include <assert.h>
+#include <util.h>
+#include <path.h>
 
 #define EX_DEVICE "exdev"
-#define EX_DIRECT_BLOCKS 16
+// how many block will every inode has
+#define EX_DIRECT_BLOCKS 8
+// how large block will be
 #define EX_BLOCK_SIZE 4096
 #define EX_INODE_MAGIC1 0xabcc
 #define EX_DIR_MAGIC1 0xde
+// maximum filename basename length
 #define EX_NAME_LEN 54
 
-#define info(fmt, ...) printf("%s: %s: " fmt "\n", \
+#define info(fmt, ...) printf("debug: %s: %s: " fmt "\n", \
+        __FILE__, __func__, ##__VA_ARGS__)
+
+#define debug(fmt, ...) printf("info: %s: %s: " fmt "\n", \
         __FILE__, __func__, ##__VA_ARGS__)
 
 typedef size_t inode_address;
@@ -86,10 +96,12 @@ int ex_device_open(const char *device_name);
 void *ex_read_device(size_t off, size_t amount);
 void ex_write_device(size_t off, const char *data, size_t amount);
 
+void ex_free_inode(struct ex_inode *ino);
+struct ex_inode *ex_copy_inode(const struct ex_inode *ino);
 // add inode to to dir, write changes to device, return device ino device offset
 inode_address ex_dir_set_inode(struct ex_inode *dir, struct ex_inode *ino);
-// get inode from
-inode_address ex_dir_get_inode(struct ex_inode *dir, const char *name);
+struct ex_inode *ex_dir_find(struct ex_inode *dir, struct ex_path *path);
+struct ex_inode *ex_dir_get_inode(struct ex_inode *dir, const char *name);
 struct ex_inode *ex_dir_load_inode(struct ex_inode *ino, const char *name);
 struct ex_inode *ex_dir_remove_inode(struct ex_inode *dir, const char *name);
 struct ex_inode **ex_dir_get_inodes(struct ex_inode *ino);
