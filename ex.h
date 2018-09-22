@@ -21,7 +21,7 @@
 
 #define EX_DEVICE "exdev"
 // how many block will every inode has
-#define EX_DIRECT_BLOCKS 8
+#define EX_DIRECT_BLOCKS 256
 // how large block will be
 #define EX_BLOCK_SIZE 4096
 #define EX_INODE_MAGIC1 0xabcc
@@ -73,7 +73,7 @@ struct ex_inode {
 struct ex_super_block {
     // address of root inode
     inode_address root;
-
+    // TODO: add magic, add fs info
     size_t device_size;
 
     // address of block bitmap
@@ -121,8 +121,9 @@ void ex_print_super_block(const struct ex_super_block *block);
     block_address block##_addr = 0; \
     char *block = NULL; \
     for(size_t block##_no = 0; \
-            block##_no < EX_DIRECT_BLOCKS && \
-            (block##_addr = inode->blocks[block##_no], block ? free(block): 1,\
+            (block ? (free(block), block##_no < EX_DIRECT_BLOCKS) :\
+                block##_no < EX_DIRECT_BLOCKS) && \
+            (block##_addr = inode->blocks[block##_no], \
             block = ex_read_device(block##_addr, EX_BLOCK_SIZE), 1); \
             block##_no++) \
 

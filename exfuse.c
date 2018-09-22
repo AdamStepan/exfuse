@@ -208,9 +208,25 @@ free_inode:
     return rv;
 }
 
-static int do_utimens(const char *n, const struct timespec tv[2]) {
+static int do_utimens(const char *pathname, const struct timespec tv[2]) {
+    (void)pathname;
+    (void)tv;
+
     // XXX: implement utimensat (2)
     return 0;
+}
+
+static void* do_init(struct fuse_conn_info *conn) {
+    (void)conn;
+
+    ex_init();
+    return NULL;
+}
+
+static void do_destroy(void *private_data) {
+    (void)private_data;
+
+    ex_deinit();
 }
 
 static struct fuse_operations operations = {
@@ -223,13 +239,10 @@ static struct fuse_operations operations = {
     .unlink=do_unlink,
     .mkdir=do_mkdir,
     .utimens=do_utimens,
+    .init=do_init,
+    .destroy=do_destroy
 };
 
-__attribute__((constructor))
-static void init_fuse(void) { ex_init(); }
-
-__attribute__((destructor))
-static void deinit_fuse(void) { ex_deinit(); }
 
 int main(int argc, char **argv) {
     return fuse_main(argc, argv, &operations, NULL);

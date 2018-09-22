@@ -23,9 +23,14 @@ struct ex_path *ex_make_path(const char *path) {
     return p;
 }
 
-struct ex_path *ex_make_dir_path(const char *path) {
-    //XXX: fix leak
-    return ex_make_path(dirname(ex_strdup(path)));
+struct ex_path *ex_make_dir_path(const char *pathname) {
+
+    char *copy_of_path = ex_strdup(pathname);
+    struct ex_path *path =  ex_make_path(dirname(copy_of_path));
+
+    free(copy_of_path);
+
+    return path;
 }
 
 void ex_free_path(struct ex_path *path) {
