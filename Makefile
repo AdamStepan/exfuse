@@ -6,7 +6,7 @@ exfuse::
 clean::
 	$(MAKE) --silent --directory src clean
 	$(MAKE) --silent --directory test clean
-	$(RM) -rf mp
+	$(RM) -rf mp exdev
 
 test::
 	$(MAKE) --silent --directory test

@@ -53,7 +53,11 @@ extern struct ex_inode *root;
 void ex_root_write(void);
 void ex_root_load(void);
 
-void ex_inode_allocate_blocks(struct ex_inode *inode);
+/**
+ * Try to allocate EX_DIRECT_BLOCKS for inode. i
+ * @return 1 if EX_DIRECT_BLOCKS can be allocated, 0 otherwise.
+ */
+int ex_inode_allocate_blocks(struct ex_inode *inode);
 void ex_inode_deallocate_blocks(struct ex_inode *inode);
 void ex_inode_free(struct ex_inode *inode);
 void ex_inode_print(const struct ex_inode *inode);

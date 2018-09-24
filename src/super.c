@@ -2,6 +2,32 @@
 
 struct ex_super_block *super_block = NULL;
 
+void ex_super_deallocate_block(block_address address) {
+
+    // compute position of block in bitmap
+    block_address first = super_block->bitmap + super_block->bitmap_size;
+    block_address without_offset = address - first;
+
+    // now, block must be divisible by EX_BLOCK_SIZE
+    size_t nth_bit = without_offset / EX_BLOCK_SIZE;
+
+    size_t nth_byte = nth_bit / 8;
+    size_t nth_bit_in_byte = nth_bit % 8;
+
+    info("freeing block address=%lu, nthbyte=%lu, nthbit=%lu",
+         address, nth_byte, nth_bit_in_byte);
+
+    // set nthbit to false
+    char *bitmap = ex_device_read(super_block->bitmap + nth_byte, sizeof(char));
+
+    *bitmap &= ~(1UL << nth_bit_in_byte);
+
+    ex_device_write(super_block->bitmap + nth_byte, bitmap, sizeof(char));
+
+    free(bitmap);
+}
+
+
 block_address ex_super_allocate_block(void) {
 
     char *bitmap = ex_device_read(super_block->bitmap,
@@ -24,12 +50,12 @@ block_address ex_super_allocate_block(void) {
         }
     }
 
-    info("unable to find free block");
+    warning("unable to find free block");
 
     free(bitmap);
     return -1;
 finded:
-    info("found free block: position=%lu", free_block_pos);
+    debug("found free block: position=%lu", free_block_pos);
 
     // XXX: we flip only one bit, we don't need to the rewrite whole bitmap
     ex_device_write(super_block->bitmap, bitmap, super_block->bitmap_size);

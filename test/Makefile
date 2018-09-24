@@ -40,8 +40,9 @@ all: $(BIN)
 
 test:
 	@for testfile in $(BIN); do \
-			LD_LIBRARY_PATH=$(BUILDDIR) ./$$testfile >> log 2>&1; \
-			echo "$$testfile --> $$?"; \
+			/bin/echo -en "$$testfile ("; \
+			LD_LIBRARY_PATH=$(BUILDDIR) ./$$testfile >> log; \
+			/bin/echo ") --> $$?"; \
 	done
 
 deps: $(DEPS)

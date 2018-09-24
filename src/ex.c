@@ -65,6 +65,11 @@ int ex_create(const char *pathname, mode_t mode) {
     }
 
     struct ex_inode *inode = ex_inode_create(path->basename, mode);
+    // we do not have enough space for a new inode
+    if(!inode) {
+        rv = -ENOSPC;
+        goto free_destdir;
+    }
 
     // TODO: we need to dealocate blocks if we cannot place inode to destdir
     ex_inode_set(destdir, inode);
@@ -205,10 +210,17 @@ int ex_mkdir(const char *pathname, mode_t mode) {
     struct ex_path *dirpath = ex_make_path(pathname);
     struct ex_inode *dir = ex_inode_create(dirpath->basename, mode | S_IFDIR);
 
-    ex_inode_set(destdir, dir);
+    // we do not have enough space for a new inode
+    if(!dir) {
+        rv = -ENOSPC;
+        goto free_all;
+    }
 
-    ex_free_path(dirpath);
+    ex_inode_set(destdir, dir);
     ex_inode_free(dir);
+
+free_all:
+    ex_free_path(dirpath);
 
 free_inode:
     ex_inode_free(destdir);

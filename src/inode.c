@@ -21,23 +21,32 @@ void ex_root_load(void) {
     root = ex_inode_load(super_block->root);
 }
 
-void ex_inode_allocate_blocks(struct ex_inode *inode) {
+int ex_inode_allocate_blocks(struct ex_inode *inode) {
 
-   static char FREE_BLOCK[EX_BLOCK_SIZE];
-   memset(FREE_BLOCK, 'a', EX_BLOCK_SIZE);
+    // TODO: initialize it only once
+    static char FREE_BLOCK[EX_BLOCK_SIZE];
+    memset(FREE_BLOCK, 'a', EX_BLOCK_SIZE);
 
-   for(size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
+    for(size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
 
-        block_address addr = ex_super_allocate_block();
+        inode->blocks[i] = ex_super_allocate_block();
 
-        inode->blocks[i] = addr;
+        // we are unable to allocate next block
+        if(inode->blocks[i] == -1) {
+            return 0;
+        }
 
-        ex_device_write(addr, FREE_BLOCK, sizeof(FREE_BLOCK));
+        ex_device_write(inode->blocks[i], FREE_BLOCK, sizeof(FREE_BLOCK));
     }
+
+    return 1;
 }
 
 void ex_inode_deallocate_blocks(struct ex_inode *inode) {
-    warning("unimplemented");
+    // TODO: one block leaks here
+    for(size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
+        ex_super_deallocate_block(inode->blocks[i]);
+    }
 }
 
 void ex_inode_free(struct ex_inode *inode) {
@@ -94,7 +103,11 @@ struct ex_inode *ex_inode_create(char *name, uint16_t mode) {
         inode->size = 0;
     }
 
-    ex_inode_allocate_blocks(inode);
+    int allocated = ex_inode_allocate_blocks(inode);
+
+    if(!allocated) {
+        return NULL;
+    }
 
     ex_device_write(inode->address, (void *)inode, sizeof(struct ex_inode));
 
@@ -125,7 +138,7 @@ struct ex_inode *ex_inode_set(struct ex_inode *dir, struct ex_inode *ino) {
         }
     }
 
-    info("unable to find space for inode");
+    info("unable to find space for inode in dirinode");
     return NULL;
 
 update_entry:
@@ -232,6 +245,7 @@ finded:
 
     return inode;
 }
+
 struct ex_inode *ex_inode_remove(struct ex_inode *dir, const char *name) {
 
     struct ex_inode *inode = NULL;
