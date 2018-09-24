@@ -1,56 +1,18 @@
-#!/usr/bin/make -f
-.DEFAULT_GOAL = all
-.PHONY: clean mount umount
+.PHONY: exfuse
 
-# where .d .o .so and generated .hpp are stored
-BUILDDIR := ./build
-# where .so will be placed
-TARGETDIR := .
-# note: shouldn't end with '/'
-SRCDIR := .
+exfuse::
+	$(MAKE) --silent --directory src
 
-CC := gcc
-CDEPS := $(CC)
-LD := $(CC)
-CP := cp
-RM := rm
+clean::
+	$(MAKE) --silent --directory src clean
+	$(MAKE) --silent --directory test clean
+	$(RM) -rf mp
 
-# find files with c extension within current directory and it's subdirectories
-SRC := $(addprefix $(SRCDIR)/, $(filter-out , $(wildcard *.c)))
-DEPS := $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.d,$(SRC))
-OBJ := $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SRC))
+test::
+	$(MAKE) --silent --directory test
+	$(MAKE) --silent --directory test test
 
--include verbosity.mk
-
-DEPFLAGS = -MT $(@:.d=.o) -MM -MP $< -MF $(@:.o=.d)
-CFLAGS := -Wall -I. -ggdb -std=c11
-LDFLAGS :=
-
-CFLAGS += $(shell pkg-config --cflags fuse)
-LDFLAGS += $(shell pkg-config --libs fuse)
-
-all: $(BUILDDIR)/exfuse
-
-$(BUILDDIR)::
-	@mkdir -p $(BUILDDIR)
-
-$(TARGETDIR)::
-	@mkdir -p $(TARGETDIR)
-
-# create a build directory, generate java headers and protobuffer C++ files
-gen: | $(BUILDDIR)
-
-$(BUILDDIR)/%.d: %.c | gen
-	$(CDEPS) $(DEPFLAGS) $(CFLAGS)
-
-$(BUILDDIR)/%.o: %.c | gen
-	$(CC) $(CFLAGS) $< -c -o $@
-
-$(BUILDDIR)/exfuse: $(OBJ) | $(TARGETDIR)
-	$(LD) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $@
-	$(CP) $@ $(TARGETDIR)/$(notdir $@)
-
-mount: $(BUILDDIR)/exfuse
+mount: exfuse
 	if [ ! -d mp ]; then\
 		mkdir mp;\
 	fi
@@ -58,6 +20,3 @@ mount: $(BUILDDIR)/exfuse
 
 umount:
 	fusermount -u mp
-
-clean:
-	$(RM) -rf $(BUILDDIR) $(TARGETDIR)/exfuse

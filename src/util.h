@@ -1,7 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
-
-#define _GNU_SOURCE
+#ifndef EX_UTIL_H
+#define EX_UTIL_H
 
 #include <linux/stat.h>
 #include <unistd.h>
@@ -21,4 +19,4 @@ char **ex_str_split(const char *str, const char *delim);
 void ex_print_permissions(const char *prefix, uint8_t mode);
 void ex_print_mode(mode_t m);
 
-#endif /* UTIL_H */
+#endif /* EX_UTIL_H */
