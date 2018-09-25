@@ -26,7 +26,7 @@ ifeq (0, $(words $(findstring $(MAKECMDGOALS), clean mount umount deps)))
 	-include $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.d,$(SRC))
 endif
 
--include verbosity.mk
+include verbosity.mk
 
 DEPFLAGS = -MT $(@:.d=.o) -MM -MP $< -MF $(@:.o=.d)
 CFLAGS := -fPIC -Wall -I. -ggdb -std=c11 -D_GNU_SOURCE

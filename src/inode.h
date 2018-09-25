@@ -15,8 +15,6 @@
 #define EX_DIRECT_BLOCKS 256
 #define EX_INODE_MAGIC1 0xabcc
 #define EX_DIR_MAGIC1 0xde
-// maximum filename basename length
-#define EX_NAME_LEN 54
 
 struct ex_inode {
     // the same as stat.mode_t
@@ -59,6 +57,15 @@ extern struct ex_inode *root;
 
 void ex_root_write(void);
 void ex_root_load(void);
+
+#define ex_inode_update_time(rv, ino, attr) \
+    int rv; \
+    do { \
+        struct timespec ts; \
+        rv = clock_gettime(CLOCK_MONOTONIC, &tp); \
+        ino->attr.v_sec = rv.tv_sec; \
+        inode->attr.tv_nsec = rv.tv_nsec; \
+    } while(0);
 
 /**
  * Try to allocate EX_DIRECT_BLOCKS for inode. i

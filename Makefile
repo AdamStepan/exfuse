@@ -1,16 +1,16 @@
 .PHONY: exfuse
 
 exfuse::
-	$(MAKE) --silent --directory src
+	$(MAKE) --directory src
 
 clean::
-	$(MAKE) --silent --directory src clean
-	$(MAKE) --silent --directory test clean
+	$(MAKE) --directory src clean
+	$(MAKE) --directory test clean
 	$(RM) -rf mp exdev
 
 test::
-	$(MAKE) --silent --directory test
-	$(MAKE) --silent --directory test test
+	$(MAKE) --directory test
+	$(MAKE) --directory test test
 
 mount: exfuse
 	if [ ! -d mp ]; then\

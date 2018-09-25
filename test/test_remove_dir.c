@@ -9,8 +9,8 @@ int main(int argc, char **argv) {
     unlink(EX_DEVICE);
     ex_init();
 
-    // create file
-    int rv = ex_create("/dir", S_IRWXU | S_IFDIR);
+    // create directory
+    int rv = ex_mkdir("/dir", S_IRWXU | S_IFDIR);
 
     if(rv) {
         fprintf(stderr, "ex_create");

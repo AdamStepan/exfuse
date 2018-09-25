@@ -1,5 +1,6 @@
 #define FUSE_USE_VERSION 30
 
+#include <sys/vfs.h>
 #include <linux/stat.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -97,6 +98,14 @@ static int do_rmdir(const char *pathname) {
     return ex_rmdir(pathname);
 }
 
+static int do_statfs(const char *pathname, struct statvfs *statbuffer) {
+    ex_super_print(super_block);
+    int rv =  ex_statfs(statbuffer);
+    ex_super_print(super_block);
+
+    return rv;
+}
+
 static void* do_init(struct fuse_conn_info *conn) {
     (void)conn;
 
@@ -125,7 +134,8 @@ static struct fuse_operations operations = {
     .destroy=do_destroy,
     .truncate=do_truncate,
     .link=do_link,
-    .rmdir=do_rmdir
+    .rmdir=do_rmdir,
+    .statfs=do_statfs
 };
 
 int main(int argc, char **argv) {

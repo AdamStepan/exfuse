@@ -22,7 +22,10 @@ void ex_super_deallocate_block(block_address address) {
 
     *bitmap &= ~(1UL << nth_bit_in_byte);
 
+    super_block->blocks_free += 1;
+
     ex_device_write(super_block->bitmap + nth_byte, bitmap, sizeof(char));
+    ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
 
     free(bitmap);
 }
@@ -61,14 +64,30 @@ finded:
     ex_device_write(super_block->bitmap, bitmap, super_block->bitmap_size);
     free(bitmap);
 
+    super_block->blocks_free -= 1;
+    ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
+
     // compute block position
     return (super_block->bitmap + super_block->bitmap_size) +
         free_block_pos * EX_BLOCK_SIZE;
 }
 
 void ex_super_print(const struct ex_super_block *block) {
-    info("{.root=%lu, .device_size=%lu, bitmap=%lu, bitmap_size=%lu",
-            block->root, block->device_size, block->bitmap, block->bitmap_size);
+    info("{.root=%lu, .device_size=%lu, .bitmap=%lu, .bitmap_size=%lu, .free=%lu}",
+            block->root, block->device_size, block->bitmap, block->bitmap_size,
+            block->blocks_free);
+}
+
+void ex_super_statfs(struct statvfs *statbuf) {
+
+    statbuf->f_bsize = EX_BLOCK_SIZE;
+    statbuf->f_blocks = super_block->bitmap_size;
+    statbuf->f_bfree = statbuf->f_bavail = super_block->blocks_free;
+    statbuf->f_namemax = EX_NAME_LEN;
+
+    ex_super_print(super_block);
+
+    // XXX: add f_files and f_ffree
 }
 
 void ex_super_write(size_t device_size) {
@@ -93,11 +112,11 @@ void ex_super_write(size_t device_size) {
         .root = root_addr,
         .device_size = device_size,
         .bitmap = bitmap_addr,
-        .bitmap_size = bitmap_size
+        .bitmap_size = bitmap_size,
+        .blocks_free = bitmap_size
     };
 
-    int fd = ex_device_fd();
-    write(fd, super_block, sizeof(struct ex_super_block));
+    ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
 }
 
 void ex_super_load(void) {

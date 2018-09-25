@@ -27,7 +27,7 @@ ifeq (0, $(words $(findstring $(MAKECMDGOALS), clean mount umount deps)))
 	-include $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.d,$(SRC))
 endif
 
--include verbosity.mk
+include verbosity.mk
 
 DEPFLAGS = -MT $(@:.d=) -MM -MP $< -MF $(@:.o=.d)
 CFLAGS := -Wall -I$(SRCDIR) -ggdb -std=c11 -D_POSIX_C_SOURCE=200809L
@@ -42,7 +42,11 @@ test:
 	@for testfile in $(BIN); do \
 			/bin/echo -en "$$testfile ("; \
 			LD_LIBRARY_PATH=$(BUILDDIR) ./$$testfile >> log; \
-			/bin/echo ") --> $$?"; \
+			rv=$$?; \
+			/bin/echo ") --> $$rv"; \
+			if [ "$$rv" != "0" ]; then \
+				break; \
+			fi \
 	done
 
 deps: $(DEPS)
@@ -60,7 +64,7 @@ $(BUILDDIR)/%.d: %.c | gen
 	$(CDEPS) $(DEPFLAGS) $(CFLAGS)
 
 $(BUILDDIR)/%.test: %.c | gen
-	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
 
 $(BUILDDIR)/libexfuse.so:
 	$(MAKE) --directory $(SRCDIR) $@

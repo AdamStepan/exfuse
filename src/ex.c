@@ -359,6 +359,10 @@ int ex_readdir(const char *pathname, struct ex_dir_entry ***entries) {
     ex_update_time_ns(&inode->atime);
     ex_inode_flush(inode);
 
+    // update inode access time
+    ex_update_time_ns(&inode->atime);
+    ex_inode_flush(inode);
+
 free_inode:
     ex_inode_free(inode);
     ex_path_free(path);
@@ -432,4 +436,10 @@ free_inode:
     ex_inode_free(inode);
 
     return rv;
+}
+
+int ex_statfs(struct statvfs *statbuf) {
+    ex_super_statfs(statbuf);
+    ex_super_print(super_block);
+    return 0;
 }
