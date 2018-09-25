@@ -30,7 +30,7 @@ endif
 -include verbosity.mk
 
 DEPFLAGS = -MT $(@:.d=) -MM -MP $< -MF $(@:.o=.d)
-CFLAGS := -Wall -I$(SRCDIR) -ggdb -std=c11
+CFLAGS := -Wall -I$(SRCDIR) -ggdb -std=c11 -D_POSIX_C_SOURCE=200809L
 LDFLAGS := -L$(BUILDDIR) -lexfuse
 
 CFLAGS += $(shell pkg-config --cflags fuse)

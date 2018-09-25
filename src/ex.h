@@ -19,5 +19,6 @@ int ex_open(const char *path);
 int ex_mkdir(const char *pathname, mode_t mode);
 int ex_readdir(const char *pathname, struct ex_inode ***inodes);
 int ex_utimens(const char *pathname, const struct timespec tv[2]);
+int ex_truncate(const char *path);
 
 #endif /* EX_H */

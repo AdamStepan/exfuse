@@ -23,7 +23,12 @@ struct ex_inode {
     uint32_t mode;
     uint16_t magic;
 
-    time_t mtime;
+    // modification time
+    struct timespec mtime;
+    // access time
+    struct timespec atime;
+    // change time (time when attribute was changed)
+    struct timespec ctime;
 
     inode_address parent_inode;
     inode_address address;
@@ -37,6 +42,8 @@ struct ex_inode {
     // if an inode is file content is saved here directly in these blocks
     // if an inode is directory ex_dir_entries are saved in these blocks
     // every block is EX_DIRECT_BLOCKS size
+    // TODO: we should treat at least one block as indirect or double
+    //       indirect
     block_address blocks[EX_DIRECT_BLOCKS];
 };
 
@@ -53,6 +60,15 @@ extern struct ex_inode *root;
 void ex_root_write(void);
 void ex_root_load(void);
 
+#define ex_inode_update_time(rv, ino, attr) \
+    int rv; \
+    do { \
+        struct timespec ts; \
+        rv = clock_gettime(CLOCK_MONOTONIC, &tp); \
+        ino->attr.v_sec = rv.tv_sec; \
+        inode->attr.tv_nsec = rv.tv_nsec; \
+    } while(0);
+
 /**
  * Try to allocate EX_DIRECT_BLOCKS for inode. i
  * @return 1 if EX_DIRECT_BLOCKS can be allocated, 0 otherwise.
@@ -61,6 +77,7 @@ int ex_inode_allocate_blocks(struct ex_inode *inode);
 void ex_inode_deallocate_blocks(struct ex_inode *inode);
 void ex_inode_free(struct ex_inode *inode);
 void ex_inode_print(const struct ex_inode *inode);
+void ex_inode_flush(const struct ex_inode *inode);
 
 struct ex_inode *ex_inode_copy(const struct ex_inode *inode);
 struct ex_inode *ex_inode_create(char *name, uint16_t mode);

@@ -66,12 +66,21 @@ free_inodes:
 static int do_read(const char *pathname, char *buffer, size_t size,
                    off_t offset, struct fuse_file_info *fi) {
     (void)fi;
+
     return ex_read(pathname, buffer, size, offset);
+}
+
+static int do_truncate(const char *pathname, off_t off) {
+
+    (void)off;
+
+    return ex_truncate(pathname);
 }
 
 static int do_write(const char *path, const char *buf, size_t size,
                     off_t offset, struct fuse_file_info *fi) {
     (void)fi;
+
     return ex_write(path, buf, size, offset);
 }
 
@@ -108,7 +117,8 @@ static struct fuse_operations operations = {
     .mkdir=do_mkdir,
     .utimens=do_utimens,
     .init=do_init,
-    .destroy=do_destroy
+    .destroy=do_destroy,
+    .truncate=do_truncate
 };
 
 int main(int argc, char **argv) {

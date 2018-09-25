@@ -53,7 +53,7 @@ void ex_inode_free(struct ex_inode *inode) {
     free(inode);
 }
 
-void ex_print_inode(const struct ex_inode *inode) {
+void ex_inode_print(const struct ex_inode *inode) {
 
     info("{.size=%ld, .name=%s, .magic=%x, .address=%lu, .mode=%o}",
             inode->size, inode->name, inode->magic, inode->address, inode->mode);
@@ -65,6 +65,10 @@ void ex_print_inode(const struct ex_inode *inode) {
 #endif
 }
 
+void ex_inode_flush(const struct ex_inode *inode) {
+    ex_device_write(inode->address, (void *)inode, sizeof(struct ex_inode));
+}
+
 struct ex_inode *ex_copy_inode(const struct ex_inode *inode) {
 
     struct ex_inode *copy = ex_malloc(sizeof(struct ex_inode));
@@ -72,7 +76,11 @@ struct ex_inode *ex_copy_inode(const struct ex_inode *inode) {
     copy->mode = inode->mode;
     copy->magic = inode->magic;
     copy->parent_inode = inode->parent_inode;
+
     copy->mtime = inode->mtime;
+    copy->ctime = inode->ctime;
+    copy->atime = inode->atime;
+
     copy->address = inode->address;
     copy->size = inode->size;
 
@@ -93,7 +101,11 @@ struct ex_inode *ex_inode_create(char *name, uint16_t mode) {
     inode->mode = mode;
     inode->magic = EX_INODE_MAGIC1;
     inode->parent_inode = 0;
-    inode->mtime = time(0);
+
+    ex_update_time_ns(&(inode->mtime));
+    inode->ctime = inode->mtime;
+    inode->atime = inode->mtime;
+
     inode->address = address;
     strcpy(inode->name, name);
 

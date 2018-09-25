@@ -66,6 +66,7 @@ char **ex_str_split(const char *str, const char *delim) {
 
     return tokens;
 }
+
 void ex_print_permissions(const char *prefix, uint8_t mode) {
     printf("%s=%c%c%c ", prefix,
         mode & 0x4 ? 'r' : '-',
@@ -92,4 +93,16 @@ void ex_print_mode(mode_t m) {
     ex_print_permissions("user", (m >> 6) & 7);
 
     printf("\n");
+}
+
+void ex_update_time_ns(struct timespec *dest) {
+
+    struct timespec now;
+
+    if(clock_gettime(CLOCK_REALTIME, &now) == -1) {
+        warning("clock_gettime: errno=%d (time will remain the same)", errno);
+    } else {
+        dest->tv_sec = now.tv_sec;
+        dest->tv_nsec = now.tv_nsec;
+    }
 }

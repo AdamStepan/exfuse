@@ -1,6 +1,6 @@
 #include <path.h>
 
-struct ex_path *ex_make_path(const char *path) {
+struct ex_path *ex_path_make(const char *path) {
 
     struct ex_path *p = ex_malloc(sizeof(struct ex_path));
 
@@ -23,17 +23,17 @@ struct ex_path *ex_make_path(const char *path) {
     return p;
 }
 
-struct ex_path *ex_make_dir_path(const char *pathname) {
+struct ex_path *ex_path_make_dirpath(const char *pathname) {
 
     char *copy_of_path = ex_strdup(pathname);
-    struct ex_path *path =  ex_make_path(dirname(copy_of_path));
+    struct ex_path *path =  ex_path_make(dirname(copy_of_path));
 
     free(copy_of_path);
 
     return path;
 }
 
-void ex_free_path(struct ex_path *path) {
+void ex_path_free(struct ex_path *path) {
 
     free(path->dirname_to_free);
     free(path->basename_to_free);
@@ -46,7 +46,7 @@ void ex_free_path(struct ex_path *path) {
     free(path);
 }
 
-void ex_print_path(const struct ex_path *path) {
+void ex_path_print(const struct ex_path *path) {
 
     printf("basename: %s\n", path->basename);
     printf("dirname: %s\n", path->dirname);

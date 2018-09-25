@@ -20,9 +20,9 @@ struct ex_path {
     size_t ncomponents;
 };
 
-struct ex_path *ex_make_path(const char *path);
-struct ex_path *ex_make_dir_path(const char *path);
-void ex_free_path(struct ex_path *path);
-void ex_print_path(const struct ex_path *path);
+struct ex_path *ex_path_make(const char *path);
+struct ex_path *ex_path_make_dirpath(const char *path);
+void ex_path_free(struct ex_path *path);
+void ex_path_print(const struct ex_path *path);
 
 #endif /* PATH_H */

@@ -1,7 +1,7 @@
 #include <ex.h>
 
 size_t ex_device_size(size_t ninodes) {
-    return ninodes * EX_DIRECT_BLOCKS * EX_BLOCK_SIZE + // space for n inodes
+    return ninodes * EX_DIRECT_BLOCKS * EX_BLOCK_SIZE + // space for n-1 inodes
         sizeof(struct ex_super_block) +                 // space for superblock
         EX_DIRECT_BLOCKS / 8;                           // size of block bitmap
 }
@@ -54,8 +54,8 @@ int ex_create(const char *pathname, mode_t mode) {
 
     int rv = 0;
 
-    struct ex_path *dirpath = ex_make_dir_path(pathname);
-    struct ex_path *path = ex_make_path(pathname);
+    struct ex_path *dirpath = ex_path_make_dirpath(pathname);
+    struct ex_path *path = ex_path_make(pathname);
 
     struct ex_inode *destdir = ex_inode_find(root, dirpath);
 
@@ -77,32 +77,38 @@ int ex_create(const char *pathname, mode_t mode) {
 
 free_destdir:
     ex_inode_free(destdir);
-    ex_free_path(path);
-    ex_free_path(dirpath);
+    ex_path_free(path);
+    ex_path_free(dirpath);
 
     return rv;
 }
 
 int ex_getattr(const char *pathname, struct stat *st) {
 
-    struct ex_path *path = ex_make_path(pathname);
+    struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(root, path);
 
     if(!inode) {
-        ex_free_path(path);
+        ex_path_free(path);
         return -ENOENT;
     }
 
     st->st_nlink = inode->mode & S_IFDIR ? 2 : 1;
     st->st_size = inode->size;
     st->st_mode = inode->mode;
-    st->st_mtime = inode->mtime;
+
+    st->st_mtim = inode->mtime;
+    st->st_atim = inode->atime;
+    st->st_ctim = inode->ctime;
 
     st->st_uid = getuid();
     st->st_gid = getgid();
-    st->st_atime = st->st_ctime = time(NULL);
 
-    ex_free_path(path);
+    // update access time
+    ex_update_time_ns(&inode->atime);
+    ex_inode_flush(inode);
+
+    ex_path_free(path);
     ex_inode_free(inode);
 
     return 0;
@@ -112,7 +118,7 @@ int ex_unlink(const char *pathname) {
 
     int rv = 0;
 
-    struct ex_path *dirpath = ex_make_dir_path(pathname);
+    struct ex_path *dirpath = ex_path_make_dirpath(pathname);
     struct ex_inode *dir = ex_inode_find(root, dirpath);
 
     if(!dir) {
@@ -120,7 +126,7 @@ int ex_unlink(const char *pathname) {
         goto free_dir;
     }
 
-    struct ex_path *path = ex_make_path(pathname);
+    struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_remove(dir, path->basename);
 
     if(!inode) {
@@ -129,11 +135,11 @@ int ex_unlink(const char *pathname) {
     }
 
 free_all:
-    ex_free_path(path);
+    ex_path_free(path);
     ex_inode_free(inode);
 
 free_dir:
-    ex_free_path(dirpath);
+    ex_path_free(dirpath);
     ex_inode_free(dir);
 
     return rv;
@@ -145,7 +151,7 @@ int ex_read(const char *pathname, char *buffer, size_t size, off_t offset) {
 
     int rv = 0;
 
-    struct ex_path *path = ex_make_path(pathname);
+    struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(root, path);
 
     if(!inode) {
@@ -153,6 +159,8 @@ int ex_read(const char *pathname, char *buffer, size_t size, off_t offset) {
         goto free_inode;
     }
 
+    // TODO: rewrite this shit
+    // read data from inode, copy them to user buffer
     char *data = ex_inode_read(inode, offset, size);
     rv = strlen(data);
 
@@ -160,9 +168,13 @@ int ex_read(const char *pathname, char *buffer, size_t size, off_t offset) {
 
     free(data);
 
+    // update inode access time
+    ex_update_time_ns(&inode->atime);
+    ex_inode_flush(inode);
+
 free_inode:
     ex_inode_free(inode);
-    ex_free_path(path);
+    ex_path_free(path);
 
     return rv;
 }
@@ -173,7 +185,7 @@ int ex_write(const char *pathname, const char *buf, size_t size, off_t offset) {
 
     int rv = 0;
 
-    struct ex_path *path = ex_make_path(pathname);
+    struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(root, path);
 
     if(!inode) {
@@ -182,6 +194,12 @@ int ex_write(const char *pathname, const char *buf, size_t size, off_t offset) {
     }
 
     rv = ex_inode_write(inode, offset, buf, size);
+    if(!rv) {
+        goto free_inode;
+    }
+
+    ex_update_time_ns(&inode->mtime);
+    ex_inode_flush(inode);
 
 free_inode:
     free(path);
@@ -199,7 +217,7 @@ int ex_mkdir(const char *pathname, mode_t mode) {
 
     int rv = 0;
 
-    struct ex_path *destpath = ex_make_dir_path(pathname);
+    struct ex_path *destpath = ex_path_make_dirpath(pathname);
     struct ex_inode *destdir = ex_inode_find(root, destpath);
 
     if(!destdir) {
@@ -207,7 +225,7 @@ int ex_mkdir(const char *pathname, mode_t mode) {
         goto free_inode;
     }
 
-    struct ex_path *dirpath = ex_make_path(pathname);
+    struct ex_path *dirpath = ex_path_make(pathname);
     struct ex_inode *dir = ex_inode_create(dirpath->basename, mode | S_IFDIR);
 
     // we do not have enough space for a new inode
@@ -220,11 +238,42 @@ int ex_mkdir(const char *pathname, mode_t mode) {
     ex_inode_free(dir);
 
 free_all:
-    ex_free_path(dirpath);
+    ex_path_free(dirpath);
 
 free_inode:
     ex_inode_free(destdir);
-    ex_free_path(destpath);
+    ex_path_free(destpath);
+
+    return rv;
+}
+
+int ex_truncate(const char *pathname) {
+
+    int rv = 0;
+
+    struct ex_path *path = ex_path_make(pathname);
+    struct ex_inode *inode = ex_inode_find(root, path);
+
+    if(!inode) {
+        rv = -ENOENT;
+        goto free_inode;
+    }
+
+    if(inode->mode & S_IFDIR) {
+        rv = -EISDIR;
+        goto free_inode;
+    }
+
+    // set inode size to 0 and update access/modification time
+    inode->size = 0;
+    ex_update_time_ns(&inode->mtime);
+    inode->ctime = inode->mtime;
+
+    ex_inode_flush(inode);
+
+free_inode:
+    ex_inode_free(inode);
+    ex_path_free(path);
 
     return rv;
 }
@@ -233,7 +282,7 @@ int ex_readdir(const char *pathname, struct ex_inode ***inodes) {
 
     int rv = 0;
 
-    struct ex_path *path = ex_make_path(pathname);
+    struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(root, path);
 
     if(!inode) {
@@ -248,17 +297,40 @@ int ex_readdir(const char *pathname, struct ex_inode ***inodes) {
 
     *inodes = ex_inode_get_all(inode);
 
+    // update inode access time
+    ex_update_time_ns(&inode->atime);
+    ex_inode_flush(inode);
+
 free_inode:
     ex_inode_free(inode);
-    ex_free_path(path);
+    ex_path_free(path);
 
     return rv;
 }
 
 int ex_utimens(const char *pathname, const struct timespec tv[2]) {
-    (void)pathname;
-    (void)tv;
 
-    // XXX: implement utimensat (2)
-    return 0;
+    #define ATIM 0
+    #define MTIM 1
+
+    int rv = 0;
+
+    struct ex_path *path = ex_path_make(pathname);
+    struct ex_inode *inode = ex_inode_find(root, path);
+
+    if(!inode) {
+        rv = -ENOENT;
+        goto free_inode;
+    }
+
+    inode->atime = tv[ATIM];
+    inode->mtime = tv[MTIM];
+
+    ex_inode_flush(inode);
+
+free_inode:
+    ex_inode_free(inode);
+    ex_path_free(path);
+
+    return rv;
 }
