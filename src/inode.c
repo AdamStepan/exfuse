@@ -274,7 +274,47 @@ finded:
     return inode;
 }
 
-struct ex_inode *ex_inode_remove(struct ex_inode *dir, const char *name) {
+
+static size_t __ex_dir_entries(struct ex_inode *inode) {
+    // check if directory is empty
+    struct ex_dir_entry **entries = ex_inode_get_all(inode);
+    size_t entries_count = 0;
+
+    for(; entries[entries_count]; entries_count++);
+
+    for(size_t i = 0; i < entries_count; i++) {
+        free(entries[entries_count]);
+    }
+
+    free(entries);
+
+    info("inode=%lu, entries_count=%lu", inode->address, entries_count);
+
+    return entries_count;
+}
+
+static int __ex_inode_unlink(struct ex_inode *inode) {
+
+    // not a directory, we can deallocate blocks
+    if (!(inode->mode & S_IFDIR)) {
+        info("not a directory");
+        goto unlink_inode;
+
+    }
+
+    // we cannot remove directory if it has more than two entries ('.', '..')
+    if(__ex_dir_entries(inode) > 2) {
+        return 0;
+    } else {
+        goto unlink_inode;
+    }
+
+unlink_inode:
+    return 1;
+}
+
+
+struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name) {
 
     struct ex_inode *inode = NULL;
 
@@ -289,12 +329,18 @@ struct ex_inode *ex_inode_remove(struct ex_inode *dir, const char *name) {
 
             info("entry {.name=%s, .iaddress=%lu}", entry->name, entry->address);
 
-            entry->free = 1;
-
-            ex_device_write(entry_address, (void *)entry, sizeof(struct ex_dir_entry));
-
             inode = ex_inode_load(entry->address);
-            inode->nlinks -= 1;
+
+            if(!__ex_inode_unlink(inode)) {
+                info("unable to unlink");
+                goto fail;
+            }
+
+            if(inode->mode & S_IFDIR) {
+                inode->nlinks -= 2;
+            } else {
+                inode->nlinks -= 1;
+            }
 
             if(!inode->nlinks) {
                 ex_inode_deallocate_blocks(inode);
@@ -302,11 +348,20 @@ struct ex_inode *ex_inode_remove(struct ex_inode *dir, const char *name) {
 
             ex_inode_flush(inode);
 
+            entry->free = 1;
+            ex_device_write(entry_address, (void *)entry, sizeof(struct ex_dir_entry));
+
+
+
             goto done;
         }
     }
 
     info("unable to remove inode: %s", name);
+
+fail:
+    ex_inode_free(inode);
+    return NULL;
 
 done:
     if(block) {

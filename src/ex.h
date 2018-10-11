@@ -22,5 +22,6 @@ int ex_readdir(const char *pathname, struct ex_dir_entry ***inodes);
 int ex_utimens(const char *pathname, const struct timespec tv[2]);
 int ex_truncate(const char *path);
 int ex_link(const char *src_pathname, const char *dest_pathname);
+int ex_rmdir(const char *pathname);
 
 #endif /* EX_H */

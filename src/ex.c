@@ -127,7 +127,7 @@ int ex_unlink(const char *pathname) {
     }
 
     struct ex_path *path = ex_path_make(pathname);
-    struct ex_inode *inode = ex_inode_remove(dir, path->basename);
+    struct ex_inode *inode = ex_inode_unlink(dir, path->basename);
 
     if(!inode) {
         rv = -ENOENT;
@@ -389,6 +389,47 @@ int ex_utimens(const char *pathname, const struct timespec tv[2]) {
 free_inode:
     ex_inode_free(inode);
     ex_path_free(path);
+
+    return rv;
+}
+
+int ex_rmdir(const char *pathname) {
+
+    int rv = 0;
+
+    struct ex_path *path = ex_path_make(pathname);
+    struct ex_inode *inode = ex_inode_find(path);
+
+    if(!inode) {
+        rv = -ENOENT;
+        goto free_path;
+    }
+
+    if(!(inode->mode & S_IFDIR)) {
+        rv = -ENOTDIR;
+        goto free_inode;
+    }
+
+    struct ex_path *dirpath = ex_path_make_dirpath(pathname);
+    struct ex_inode *dir = ex_inode_find(dirpath);
+
+    if(!dir) {
+        rv =  -ENOENT;
+        goto free_dir_inode;
+    }
+
+    if(!ex_inode_unlink(dir, path->basename)) {
+        rv = -ENOTEMPTY;
+    }
+
+free_dir_inode:
+    ex_path_free(dirpath);
+    ex_inode_free(dir);
+
+free_path:
+    ex_path_free(path);
+free_inode:
+    ex_inode_free(inode);
 
     return rv;
 }

@@ -93,6 +93,10 @@ static int do_link(const char *srcpath, const char *destpath) {
     return ex_link(srcpath, destpath);
 }
 
+static int do_rmdir(const char *pathname) {
+    return ex_rmdir(pathname);
+}
+
 static void* do_init(struct fuse_conn_info *conn) {
     (void)conn;
 
@@ -120,7 +124,8 @@ static struct fuse_operations operations = {
     .init=do_init,
     .destroy=do_destroy,
     .truncate=do_truncate,
-    .link=do_link
+    .link=do_link,
+    .rmdir=do_rmdir
 };
 
 int main(int argc, char **argv) {

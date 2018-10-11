@@ -82,9 +82,9 @@ struct ex_inode *ex_inode_load(inode_address ino_addr);
 
 struct ex_inode *ex_inode_find(struct ex_path *path);
 struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name);
-struct ex_inode *ex_inode_remove(struct ex_inode *dir, const char *name);
-struct ex_dir_entry **ex_inode_get_all(struct ex_inode *inode);
 void ex_inode_fill_dir(struct ex_inode *inode);
+struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name);
+struct ex_dir_entry **ex_inode_get_all(struct ex_inode *inode);
 
 ssize_t ex_inode_write(struct ex_inode *inode, size_t off, const char *data, size_t amount);
 char *ex_inode_read(struct ex_inode *inode, size_t off, size_t amount);
