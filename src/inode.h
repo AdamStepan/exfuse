@@ -33,7 +33,8 @@ struct ex_inode {
     inode_address parent_inode;
     inode_address address;
 
-    char name[EX_NAME_LEN];
+    // number of links
+    uint16_t nlinks;
 
     // size of file when inode is file
     // size of file metadata (struct ex_inode) if inode is directory
@@ -51,7 +52,6 @@ struct ex_dir_entry {
     inode_address address;
     uint8_t magic;
     uint8_t free;
-    // XXX: name should not be here, all information should be readed from address
     char name[EX_NAME_LEN];
 };
 
@@ -59,15 +59,6 @@ extern struct ex_inode *root;
 
 void ex_root_write(void);
 void ex_root_load(void);
-
-#define ex_inode_update_time(rv, ino, attr) \
-    int rv; \
-    do { \
-        struct timespec ts; \
-        rv = clock_gettime(CLOCK_MONOTONIC, &tp); \
-        ino->attr.v_sec = rv.tv_sec; \
-        inode->attr.tv_nsec = rv.tv_nsec; \
-    } while(0);
 
 /**
  * Try to allocate EX_DIRECT_BLOCKS for inode. i
@@ -79,17 +70,21 @@ void ex_inode_free(struct ex_inode *inode);
 void ex_inode_print(const struct ex_inode *inode);
 void ex_inode_flush(const struct ex_inode *inode);
 
+struct ex_dir_entry *ex_dir_entry_copy(const struct ex_dir_entry *entry);
+void ex_dir_entry_free(struct ex_dir_entry *entry);
+
 struct ex_inode *ex_inode_copy(const struct ex_inode *inode);
-struct ex_inode *ex_inode_create(char *name, uint16_t mode);
+struct ex_inode *ex_inode_create(uint16_t mode);
 // add inode to to dir, write changes to device, return device inode device offset
-struct ex_inode *ex_inode_set(struct ex_inode *dir, struct ex_inode *inode);
+struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name, struct ex_inode *inode);
 // load inode from given address
 struct ex_inode *ex_inode_load(inode_address ino_addr);
 
-struct ex_inode *ex_inode_find(struct ex_inode *dir, struct ex_path *path);
+struct ex_inode *ex_inode_find(struct ex_path *path);
 struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name);
 struct ex_inode *ex_inode_remove(struct ex_inode *dir, const char *name);
-struct ex_inode **ex_inode_get_all(struct ex_inode *inode);
+struct ex_dir_entry **ex_inode_get_all(struct ex_inode *inode);
+void ex_inode_fill_dir(struct ex_inode *inode);
 
 ssize_t ex_inode_write(struct ex_inode *inode, size_t off, const char *data, size_t amount);
 char *ex_inode_read(struct ex_inode *inode, size_t off, size_t amount);

@@ -37,28 +37,25 @@ static int do_readdir(const char *pathname, void *buffer, fuse_fill_dir_t filler
 
     assert(!offset);
 
-    struct ex_inode **inodes;
-    int rv = ex_readdir(pathname, &inodes);
+    struct ex_dir_entry **entries;
+    int rv = ex_readdir(pathname, &entries);
 
     if(rv) {
-        goto free_inodes;
+        goto free_entries;
     }
 
-    filler(buffer, ".", NULL, 0);
-    filler(buffer, "..", NULL, 0);
-
-    for(size_t i = 0; inodes[i]; i++) {
-        debug("inode name=%s", inodes[i]->name);
-        filler(buffer, inodes[i]->name, NULL, 0);
+    for(size_t i = 0; entries[i]; i++) {
+        debug("inode name=%s", entries[i]->name);
+        filler(buffer, entries[i]->name, NULL, 0);
     }
 
-free_inodes:
+free_entries:
 
-    for(size_t i = 0; inodes[i]; i++) {
-        ex_inode_free(inodes[i]);
+    for(size_t i = 0; entries[i]; i++) {
+        ex_dir_entry_free(entries[i]);
     }
 
-    free(inodes);
+    free(entries);
 
     return rv;
 }
@@ -92,6 +89,10 @@ static int do_utimens(const char *pathname, const struct timespec tv[2]) {
     return ex_utimens(pathname, tv);
 }
 
+static int do_link(const char *srcpath, const char *destpath) {
+    return ex_link(srcpath, destpath);
+}
+
 static void* do_init(struct fuse_conn_info *conn) {
     (void)conn;
 
@@ -118,7 +119,8 @@ static struct fuse_operations operations = {
     .utimens=do_utimens,
     .init=do_init,
     .destroy=do_destroy,
-    .truncate=do_truncate
+    .truncate=do_truncate,
+    .link=do_link
 };
 
 int main(int argc, char **argv) {

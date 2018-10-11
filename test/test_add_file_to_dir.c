@@ -36,17 +36,17 @@ int main(int argc, char **argv) {
 
 
     // check that readdir return our file
-    struct ex_inode **inodes;
+    struct ex_dir_entry **entries;
 
-    rv = ex_readdir("/dir/", &inodes);
+    rv = ex_readdir("/dir/", &entries);
 
     if(rv) {
         printf("readdir");
         goto end;
     }
 
-    for(size_t i = 0; inodes[i]; i++) {
-        if(!strcmp(inodes[i]->name, "file")) {
+    for(size_t i = 0; entries[i]; i++) {
+        if(!strcmp(entries[i]->name, "file")) {
             goto end;
         }
     }

@@ -3,6 +3,7 @@
 
 #include <fcntl.h>
 #include <stdint.h>
+#include <limits.h>
 #include <time.h>
 #include <inode.h>
 #include <device.h>
@@ -17,8 +18,9 @@ int ex_read(const char *pathname, char *buffer, size_t size, off_t offset);
 int ex_write(const char *path, const char *buf, size_t size, off_t offset);
 int ex_open(const char *path);
 int ex_mkdir(const char *pathname, mode_t mode);
-int ex_readdir(const char *pathname, struct ex_inode ***inodes);
+int ex_readdir(const char *pathname, struct ex_dir_entry ***inodes);
 int ex_utimens(const char *pathname, const struct timespec tv[2]);
 int ex_truncate(const char *path);
+int ex_link(const char *src_pathname, const char *dest_pathname);
 
 #endif /* EX_H */

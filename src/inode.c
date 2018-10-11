@@ -5,12 +5,12 @@ struct ex_inode *root = NULL;
 void ex_root_write(void) {
 
     assert(super_block);
-    root = ex_inode_create("/", S_IRWXU | S_IFDIR);
-    root->parent_inode = super_block->root;
 
-    ex_device_write(super_block->root,
-                    (char *)root,
-                    sizeof(struct ex_inode));
+    root = ex_inode_create(S_IRWXU | S_IFDIR);
+    ex_inode_fill_dir(root);
+
+    root->parent_inode = super_block->root;
+    ex_inode_flush(root);
 }
 
 void ex_root_load(void) {
@@ -55,8 +55,8 @@ void ex_inode_free(struct ex_inode *inode) {
 
 void ex_inode_print(const struct ex_inode *inode) {
 
-    info("{.size=%ld, .name=%s, .magic=%x, .address=%lu, .mode=%o}",
-            inode->size, inode->name, inode->magic, inode->address, inode->mode);
+    info("{.size=%ld, magic=%x, .address=%lu, .mode=%o}",
+            inode->size, inode->magic, inode->address, inode->mode);
 
 #ifdef VERBOSE
     for(size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
@@ -83,17 +83,32 @@ struct ex_inode *ex_copy_inode(const struct ex_inode *inode) {
 
     copy->address = inode->address;
     copy->size = inode->size;
+    copy->nlinks = inode->nlinks;
 
     for(size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
         copy->blocks[i] = inode->blocks[i];
     }
 
-    strcpy(copy->name, inode->name);
-
     return copy;
 }
 
-struct ex_inode *ex_inode_create(char *name, uint16_t mode) {
+void ex_inode_fill_dir(struct ex_inode *inode) {
+
+    struct ex_inode *parent = NULL;
+
+    if(inode->parent_inode) {
+        parent = ex_inode_load(inode->parent_inode);
+    } else {
+        parent = inode;
+    }
+
+    ex_inode_set(inode, ".", inode);
+    ex_inode_set(inode, "..", parent);
+
+    ex_inode_flush(inode);
+}
+
+struct ex_inode *ex_inode_create(uint16_t mode) {
 
     inode_address address = ex_super_allocate_block();
     struct ex_inode *inode = ex_malloc(sizeof(struct ex_inode));
@@ -107,12 +122,13 @@ struct ex_inode *ex_inode_create(char *name, uint16_t mode) {
     inode->atime = inode->mtime;
 
     inode->address = address;
-    strcpy(inode->name, name);
 
     if(mode & S_IFDIR) {
         inode->size = sizeof(struct ex_inode);
+        inode->nlinks = 2;
     } else {
         inode->size = 0;
+        inode->nlinks = 1;
     }
 
     int allocated = ex_inode_allocate_blocks(inode);
@@ -126,7 +142,7 @@ struct ex_inode *ex_inode_create(char *name, uint16_t mode) {
     return inode;
 }
 
-struct ex_inode *ex_inode_set(struct ex_inode *dir, struct ex_inode *ino) {
+struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name, struct ex_inode *ino) {
 
     size_t entry_address = 0;
     struct ex_dir_entry *entry = NULL;
@@ -157,7 +173,7 @@ update_entry:
 
     entry->free = 0;
     entry->magic = EX_DIR_MAGIC1;
-    strcpy(entry->name, ino->name);
+    strcpy(entry->name, name);
     entry->address = ino->address;
 
     info("entry address=%ld", entry_address);
@@ -166,6 +182,7 @@ update_entry:
 
     info("update inode parent: ino=%ld, parent=%ld", ino->address, dir->address);
 
+    // XXX: this is probably bad idea, due to hardlinks
     ino->parent_inode = dir->address;
     ex_device_write(ino->address, (void *)ino, sizeof(struct ex_inode));
 
@@ -182,13 +199,13 @@ struct ex_inode *ex_inode_load(inode_address ino_addr) {
     return ino;
 }
 
-struct ex_inode *ex_inode_find(struct ex_inode *dir, struct ex_path *path) {
+struct ex_inode *ex_inode_find(struct ex_path *path) {
 
-    if(!strcmp(dir->name, path->basename) && path->ncomponents == 0) {
-        return ex_copy_inode(dir);
+    if(!strcmp("/", path->basename) && path->ncomponents == 0) {
+        return ex_copy_inode(root);
     }
 
-    struct ex_inode *searched = NULL, *curdir = dir;
+    struct ex_inode *searched = NULL, *curdir = root;
     size_t n = 0;
 
     while(curdir) {
@@ -201,7 +218,6 @@ struct ex_inode *ex_inode_find(struct ex_inode *dir, struct ex_path *path) {
         searched = ex_inode_get(curdir, path->components[n]);
 
         if(!searched) {
-            debug("dir: %s does not contain: %s", curdir->name, path->components[n]);
             goto not_found;
         }
 
@@ -212,7 +228,7 @@ struct ex_inode *ex_inode_find(struct ex_inode *dir, struct ex_path *path) {
         }
 
         if(!(searched->mode & S_IFDIR)) {
-            debug("component: %s is not directory at: %s", curdir->name, path->components[n]);
+            debug("component: %lu is not directory at: %s", curdir->address, path->components[n]);
             goto not_found;
         }
 
@@ -220,7 +236,7 @@ struct ex_inode *ex_inode_find(struct ex_inode *dir, struct ex_path *path) {
 
         curdir = searched;
 
-        debug("looking for: %s in %s", path->components[n], curdir->name);
+        debug("looking for: %s in %lu", path->components[n], curdir->address);
     }
 
 found:
@@ -278,7 +294,13 @@ struct ex_inode *ex_inode_remove(struct ex_inode *dir, const char *name) {
             ex_device_write(entry_address, (void *)entry, sizeof(struct ex_dir_entry));
 
             inode = ex_inode_load(entry->address);
-            ex_inode_deallocate_blocks(inode);
+            inode->nlinks -= 1;
+
+            if(!inode->nlinks) {
+                ex_inode_deallocate_blocks(inode);
+            }
+
+            ex_inode_flush(inode);
 
             goto done;
         }
@@ -290,18 +312,35 @@ done:
     if(block) {
         free(block);
     }
+
     return inode;
 }
 
-struct ex_inode **ex_inode_get_all(struct ex_inode *ino) {
+struct ex_dir_entry *ex_dir_entry_copy(const struct ex_dir_entry *entry) {
+
+    struct ex_dir_entry *new_entry = ex_malloc(sizeof(struct ex_dir_entry));
+
+    new_entry->address = entry->address;
+    new_entry->magic = entry->magic;
+    new_entry->free = entry->free;
+    strcpy(new_entry->name, entry->name);
+
+    return new_entry;
+}
+
+void ex_dir_entry_free(struct ex_dir_entry *entry) {
+    free(entry);
+}
+
+struct ex_dir_entry **ex_inode_get_all(struct ex_inode *ino) {
 
     if(!(ino->mode & S_IFDIR)) {
         warning("inode on %lu is not directory", ino->address);
         return NULL;
     }
 
-    size_t max_inodes = 16, inode_no = 0;
-    struct ex_inode **inodes = ex_malloc(sizeof(struct ex_inode *) * max_inodes);
+    size_t max_direntries = 16, dir_entry_no = 0;
+    struct ex_dir_entry **entries = ex_malloc(sizeof(struct ex_dir_entry *) * max_direntries);
 
     foreach_inode_block(ino, block) {
         foreach_block_entry(block, entry) {
@@ -315,17 +354,17 @@ struct ex_inode **ex_inode_get_all(struct ex_inode *ino) {
                 break;
             }
 
-            inodes[inode_no++] = ex_inode_load(entry->address);
-            inodes[inode_no] = NULL;
+            entries[dir_entry_no++] = ex_dir_entry_copy(entry);
+            entries[dir_entry_no] = NULL;
 
-            if(inode_no >= max_inodes) {
-                max_inodes <<= 1;
-                inodes = ex_realloc(inodes, sizeof(struct ex_inode *) * max_inodes);
+            if(dir_entry_no >= max_direntries) {
+                max_direntries <<= 1;
+                entries = ex_realloc(entries, sizeof(struct ex_dir_entry *) * max_direntries);
             }
         }
     }
 
-    return inodes;
+    return entries;
 }
 
 ssize_t ex_inode_write(struct ex_inode *ino, size_t off, const char *data, size_t amount) {
