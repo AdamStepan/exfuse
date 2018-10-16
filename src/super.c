@@ -64,7 +64,9 @@ finded:
     ex_device_write(super_block->bitmap, bitmap, super_block->bitmap_size);
     free(bitmap);
 
-    super_block->blocks_free -= 1;
+    if(super_block->blocks_free)
+        super_block->blocks_free -= 1;
+
     ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
 
     // compute block position

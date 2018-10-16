@@ -31,8 +31,10 @@ int ex_inode_allocate_blocks(struct ex_inode *inode) {
 
         inode->blocks[i] = ex_super_allocate_block();
 
-        // we are unable to allocate next block
+        // we are unable to allocate next block, we should deallocate all
+        // already allocated blocks
         if(inode->blocks[i] == -1) {
+            ex_inode_deallocate_blocks(inode);
             return 0;
         }
 
@@ -43,8 +45,13 @@ int ex_inode_allocate_blocks(struct ex_inode *inode) {
 }
 
 void ex_inode_deallocate_blocks(struct ex_inode *inode) {
-    // TODO: one block leaks here
+
     for(size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
+
+        if(inode->blocks[i] == -1) {
+            break;
+        }
+
         ex_super_deallocate_block(inode->blocks[i]);
     }
 }
@@ -134,6 +141,7 @@ struct ex_inode *ex_inode_create(uint16_t mode) {
     int allocated = ex_inode_allocate_blocks(inode);
 
     if(!allocated) {
+        ex_super_deallocate_block(address);
         return NULL;
     }
 
@@ -223,7 +231,7 @@ struct ex_inode *ex_inode_find(struct ex_path *path) {
 
         // we found our file
         if(n + 1 == path->ncomponents) {
-            info("found: %lu/%lu", n, path->ncomponents);
+            debug("found: %lu/%lu", n, path->ncomponents);
             goto found;
         }
 
@@ -264,7 +272,7 @@ struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name) {
         }
     }
 
-    info("inode=%ld does not contain=%s", dir->address, name);
+    debug("inode=%ld does not contain=%s", dir->address, name);
 
     return 0;
 
@@ -350,8 +358,6 @@ struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name) {
 
             entry->free = 1;
             ex_device_write(entry_address, (void *)entry, sizeof(struct ex_dir_entry));
-
-
 
             goto done;
         }
