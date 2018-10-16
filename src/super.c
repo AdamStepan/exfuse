@@ -5,17 +5,18 @@ struct ex_super_block *super_block = NULL;
 void ex_super_deallocate_block(block_address address) {
 
     // compute position of block in bitmap
-    block_address first = super_block->bitmap + super_block->bitmap_size;
-    block_address without_offset = address - first;
+    size_t first_data_block = super_block->bitmap + super_block->bitmap_size - 8;
+    size_t address_without_offset = address - first_data_block;
 
-    // now, block must be divisible by EX_BLOCK_SIZE
-    size_t nth_bit = without_offset / EX_BLOCK_SIZE;
+    // now, block must be divisible by EX_BLOCK_SIZE, -1 because first block is on
+    // address 0
+    size_t nth_bit = (address_without_offset / EX_BLOCK_SIZE) - 1;
 
     size_t nth_byte = nth_bit / 8;
     size_t nth_bit_in_byte = nth_bit % 8;
 
-    info("freeing block address=%lu, nthbyte=%lu, nthbit=%lu",
-         address, nth_byte, nth_bit_in_byte);
+    info("freeing block address=%lu, nthbyte=%lu, nthbit=%lu, pos=%lu",
+         address, nth_byte, nth_bit_in_byte, nth_bit);
 
     // set nthbit to false
     char *bitmap = ex_device_read(super_block->bitmap + nth_byte, sizeof(char));
@@ -29,7 +30,6 @@ void ex_super_deallocate_block(block_address address) {
 
     free(bitmap);
 }
-
 
 block_address ex_super_allocate_block(void) {
 
@@ -48,7 +48,7 @@ block_address ex_super_allocate_block(void) {
             // flip bit, compute absolute btt position
             bitmap[i] |= (1 << bit);
             free_block_pos = (8 * i) + bit;
-
+            info("allocating=%lu, %i, pos=%lu", i, bit, free_block_pos);
             goto finded;
         }
     }
@@ -127,4 +127,8 @@ void ex_super_load(void) {
 
     super_block = ex_device_read(0, sizeof(struct ex_super_block));
     ex_super_print(super_block);
+}
+
+int ex_super_check_path_len(const char *pathname) {
+    return strlen(pathname) <= EX_NAME_LEN;
 }

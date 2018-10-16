@@ -44,4 +44,6 @@ void ex_super_write(size_t device_size);
 void ex_super_load(void);
 void ex_super_statfs(struct statvfs *statbuf);
 
+int ex_super_check_path_len(const char *pathname);
+
 #endif
