@@ -2,7 +2,7 @@
 .DEFAULT_GOAL = all
 .PHONY: clean mount umount deps
 
-# where .d .o .so and generated .hpp are stored
+# where .d .o .so and are stored
 BUILDDIR := ../build
 # where .so will be placed
 TARGETDIR := ..
@@ -22,7 +22,7 @@ OBJ := $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SRC))
 
 # don't create dependencies when we're cleaning or creating deps
 ifeq (0, $(words $(findstring $(MAKECMDGOALS), clean mount umount deps)))
-	# include .cpp files dependencies
+	# include .c files dependencies
 	-include $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.d,$(SRC))
 endif
 
@@ -44,7 +44,6 @@ $(BUILDDIR)::
 $(TARGETDIR)::
 	@mkdir -p $(TARGETDIR)
 
-# create a build directory, generate java headers and protobuffer C++ files
 gen: | $(BUILDDIR)
 
 $(BUILDDIR)/%.d: %.c | gen

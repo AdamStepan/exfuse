@@ -23,6 +23,8 @@ void ex_root_load(void) {
 
 int ex_inode_allocate_blocks(struct ex_inode *inode) {
 
+    info("allocating blocks");
+
     // TODO: initialize it only once
     static char FREE_BLOCK[EX_BLOCK_SIZE];
     memset(FREE_BLOCK, 'a', EX_BLOCK_SIZE);
@@ -54,6 +56,8 @@ void ex_inode_deallocate_blocks(struct ex_inode *inode) {
 
         ex_super_deallocate_block(inode->blocks[i]);
     }
+
+    ex_super_deallocate_block(inode->address);
 }
 
 void ex_inode_free(struct ex_inode *inode) {
@@ -117,6 +121,8 @@ void ex_inode_fill_dir(struct ex_inode *inode) {
 
 struct ex_inode *ex_inode_create(uint16_t mode) {
 
+    info("allocating inode block");
+
     inode_address address = ex_super_allocate_block();
     struct ex_inode *inode = ex_malloc(sizeof(struct ex_inode));
 
@@ -138,11 +144,8 @@ struct ex_inode *ex_inode_create(uint16_t mode) {
         inode->nlinks = 1;
     }
 
-    int allocated = ex_inode_allocate_blocks(inode);
-
-    if(!allocated) {
-        ex_super_deallocate_block(address);
-        return NULL;
+    if(!ex_inode_allocate_blocks(inode)) {
+        return 0;
     }
 
     ex_device_write(inode->address, (void *)inode, sizeof(struct ex_inode));
