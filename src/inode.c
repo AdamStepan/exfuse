@@ -19,6 +19,10 @@ void ex_root_load(void) {
 
     info("loading root");
     root = ex_inode_load(super_block->root);
+
+    if(!root) {
+        fatal("unable to load root from %lu", super_block->root);
+    }
 }
 
 int ex_inode_allocate_blocks(struct ex_inode *inode) {
@@ -108,7 +112,14 @@ void ex_inode_fill_dir(struct ex_inode *inode) {
     struct ex_inode *parent = NULL;
 
     if(inode->parent_inode) {
+
         parent = ex_inode_load(inode->parent_inode);
+
+        if(!parent) {
+            error("unable to load parent inode for %lu", inode->address);
+            return;
+        }
+
     } else {
         parent = inode;
     }
@@ -273,10 +284,17 @@ struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name) {
                 continue;
             }
 
-            if(!strcmp(entry->name, name)) {
-                inode = ex_inode_load(entry->address);
-                goto finded;
+            if(strcmp(entry->name, name)) {
+                continue;
             }
+
+            inode = ex_inode_load(entry->address);
+
+            if(!inode) {
+                error("unable to load inode at: %lu", entry->address);
+            }
+
+            goto finded;
         }
     }
 
@@ -347,6 +365,11 @@ struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name) {
 
             inode = ex_inode_load(entry->address);
 
+            if(!inode) {
+                error("unable to load inode from %lu", entry->address);
+                goto loadfail;
+            }
+
             if(!__ex_inode_unlink(inode)) {
                 info("unable to unlink");
                 goto fail;
@@ -375,6 +398,8 @@ struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name) {
 
 fail:
     ex_inode_free(inode);
+
+loadfail:
     return NULL;
 
 done:
