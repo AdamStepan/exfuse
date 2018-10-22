@@ -47,16 +47,23 @@ void *ex_device_read(size_t off, size_t amount) {
     off_t offset = lseek(fd, off, SEEK_SET);
 
     if(offset != off) {
-        err(errno, "lseek: offset=%lu, off=%lu", offset, off);
+        warnx("lseek: offset=%lu, wanted=%lu", offset, off);
+        goto failure;
     }
 
     size_t readed = read(fd, data, amount);
 
     if(readed != amount) {
-        err(errno, "read: readed=%lu, amount=%lu", readed, amount);
+        warnx("read: readed=%lu, wanted=%lu", readed, amount);
+        goto failure;
     }
 
     return data;
+
+failure:
+    free(data);
+
+    return NULL;
 }
 
 void ex_device_write(size_t off, const char *data, size_t amount) {
@@ -66,12 +73,12 @@ void ex_device_write(size_t off, const char *data, size_t amount) {
     off_t offset = lseek(fd, off, SEEK_SET);
 
     if(offset != off) {
-        err(errno, "lseek: offset=%lu, off=%lu", offset, off);
+        warn("lseek: offset=%lu, off=%lu", offset, off);
     }
 
     size_t written = write(fd, data, amount);
 
     if(written != amount) {
-        err(errno, "write: written=%lu, amount=%lu", written, amount);
+        warn("write: written=%lu, amount=%lu", written, amount);
     }
 }

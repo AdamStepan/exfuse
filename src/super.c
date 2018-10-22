@@ -147,7 +147,10 @@ void ex_super_load(void) {
     info("loading device");
 
     super_block = ex_device_read(0, sizeof(struct ex_super_block));
-    ex_super_print(super_block);
+
+    if(!super_block) {
+        fatal("unable to load super block");
+    }
 }
 
 int ex_super_check_path_len(const char *pathname) {

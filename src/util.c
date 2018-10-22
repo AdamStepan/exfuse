@@ -77,7 +77,7 @@ void ex_print_permissions(const char *prefix, uint8_t mode) {
 void ex_print_mode(mode_t m) {
 
     if(m & S_IFDIR)
-        printf("dir");
+        printf("dir ");
 
     if(m & S_ISUID)
         printf("suid ");
@@ -91,8 +91,6 @@ void ex_print_mode(mode_t m) {
     ex_print_permissions("other", m & 7);
     ex_print_permissions("group", (m >> 3) & 7);
     ex_print_permissions("user", (m >> 6) & 7);
-
-    printf("\n");
 }
 
 void ex_update_time_ns(struct timespec *dest) {

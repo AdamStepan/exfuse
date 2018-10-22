@@ -15,18 +15,21 @@
 #define info(fmt, ...) ex_log(info, fmt, ##__VA_ARGS__)
 #define warning(fmt, ...) ex_log(warning, fmt, ##__VA_ARGS__)
 #define error(fmt, ...) ex_log(error, fmt, ##__VA_ARGS__)
+#define fatal(fmt, ...) \
+    do { ex_log(fatal, fmt, ##__VA_ARGS__); exit(1); } while(0);
 
 enum loglevel {
     debug = 0,
     info,
     warning,
-    error
+    error,
+    fatal
 };
 
-extern const char *level2str[];
+extern const char *level2str[5];
 extern enum loglevel current_level;
 
-void set_log_level(enum loglevel new_level);
-enum loglevel get_log_level(void);
+void ex_set_log_level(enum loglevel new_level);
+enum loglevel ex_get_log_level(void);
 
 #endif /* EX_LOGGING_H */

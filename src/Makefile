@@ -16,7 +16,7 @@ CP := cp
 RM := rm
 
 # find files with c extension within current directory and it's subdirectories
-SRC := $(addprefix $(SRCDIR)/, $(filter-out , $(wildcard *.c)))
+SRC := $(addprefix $(SRCDIR)/, $(filter-out exdbg.c, $(wildcard *.c)))
 DEPS := $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.d,$(SRC))
 OBJ := $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SRC))
 
@@ -35,7 +35,7 @@ LDFLAGS :=
 CFLAGS += $(shell pkg-config --cflags fuse)
 LDFLAGS += $(shell pkg-config --libs fuse)
 
-all: $(BUILDDIR)/exfuse $(BUILDDIR)/libexfuse.so
+all: $(BUILDDIR)/exfuse $(BUILDDIR)/exdbg $(BUILDDIR)/libexfuse.so
 deps: $(DEPS)
 
 $(BUILDDIR)::
@@ -56,9 +56,16 @@ $(BUILDDIR)/exfuse: $(OBJ) | $(TARGETDIR)
 	$(LD) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $@
 	$(CP) $@ $(TARGETDIR)/$(notdir $@)
 
+$(BUILDDIR)/exdbg: exdbg.c $(OBJ) $(BUILDDIR)/libexfuse.so
+	$(CC) $(CFLAGS) $< -c -o $(BUILDDIR)/exdbg.o
+	$(LD) $(filter-out $(BUILDDIR)/wrapper.o, $(OBJ)) $(BUILDDIR)/exdbg.o $(LDFLAGS) -o $@
+	$(CP) $@ $(TARGETDIR)/$(notdir $@)
+
+
 $(BUILDDIR)/libexfuse.so: $(filter-out $(BUILDDIR)/wrapper.o, $(OBJ)) | $(TARGETDIR)
 	$(LD) $(CFLAGS) $? $(LDFLAGS) -shared -o $@
 	$(CP) $@ $(TARGETDIR)/$(notdir $@)
 
 clean:
-	$(RM) -rf $(BUILDDIR) $(TARGETDIR)/exfuse $(TARGETDIR)/libexfuse.so
+	$(RM) -rf $(BUILDDIR) $(TARGETDIR)/exfuse $(TARGETDIR)/libexfuse.so \
+			$(TARGETDIR)/exdbg

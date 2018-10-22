@@ -2,7 +2,7 @@ VERBOSE ?= 0
 
 ifdef CC
 	_ACTUAL_CC := $(CC)
-	_CC_0 = @echo "CC    $<"; $(_ACTUAL_CC)
+	_CC_0 = @echo "CC     $<"; $(_ACTUAL_CC)
 	_CC_1 = $(_ACTUAL_CC)
 	CC = $(_CC_$(VERBOSE))
 endif

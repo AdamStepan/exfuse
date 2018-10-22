@@ -202,10 +202,15 @@ update_entry:
     return ino;
 }
 
+// XXX: check that all calls check return value
 struct ex_inode *ex_inode_load(inode_address ino_addr) {
 
     struct ex_inode *ino = ex_device_read(ino_addr, sizeof(struct ex_inode));
-    assert(ino->magic == EX_INODE_MAGIC1);
+
+    if(ino->magic != EX_INODE_MAGIC1) {
+        ex_inode_free(ino);
+        return NULL;
+    }
 
     return ino;
 }
