@@ -151,6 +151,11 @@ void ex_super_load(void) {
     if(!super_block) {
         fatal("unable to load super block");
     }
+
+    if(super_block->magic != EX_SUPER_MAGIC) {
+        fatal("invalid super block magic: %x, expected: %x",
+                super_block->magic, EX_SUPER_MAGIC);
+    }
 }
 
 int ex_super_check_path_len(const char *pathname) {

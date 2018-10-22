@@ -42,7 +42,7 @@ void print_bitmap(void) {
 
 void print_super(const char *device) {
 
-    ex_set_log_level(error);
+    ex_set_log_level(warning);
     ex_device_open(device);
     ex_super_load();
 
