@@ -22,7 +22,7 @@ char* readable_size(double size) {
 
     int i = 0;
 
-    while (size > 1024) {
+    while (size >= 1024) {
         size /= 1024;
         i++;
     }

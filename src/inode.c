@@ -481,7 +481,7 @@ ssize_t ex_inode_write(struct ex_inode *ino, size_t off, const char *data, size_
     size_t start_block_idx = off / EX_BLOCK_SIZE;
     size_t start_block_off = off % EX_BLOCK_SIZE;
 
-    if(start_block_idx >= EX_DIRECT_BLOCKS) {
+    if(start_block_idx >= EX_DIRECT_BLOCKS || amount / EX_BLOCK_SIZE >= EX_DIRECT_BLOCKS) {
         return -1;
     }
 

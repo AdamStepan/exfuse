@@ -39,12 +39,13 @@ LDFLAGS += $(shell pkg-config --libs fuse)
 all: $(BIN)
 
 test:
-	@for testfile in $(BIN); do \
+	@for testfile in $(sort $(BIN)); do \
 			/bin/echo -en "$$testfile ("; \
 			LD_LIBRARY_PATH=$(BUILDDIR) ./$$testfile >> log; \
 			rv=$$?; \
 			/bin/echo ") --> $$rv"; \
 			if [ "$$rv" != "0" ]; then \
+				exit $$rv; \
 				break; \
 			fi \
 	done
