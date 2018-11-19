@@ -2,6 +2,18 @@
 
 struct ex_super_block *super_block = NULL;
 
+// super | inode bitmap | data bitmap | inodes | data
+#define inode_bitmap_end \
+    (super_block->inode_bitmap.address + (super_block->inode_bitmap.size / 8))
+
+#define data_bitmap_end \
+    (super_block->bitmap.address + (super_block->bitmap.size / 8))
+
+#define first_data_block \
+    (first_inode_block + (EX_BLOCK_SIZE * super_block->inode_bitmap.size))
+
+#define first_inode_block (data_bitmap_end)
+
 void ex_bitmap_free_bit(struct ex_bitmap *bitmap, size_t nth_bit) {
 
     size_t nth_byte = nth_bit / 8;
@@ -23,6 +35,7 @@ void ex_bitmap_free_bit(struct ex_bitmap *bitmap, size_t nth_bit) {
 size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap) {
 
     if(bitmap->allocated == bitmap->size) {
+        info("bitmap is full");
         return -1;
     }
 
@@ -59,7 +72,6 @@ found:
 void ex_super_deallocate_block(block_address address) {
 
     // compute position of block in bitmap
-    size_t first_data_block = super_block->bitmap.address + super_block->bitmap.size;
     size_t address_without_offset = address - first_data_block;
 
     // now, block must be divisible by EX_BLOCK_SIZE
@@ -71,19 +83,57 @@ void ex_super_deallocate_block(block_address address) {
 
 }
 
+void ex_super_init_block(size_t address, char with) {
+
+    static char FREE_BLOCK[EX_BLOCK_SIZE];
+    memset(FREE_BLOCK, with, EX_BLOCK_SIZE);
+
+    ex_device_write(address, FREE_BLOCK, sizeof(FREE_BLOCK));
+}
+
+struct ex_inode_block ex_super_allocate_inode_block(void) {
+
+    struct ex_inode_block block = {.address = -1, .id = -1};
+
+    block.id = ex_bitmap_find_free_bit(&super_block->inode_bitmap);
+
+    if(block.id == -1) {
+        warning("unable to find free inode block");
+        goto returnblock;
+    }
+
+
+    block.address = first_inode_block + block.id * EX_BLOCK_SIZE;
+    error("id=%lu, address=%lu", block.id, block.address);
+
+    ex_super_init_block(block.address, 0);
+returnblock:
+    return block;
+}
+
+void ex_super_deallocate_inode_block(size_t inode_number) {
+    ex_bitmap_free_bit(&super_block->inode_bitmap, inode_number);
+}
+
+#include <assert.h>
+
 block_address ex_super_allocate_block(void) {
 
     size_t free_block_pos = ex_bitmap_find_free_bit(&super_block->bitmap);
     size_t address = -1;
-
 
     if(free_block_pos == -1) {
         warning("unable to find free block");
     } else {
         debug("found free block: position=%lu", free_block_pos);
 
-        address = (super_block->bitmap.address + super_block->bitmap.size) +
-            free_block_pos * EX_BLOCK_SIZE;
+        address = first_data_block + (free_block_pos * EX_BLOCK_SIZE);
+
+        error("id=%lu, address=%lu", free_block_pos, address);
+
+        assert(address >= first_inode_block);
+
+        ex_super_init_block(address, 'a');
     }
 
     return address;
@@ -109,33 +159,37 @@ void ex_super_statfs(struct statvfs *statbuf) {
 
 void ex_super_write(size_t device_size) {
 
-    info("populating device: device_size=%lu, blocks=%lu", device_size, device_size / EX_BLOCK_SIZE);
-    info("super_block: block end=%lu", sizeof(struct ex_super_block));
+#define EX_MAX_INODES 128
 
-    // every byte in bitmap represent 8 pages
-    size_t bitmap_size = device_size / (EX_BLOCK_SIZE * 8);
+    size_t size = device_size - sizeof(struct ex_super_block);
+    info("populating device, size=%lu", size);
 
-    info("super_block: bitmap device_size=%lu", bitmap_size);
+    size_t inode_bitmap_size = EX_MAX_INODES;
+    size_t data_bitmap_size = ((size / EX_BLOCK_SIZE) - EX_MAX_INODES) * 8;
+    info("inode_bitmap_size=%lu, data_bitmap_size=%lu", inode_bitmap_size,
+            data_bitmap_size);
 
-    size_t bitmap_addr = sizeof(struct ex_super_block);
-    size_t root_addr = bitmap_addr + bitmap_size;
-
-    info("super_block: bitmap addr=%lu", bitmap_addr);
-    info("super_block: root_addr=%lu", root_addr);
-
-    super_block = ex_malloc(sizeof(struct ex_super_block));
+    struct ex_bitmap inode_bitmap = {
+        .head = offsetof(struct ex_super_block, inode_bitmap),
+        .address = sizeof(struct ex_super_block),
+        .allocated = 0,
+        .size = inode_bitmap_size
+    };
 
     struct ex_bitmap bitmap = {
         .head = offsetof(struct ex_super_block, bitmap),
-        .address = sizeof(struct ex_super_block),
+        .address = inode_bitmap.address + inode_bitmap.size / 8,
         .allocated = 0,
-        .size = device_size / (EX_BLOCK_SIZE * 8)
+        .size = data_bitmap_size
     };
 
+    super_block = ex_malloc(sizeof(struct ex_super_block));
+
     *super_block = (struct ex_super_block){
-        .root = root_addr,
+        .root = 0,
         .device_size = device_size,
         .bitmap = bitmap,
+        .inode_bitmap = inode_bitmap,
         .magic = EX_SUPER_MAGIC
     };
 

@@ -7,10 +7,17 @@ void ex_root_write(void) {
     assert(super_block);
 
     root = ex_inode_create(S_IRWXU | S_IFDIR);
+
+    if(!root) {
+        fatal("unable to create root inode");
+    }
+
+    root->parent_inode = super_block->root = root->address;
+
+    ex_inode_flush(root);
     ex_inode_fill_dir(root);
 
-    root->parent_inode = super_block->root;
-    ex_inode_flush(root);
+    ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
 }
 
 void ex_root_load(void) {
@@ -29,10 +36,6 @@ int ex_inode_allocate_blocks(struct ex_inode *inode) {
 
     info("allocating blocks");
 
-    // TODO: initialize it only once
-    static char FREE_BLOCK[EX_BLOCK_SIZE];
-    memset(FREE_BLOCK, 'a', EX_BLOCK_SIZE);
-
     for(size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
 
         inode->blocks[i] = ex_super_allocate_block();
@@ -40,11 +43,11 @@ int ex_inode_allocate_blocks(struct ex_inode *inode) {
         // we are unable to allocate next block, we should deallocate all
         // already allocated blocks
         if(inode->blocks[i] == -1) {
+            warning("failing to allocate nth (%lu) block", i);
             ex_inode_deallocate_blocks(inode);
             return 0;
         }
 
-        ex_device_write(inode->blocks[i], FREE_BLOCK, sizeof(FREE_BLOCK));
     }
 
     return 1;
@@ -61,7 +64,7 @@ void ex_inode_deallocate_blocks(struct ex_inode *inode) {
         ex_super_deallocate_block(inode->blocks[i]);
     }
 
-    ex_super_deallocate_block(inode->address);
+    ex_super_deallocate_inode_block(inode->number);
 }
 
 void ex_inode_free(struct ex_inode *inode) {
@@ -69,7 +72,7 @@ void ex_inode_free(struct ex_inode *inode) {
 }
 
 void ex_inode_print(const struct ex_inode *inode) {
-
+    // XXX: add other attributes
     info("{.size=%ld, magic=%x, .address=%lu, .mode=%o}",
             inode->size, inode->magic, inode->address, inode->mode);
 
@@ -88,6 +91,7 @@ struct ex_inode *ex_copy_inode(const struct ex_inode *inode) {
 
     struct ex_inode *copy = ex_malloc(sizeof(struct ex_inode));
 
+    copy->number = inode->number;
     copy->mode = inode->mode;
     copy->magic = inode->magic;
     copy->parent_inode = inode->parent_inode;
@@ -134,9 +138,19 @@ struct ex_inode *ex_inode_create(uint16_t mode) {
 
     info("allocating inode block");
 
-    inode_address address = ex_super_allocate_block();
+    struct ex_inode_block block = ex_super_allocate_inode_block();
+
+    if(block.address == -1) {
+        warning("inode block allocation failed");
+        return 0;
+    }
+
     struct ex_inode *inode = ex_malloc(sizeof(struct ex_inode));
 
+    warning("number: %lu, address: %lu", block.id, block.address);
+
+    inode->number = block.id;
+    inode->address = block.address;
     inode->mode = mode;
     inode->magic = EX_INODE_MAGIC1;
     inode->parent_inode = 0;
@@ -144,8 +158,6 @@ struct ex_inode *ex_inode_create(uint16_t mode) {
     ex_update_time_ns(&(inode->mtime));
     inode->ctime = inode->mtime;
     inode->atime = inode->mtime;
-
-    inode->address = address;
 
     if(mode & S_IFDIR) {
         inode->size = sizeof(struct ex_inode);
@@ -219,8 +231,9 @@ struct ex_inode *ex_inode_load(inode_address ino_addr) {
     struct ex_inode *ino = ex_device_read(ino_addr, sizeof(struct ex_inode));
 
     if(ino->magic != EX_INODE_MAGIC1) {
-        ex_inode_free(ino);
-        return NULL;
+        warning("inode (%lu) has bad magic (%x)", ino_addr, ino->magic);
+        //ex_inode_free(ino);
+        //return NULL;
     }
 
     return ino;

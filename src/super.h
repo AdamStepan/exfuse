@@ -19,8 +19,15 @@
 typedef size_t inode_address;
 typedef size_t block_address;
 
+struct ex_inode_block {
+    // position in super block inodes block bitmap
+    size_t id;
+    // address of inode block
+    size_t address;
+};
+
 struct ex_bitmap {
-    // where on disk is this bitmap stored
+    // where on disk is this structure stored
     size_t head;
     // address of bitmap
     size_t address;
@@ -35,8 +42,10 @@ struct ex_super_block {
     inode_address root;
     // size of whole device (sizeof(super block) + bitmap.size * 4096)
     size_t device_size;
-    // data+inode allocation bitmap
+    // data allocation bitmap
     struct ex_bitmap bitmap;
+    // inode allocation bitmap
+    struct ex_bitmap inode_bitmap;
     // magic number for fs checking
     uint32_t magic;
 };
@@ -48,6 +57,9 @@ size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap);
 
 block_address ex_super_allocate_block(void);
 void ex_super_deallocate_block(block_address address);
+
+struct ex_inode_block ex_super_allocate_inode_block(void);
+void ex_super_deallocate_inode_block(size_t inode_number);
 
 void ex_super_print(const struct ex_super_block *block);
 void ex_super_write(size_t device_size);

@@ -31,13 +31,13 @@ char* readable_size(double size) {
 
     return buf;
 }
-void print_bitmap(void) {
+void print_bitmap(const char *name, struct ex_bitmap *bitmap) {
 
-    printf("bitmap:\n");
-    printf("\thead = %lu\n", super_block->bitmap.head);
-    printf("\taddress = %lu\n", super_block->bitmap.address);
-    printf("\tsize = %lu\n", super_block->bitmap.size);
-    printf("\tallocated = %lu\n", super_block->bitmap.allocated);
+    printf("%s:\n", name);
+    printf("\thead = %lu\n", bitmap->head);
+    printf("\taddress = %lu\n", bitmap->address);
+    printf("\tsize = %lu\n", bitmap->size);
+    printf("\tallocated = %lu\n", bitmap->allocated);
 }
 
 void print_super(const char *device) {
@@ -50,7 +50,8 @@ void print_super(const char *device) {
     printf("\troot = %lu\n", super_block->root);
     printf("\tmagic = %x\n", super_block->magic);
 
-    print_bitmap();
+    print_bitmap("data_bitmap", &super_block->bitmap);
+    print_bitmap("inode_bitmap", &super_block->inode_bitmap);
 
 }
 
@@ -69,6 +70,9 @@ void print_info(const char *device) {
 
     size_t max_size = EX_DIRECT_BLOCKS * 4096;
     printf("\tmax_file_size: %lu (%s)\n", max_size, readable_size(max_size));
+
+    printf("\tinode_size: %lu\n", sizeof(struct ex_inode));
+    printf("\tsuper_block_size: %lu\n", sizeof(struct ex_super_block));
 
 
 }
@@ -109,6 +113,7 @@ void print_inode(const char *device, size_t address) {
     printf("\tparent: %lu\n", inode->parent_inode);
     printf("\taddress: %lu\n", inode->address);
     printf("\tnlinks: %u\n", inode->nlinks);
+    printf("\tino = %lu\n", inode->number);
 
     if(inode->mode & S_IFDIR) {
         printf("\tentries:\n");

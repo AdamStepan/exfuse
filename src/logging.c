@@ -1,6 +1,7 @@
 #include "logging.h"
 
-enum loglevel current_level = info;
+enum loglevel current_level = debug;
+
 
 const char *level2str[] = {
     "debug", "info", "warning", "error", "fatal"

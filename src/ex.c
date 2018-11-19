@@ -1,9 +1,11 @@
 #include <ex.h>
 
 size_t ex_device_size(size_t ninodes) {
-    return ninodes * EX_DIRECT_BLOCKS * EX_BLOCK_SIZE + // space for n-1 inodes
+    return ninodes * EX_DIRECT_BLOCKS * EX_BLOCK_SIZE + // space for n-1 inode data
+        ninodes * EX_DIRECT_BLOCKS +                    // space for n-1 inodes
         sizeof(struct ex_super_block) +                 // space for superblock
-        EX_DIRECT_BLOCKS / 8;                           // size of block bitmap
+        ninodes / 8 +                                   // size of inode bitmap
+        ninodes * EX_DIRECT_BLOCKS / 8;                 // size of data bitmap
 }
 
 void ex_init(void) {

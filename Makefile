@@ -3,7 +3,7 @@
 exfuse::
 	$(MAKE) --directory src
 
-clean::
+clean:: umount
 	$(MAKE) --directory src clean
 	$(MAKE) --directory test clean
 	$(RM) -rf mp exdev
@@ -12,11 +12,16 @@ test::
 	$(MAKE) --directory test
 	$(MAKE) --directory test test
 
-mount: exfuse
+dir::
 	if [ ! -d mp ]; then\
 		mkdir mp;\
 	fi
+
+debug:: exfuse umount | dir
+	gdb --args ./exfuse -f mp
+
+mount: exfuse umount | dir
 	./exfuse -f mp
 
 umount:
-	fusermount -u mp
+	fusermount -u mp || true

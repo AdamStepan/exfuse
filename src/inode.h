@@ -17,6 +17,11 @@
 #define EX_DIR_MAGIC1 0xde
 
 struct ex_inode {
+    // number of inode, it corresponds with allocated block number
+    // e.g. number==0 means that inode has allocated first inode
+    // block
+    size_t number;
+
     // the same as stat.mode_t
     uint32_t mode;
     uint16_t magic;
