@@ -250,6 +250,12 @@ int ex_read(const char *pathname, char *buffer, size_t size, off_t offset) {
     // TODO: rewrite this shit
     // read data from inode, copy them to user buffer
     char *data = ex_inode_read(inode, offset, size);
+
+    if(!data) {
+        rv = 0;
+        goto free_inode;
+    }
+
     rv = strlen(data);
 
     memcpy(buffer, data, rv);
@@ -271,7 +277,7 @@ int ex_write(const char *pathname, const char *buf, size_t size, off_t offset) {
 
     info("path=%s, off=%jd, size=%lu", pathname, offset, size);
 
-    int rv = 0;
+    ssize_t rv = 0;
 
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
@@ -282,7 +288,14 @@ int ex_write(const char *pathname, const char *buf, size_t size, off_t offset) {
     }
 
     rv = ex_inode_write(inode, offset, buf, size);
+
     if(!rv) {
+        rv = -EIO;
+        goto free_inode;
+    }
+
+    if(rv == -1) { // ENOSPC?
+        rv = -EFBIG;
         goto free_inode;
     }
 

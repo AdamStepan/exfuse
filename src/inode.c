@@ -481,8 +481,9 @@ ssize_t ex_inode_write(struct ex_inode *ino, size_t off, const char *data, size_
     size_t start_block_idx = off / EX_BLOCK_SIZE;
     size_t start_block_off = off % EX_BLOCK_SIZE;
 
-    // TODO: handle situation of writing after last allocated block
-    assert(start_block_idx < EX_DIRECT_BLOCKS);
+    if(start_block_idx >= EX_DIRECT_BLOCKS) {
+        return -1;
+    }
 
     if(off + amount > ino->size) {
         ino->size += (off + amount) - ino->size;
@@ -501,7 +502,9 @@ char *ex_inode_read(struct ex_inode *ino, size_t off, size_t amount) {
     size_t start_block_idx = off / EX_BLOCK_SIZE;
     size_t start_block_off = off % EX_BLOCK_SIZE;
 
-    assert(start_block_idx < EX_DIRECT_BLOCKS);
+    if(start_block_idx >= EX_DIRECT_BLOCKS) {
+        return NULL;
+    }
 
     char *block = ex_device_read(
         ino->blocks[start_block_idx] + start_block_off,
