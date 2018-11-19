@@ -54,6 +54,8 @@ void ex_print_struct_sizes(void) {
 
 int ex_create(const char *pathname, mode_t mode) {
 
+    ex_super_lock();
+
     int rv = 0;
 
     if(!ex_super_check_path_len(pathname)) {
@@ -88,10 +90,14 @@ free_destdir:
     ex_path_free(dirpath);
 
 name_too_long:
+    ex_super_unlock();
+
     return rv;
 }
 
 int ex_getattr(const char *pathname, struct stat *st) {
+
+    ex_super_lock();
 
     int rv = 0;
 
@@ -129,10 +135,14 @@ free_path:
     ex_path_free(path);
 
 name_too_long:
+    ex_super_unlock();
+
     return rv;
 }
 
 int ex_unlink(const char *pathname) {
+
+    ex_super_lock();
 
     int rv = 0;
 
@@ -166,10 +176,14 @@ free_dir:
     ex_inode_free(dir);
 
 name_too_long:
+    ex_super_unlock();
+
     return rv;
 }
 
 int ex_link(const char *src_pathname, const char *dest_pathname) {
+
+    ex_super_lock();
 
     int rv = 0;
 
@@ -230,10 +244,14 @@ free_src_inode:
     ex_path_free(src_path);
 
 name_too_long:
+    ex_super_unlock();
+
     return rv;
 }
 
 int ex_read(const char *pathname, char *buffer, size_t size, off_t offset) {
+
+    ex_super_lock();
 
     info("path=%s, offset=%lu, size=%lu", pathname, offset, size);
 
@@ -247,20 +265,7 @@ int ex_read(const char *pathname, char *buffer, size_t size, off_t offset) {
         goto free_inode;
     }
 
-    // TODO: rewrite this shit
-    // read data from inode, copy them to user buffer
-    char *data = ex_inode_read(inode, offset, size);
-
-    if(!data) {
-        rv = 0;
-        goto free_inode;
-    }
-
-    rv = strlen(data);
-
-    memcpy(buffer, data, rv);
-
-    free(data);
+    rv = ex_inode_read(inode, offset, buffer, size);
 
     // update inode access time
     ex_update_time_ns(&inode->atime);
@@ -270,10 +275,16 @@ free_inode:
     ex_inode_free(inode);
     ex_path_free(path);
 
+    info("read rv=%i", rv);
+
+    ex_super_unlock();
+
     return rv;
 }
 
 int ex_write(const char *pathname, const char *buf, size_t size, off_t offset) {
+
+    ex_super_lock();
 
     info("path=%s, off=%jd, size=%lu", pathname, offset, size);
 
@@ -306,6 +317,8 @@ free_inode:
     free(path);
     ex_inode_free(inode);
 
+    ex_super_unlock();
+
     return rv;
 }
 
@@ -315,6 +328,8 @@ int ex_open(const char *pathname) {
 }
 
 int ex_mkdir(const char *pathname, mode_t mode) {
+
+    ex_super_lock();
 
     int rv = 0;
 
@@ -352,10 +367,13 @@ free_inode:
     ex_path_free(destpath);
 
 name_too_long:
+    ex_super_unlock();
+
     return rv;
 }
 
 int ex_truncate(const char *pathname) {
+    ex_super_lock();
 
     int rv = 0;
 
@@ -389,10 +407,14 @@ free_inode:
     ex_path_free(path);
 
 name_too_long:
+    ex_super_unlock();
+
     return rv;
 }
 
 int ex_readdir(const char *pathname, struct ex_dir_entry ***entries) {
+
+    ex_super_lock();
 
     int rv = 0;
 
@@ -430,10 +452,14 @@ free_inode:
     ex_path_free(path);
 
 name_too_long:
+    ex_super_unlock();
+
     return rv;
 }
 
 int ex_utimens(const char *pathname, const struct timespec tv[2]) {
+
+    ex_super_lock();
 
     #define ATIM 0
     #define MTIM 1
@@ -463,10 +489,14 @@ free_inode:
     ex_path_free(path);
 
 name_too_long:
+    ex_super_unlock();
+
     return rv;
 }
 
 int ex_rmdir(const char *pathname) {
+
+    ex_super_lock();
 
     int rv = 0;
 
@@ -511,11 +541,19 @@ free_inode:
     ex_inode_free(inode);
 
 name_too_long:
+    ex_super_unlock();
+
     return rv;
 }
 
 int ex_statfs(struct statvfs *statbuf) {
+
+    ex_super_lock();
+
     ex_super_statfs(statbuf);
     ex_super_print(super_block);
+
+    ex_super_unlock();
+
     return 0;
 }

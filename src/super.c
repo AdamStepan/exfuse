@@ -196,6 +196,8 @@ void ex_super_write(size_t device_size) {
     ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
 }
 
+pthread_mutex_t super_lock;
+
 void ex_super_load(void) {
 
     info("loading device");
@@ -210,8 +212,19 @@ void ex_super_load(void) {
         fatal("invalid super block magic: %x, expected: %x",
                 super_block->magic, EX_SUPER_MAGIC);
     }
+
+
+    pthread_mutex_init(&super_lock, NULL);
 }
 
 int ex_super_check_path_len(const char *pathname) {
     return strlen(pathname) <= EX_NAME_LEN;
+}
+
+void ex_super_lock(void) {
+    pthread_mutex_lock(&super_lock);
+}
+
+void ex_super_unlock(void) {
+    pthread_mutex_unlock(&super_lock);
 }

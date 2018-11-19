@@ -2,6 +2,7 @@
 #define EX_SUPER_H
 
 #include <sys/statvfs.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -67,5 +68,8 @@ void ex_super_load(void);
 void ex_super_statfs(struct statvfs *statbuf);
 
 int ex_super_check_path_len(const char *pathname);
+
+void ex_super_lock(void);
+void ex_super_unlock(void);
 
 #endif

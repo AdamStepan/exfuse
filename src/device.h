@@ -20,6 +20,7 @@ int ex_device_create(const char *name, size_t size);
 int ex_device_open(const char *device_name);
 
 void *ex_device_read(size_t off, size_t amount);
+ssize_t ex_device_read_to_buffer(char *buffer, size_t off, size_t amount);
 void ex_device_write(size_t off, const char *data, size_t amount);
 
 #endif

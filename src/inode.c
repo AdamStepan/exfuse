@@ -497,26 +497,16 @@ ssize_t ex_inode_write(struct ex_inode *ino, size_t off, const char *data, size_
     return (ssize_t)amount;
 }
 
-char *ex_inode_read(struct ex_inode *ino, size_t off, size_t amount) {
+ssize_t ex_inode_read(struct ex_inode *ino, size_t off, char *buffer, size_t amount) {
 
     size_t start_block_idx = off / EX_BLOCK_SIZE;
     size_t start_block_off = off % EX_BLOCK_SIZE;
 
     if(start_block_idx >= EX_DIRECT_BLOCKS) {
-        return NULL;
+        return 0;
     }
 
-    char *block = ex_device_read(
-        ino->blocks[start_block_idx] + start_block_off,
-        amount
-    );
+    size_t offset = ino->blocks[start_block_idx] + start_block_off;
 
-    char *block_copy = ex_malloc((amount - start_block_off + 1) * sizeof(char));
-
-    memcpy(block_copy, block, (amount - start_block_off) * sizeof(char));
-    block_copy[amount - start_block_off] = '\0';
-
-    free(block);
-
-    return block_copy;
+    return ex_device_read_to_buffer(buffer, offset, amount);
 }
