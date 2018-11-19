@@ -17,6 +17,9 @@
 #define EX_NAME_LEN 54
 #define EX_SUPER_MAGIC 0xffaacc
 
+#define EX_BLOCK_INVALID_ID ((size_t)-1)
+#define EX_BLOCK_INVALID_ADDRESS ((size_t)-1)
+
 typedef size_t inode_address;
 typedef size_t block_address;
 

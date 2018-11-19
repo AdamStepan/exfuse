@@ -42,7 +42,7 @@ int ex_inode_allocate_blocks(struct ex_inode *inode) {
 
         // we are unable to allocate next block, we should deallocate all
         // already allocated blocks
-        if(inode->blocks[i] == -1) {
+        if(inode->blocks[i] == EX_BLOCK_INVALID_ADDRESS) {
             warning("failing to allocate nth (%lu) block", i);
             ex_inode_deallocate_blocks(inode);
             return 0;
@@ -57,7 +57,7 @@ void ex_inode_deallocate_blocks(struct ex_inode *inode) {
 
     for(size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
 
-        if(inode->blocks[i] == -1) {
+        if(inode->blocks[i] == EX_BLOCK_INVALID_ADDRESS) {
             break;
         }
 
@@ -140,7 +140,7 @@ struct ex_inode *ex_inode_create(uint16_t mode) {
 
     struct ex_inode_block block = ex_super_allocate_inode_block();
 
-    if(block.address == -1) {
+    if(block.address == EX_BLOCK_INVALID_ADDRESS) {
         warning("inode block allocation failed");
         return 0;
     }

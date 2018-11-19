@@ -93,11 +93,14 @@ void ex_super_init_block(size_t address, char with) {
 
 struct ex_inode_block ex_super_allocate_inode_block(void) {
 
-    struct ex_inode_block block = {.address = -1, .id = -1};
+    struct ex_inode_block block = {
+        .address = EX_BLOCK_INVALID_ADDRESS,
+        .id = EX_BLOCK_INVALID_ID
+    };
 
     block.id = ex_bitmap_find_free_bit(&super_block->inode_bitmap);
 
-    if(block.id == -1) {
+    if(block.id == EX_BLOCK_INVALID_ID) {
         warning("unable to find free inode block");
         goto returnblock;
     }
@@ -122,7 +125,7 @@ block_address ex_super_allocate_block(void) {
     size_t free_block_pos = ex_bitmap_find_free_bit(&super_block->bitmap);
     size_t address = -1;
 
-    if(free_block_pos == -1) {
+    if(free_block_pos == EX_BLOCK_INVALID_ID) {
         warning("unable to find free block");
     } else {
         debug("found free block: position=%lu", free_block_pos);

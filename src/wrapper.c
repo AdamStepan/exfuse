@@ -99,11 +99,8 @@ static int do_rmdir(const char *pathname) {
 }
 
 static int do_statfs(const char *pathname, struct statvfs *statbuffer) {
-    ex_super_print(super_block);
-    int rv =  ex_statfs(statbuffer);
-    ex_super_print(super_block);
-
-    return rv;
+    (void)pathname;
+    return ex_statfs(statbuffer);
 }
 
 static void* do_init(struct fuse_conn_info *conn) {

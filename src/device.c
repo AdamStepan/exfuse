@@ -47,7 +47,12 @@ void *ex_device_read(size_t off, size_t amount) {
 
     off_t offset = lseek(fd, off, SEEK_SET);
 
-    if(offset != off) {
+    if ((off_t)off < 0) {
+        warnx("lseek: underthrow (off > max(int))");
+        goto failure;
+    }
+
+    if((size_t)offset != off) {
         warnx("lseek: offset=%lu, wanted=%lu", offset, off);
         goto failure;
     }
@@ -73,7 +78,12 @@ ssize_t ex_device_read_to_buffer(char *buffer, size_t off, size_t amount) {
 
     off_t offset = lseek(fd, off, SEEK_SET);
 
-    if(offset != off) {
+    if ((off_t)off < 0) {
+        warnx("lseek: underthrow (off > max(int))");
+        goto failure;
+    }
+
+    if((size_t)offset != off) {
         warnx("lseek: offset=%lu, wanted=%lu", offset, off);
         goto failure;
     }
@@ -91,8 +101,14 @@ void ex_device_write(size_t off, const char *data, size_t amount) {
 
     off_t offset = lseek(fd, off, SEEK_SET);
 
-    if(offset != off) {
+    if ((off_t)off < 0) {
+        warnx("lseek: underthrow (off > max(int))");
+        goto failure;
+    }
+
+    if((size_t)offset != off) {
         warn("lseek: offset=%lu, off=%lu", offset, off);
+        goto failure;
     }
 
     size_t written = write(fd, data, amount);
@@ -100,4 +116,6 @@ void ex_device_write(size_t off, const char *data, size_t amount) {
     if(written != amount) {
         warn("write: written=%lu, amount=%lu", written, amount);
     }
+failure:
+    ;
 }
