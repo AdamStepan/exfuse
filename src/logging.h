@@ -2,6 +2,7 @@
 #define EX_LOGGING_H
 
 #include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 
 #define ex_log(level, fmt, ...) \
@@ -23,13 +24,15 @@ enum loglevel {
     info,
     warning,
     error,
-    fatal
+    fatal,
+    notset
 };
 
-extern const char *level2str[5];
+extern const char *level2str[notset];
 extern enum loglevel current_level;
 
 void ex_set_log_level(enum loglevel new_level);
 enum loglevel ex_get_log_level(void);
+enum loglevel ex_parse_log_level(const char *name);
 
 #endif /* EX_LOGGING_H */

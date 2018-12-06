@@ -135,6 +135,40 @@ static struct fuse_operations operations = {
     .statfs=do_statfs
 };
 
+struct ex_args {
+    char *loglevel;
+};
+
+static void ex_args_init(struct ex_args *args) {
+    args->loglevel = NULL;
+}
+
+static struct fuse_opt ex_opts[] = {
+    {"--log-level %s", offsetof(struct ex_args, loglevel), FUSE_OPT_KEY_OPT},
+    {NULL, 0, 0}
+};
+
 int main(int argc, char **argv) {
-    return fuse_main(argc, argv, &operations, NULL);
+
+    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+    struct ex_args exargs;
+
+    ex_args_init(&exargs);
+
+    fuse_opt_parse(&args, &exargs, ex_opts, NULL);
+
+    if(exargs.loglevel) {
+
+        enum loglevel level = ex_parse_log_level(exargs.loglevel);
+
+        if(level == notset) {
+            warning("invalid log level: %s", exargs.loglevel);
+            return 1;
+        } else {
+            ex_set_log_level(level);
+        }
+
+    }
+
+    return fuse_main(args.argc, args.argv, &operations, NULL);
 }
