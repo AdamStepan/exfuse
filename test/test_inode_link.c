@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     rv = ex_link("/fname", "/link");
 
     if(rv) {
-        printf("ex_link");
+        printf("%s", "ex_link");
         goto end;
     }
 

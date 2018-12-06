@@ -373,6 +373,7 @@ name_too_long:
 }
 
 int ex_truncate(const char *pathname) {
+
     ex_super_lock();
 
     int rv = 0;

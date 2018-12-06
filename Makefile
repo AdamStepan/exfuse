@@ -7,6 +7,7 @@ clean:: umount
 	$(MAKE) --directory src clean
 	$(MAKE) --directory test clean
 	$(RM) -rf mp exdev
+	find . -type f -name core -exec rm {} ';'
 
 test::
 	$(MAKE) --directory test

@@ -107,7 +107,6 @@ struct ex_inode_block ex_super_allocate_inode_block(void) {
 
 
     block.address = first_inode_block + block.id * EX_BLOCK_SIZE;
-    error("id=%lu, address=%lu", block.id, block.address);
 
     ex_super_init_block(block.address, 0);
 returnblock:
@@ -117,8 +116,6 @@ returnblock:
 void ex_super_deallocate_inode_block(size_t inode_number) {
     ex_bitmap_free_bit(&super_block->inode_bitmap, inode_number);
 }
-
-#include <assert.h>
 
 block_address ex_super_allocate_block(void) {
 
@@ -131,11 +128,6 @@ block_address ex_super_allocate_block(void) {
         debug("found free block: position=%lu", free_block_pos);
 
         address = first_data_block + (free_block_pos * EX_BLOCK_SIZE);
-
-        error("id=%lu, address=%lu", free_block_pos, address);
-
-        assert(address >= first_inode_block);
-
         ex_super_init_block(address, 'a');
     }
 
@@ -151,13 +143,14 @@ void ex_super_print(const struct ex_super_block *block) {
 void ex_super_statfs(struct statvfs *statbuf) {
 
     statbuf->f_bsize = EX_BLOCK_SIZE;
+    statbuf->f_namemax = EX_NAME_LEN;
+
     statbuf->f_blocks = super_block->bitmap.size;
     statbuf->f_bfree = super_block->bitmap.size - super_block->bitmap.allocated;
     statbuf->f_bavail = statbuf->f_bfree;
 
-    statbuf->f_namemax = EX_NAME_LEN;
-
-    // XXX: add f_files and f_ffree
+    statbuf->f_files = super_block->inode_bitmap.size;
+    statbuf->f_ffree = statbuf->f_files - super_block->inode_bitmap.allocated;
 }
 
 void ex_super_write(size_t device_size) {
