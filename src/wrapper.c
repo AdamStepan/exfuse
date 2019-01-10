@@ -117,6 +117,10 @@ static void do_destroy(void *private_data) {
     ex_deinit();
 }
 
+static int do_chmod(const char *pathname, mode_t mode) {
+    return ex_chmod(pathname, mode);
+}
+
 static struct fuse_operations operations = {
     .getattr=do_getattr,
     .readdir=do_readdir,
@@ -132,7 +136,8 @@ static struct fuse_operations operations = {
     .truncate=do_truncate,
     .link=do_link,
     .rmdir=do_rmdir,
-    .statfs=do_statfs
+    .statfs=do_statfs,
+    .chmod=do_chmod
 };
 
 struct ex_args {

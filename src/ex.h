@@ -26,5 +26,6 @@ int ex_truncate(const char *path);
 int ex_link(const char *src_pathname, const char *dest_pathname);
 int ex_rmdir(const char *pathname);
 int ex_statfs(struct statvfs *buffer);
+int ex_chmod(const char *pathname, mode_t mode);
 
 #endif /* EX_H */

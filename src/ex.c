@@ -558,3 +558,43 @@ int ex_statfs(struct statvfs *statbuf) {
 
     return 0;
 }
+
+int ex_chmod(const char *pathname, mode_t mode) {
+
+    ex_super_lock();
+
+    int rv = 0;
+
+    if(!ex_super_check_path_len(pathname)) {
+        rv = -ENAMETOOLONG;
+        goto name_too_long;
+    }
+
+    struct ex_path *path = ex_path_make(pathname);
+    struct ex_inode *inode = ex_inode_find(path);
+
+    if(!inode) {
+        rv = -ENOENT;
+        goto free_inode;
+    }
+
+    ex_print_mode(mode);
+    ex_print_mode(inode->mode);
+
+    // clean permissions mode
+    inode->mode &= ~((2048 << 1) - 1);
+    inode->mode |= mode;
+
+    ex_print_mode(inode->mode);
+
+    ex_inode_flush(inode);
+
+free_inode:
+    ex_path_free(path);
+    ex_inode_free(inode);
+
+name_too_long:
+    ex_super_unlock();
+
+    return rv;
+}
