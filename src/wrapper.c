@@ -121,6 +121,10 @@ static int do_chmod(const char *pathname, mode_t mode) {
     return ex_chmod(pathname, mode);
 }
 
+static int do_access(const char *pathname, int mode) {
+    return ex_access(pathname, mode);
+}
+
 static struct fuse_operations operations = {
     .getattr=do_getattr,
     .readdir=do_readdir,
@@ -137,7 +141,8 @@ static struct fuse_operations operations = {
     .link=do_link,
     .rmdir=do_rmdir,
     .statfs=do_statfs,
-    .chmod=do_chmod
+    .chmod=do_chmod,
+    .access=do_access
 };
 
 struct ex_args {

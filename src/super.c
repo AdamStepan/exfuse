@@ -193,6 +193,7 @@ void ex_super_write(size_t device_size) {
 }
 
 pthread_mutex_t super_lock;
+pthread_mutexattr_t super_lock_attr;
 
 void ex_super_load(void) {
 
@@ -209,8 +210,10 @@ void ex_super_load(void) {
                 super_block->magic, EX_SUPER_MAGIC);
     }
 
+    pthread_mutexattr_init(&super_lock_attr);
+    pthread_mutexattr_settype(&super_lock_attr, PTHREAD_MUTEX_RECURSIVE);
 
-    pthread_mutex_init(&super_lock, NULL);
+    pthread_mutex_init(&super_lock, &super_lock_attr);
 }
 
 int ex_super_check_path_len(const char *pathname) {

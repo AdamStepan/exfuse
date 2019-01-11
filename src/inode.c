@@ -6,7 +6,7 @@ void ex_root_write(void) {
 
     assert(super_block);
 
-    root = ex_inode_create(S_IRWXU | S_IFDIR);
+    root = ex_inode_create(S_IRWXU | S_IXOTH | S_IROTH | S_IFDIR);
 
     if(!root) {
         fatal("unable to create root inode");
