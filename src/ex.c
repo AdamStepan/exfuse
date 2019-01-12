@@ -80,8 +80,12 @@ int ex_create(const char *pathname, mode_t mode) {
         goto free_destdir;
     }
 
-    // TODO: we need to dealocate blocks if we cannot place inode to destdir
-    ex_inode_set(destdir, path->basename, inode);
+    // check if directory has enough space for a new inode
+    if(!ex_inode_set(destdir, path->basename, inode)) {
+        ex_inode_deallocate_blocks(inode);
+        rv = -ENOSPC;
+    }
+
     ex_inode_free(inode);
 
 free_destdir:
