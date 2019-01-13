@@ -28,6 +28,8 @@ struct ex_inode_block {
     size_t id;
     // address of inode block
     size_t address;
+    // block data, not loaded by default
+    char *data;
 };
 
 struct ex_bitmap {

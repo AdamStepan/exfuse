@@ -29,7 +29,7 @@ endif
 include verbosity.mk
 
 DEPFLAGS = -MT $(@:.d=.o) -MM -MP $< -MF $(@:.o=.d)
-CFLAGS := -fPIC -Wall -I. -ggdb -std=c11 -D_GNU_SOURCE -Wextra
+CFLAGS := -fPIC -Wall -I. -ggdb -std=c11 -D_GNU_SOURCE -Wextra -fmax-errors=2
 LDFLAGS :=
 
 CFLAGS += $(shell pkg-config --cflags fuse)

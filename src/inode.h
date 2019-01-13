@@ -100,20 +100,34 @@ struct ex_dir_entry **ex_inode_get_all(struct ex_inode *inode);
 ssize_t ex_inode_write(struct ex_inode *inode, size_t off, const char *data, size_t amount);
 ssize_t ex_inode_read(struct ex_inode *inode, size_t off, char *buffer, size_t amount);
 
+
+struct ex_block_iterator {
+    struct ex_inode_block last_block;
+    size_t block_number;
+};
+
+struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode, struct ex_block_iterator *it);
+
 #define foreach_inode_block(inode, block) \
-    block_address block##_addr = 0; \
-    char *block = NULL; \
-    for(size_t block##_no = 0; \
-            (block ? (free(block), block##_no < EX_DIRECT_BLOCKS) : \
-                block##_no < EX_DIRECT_BLOCKS) && \
-            (block##_addr = inode->blocks[block##_no], \
-            block = ex_device_read(block##_addr, EX_BLOCK_SIZE), 1); \
-            block##_no++) \
+    struct ex_inode_block block = { \
+        .id = EX_BLOCK_INVALID_ID, \
+        .data = NULL, \
+        .address = EX_BLOCK_INVALID_ADDRESS \
+    }; \
+    \
+    struct ex_block_iterator block##_iterator = { \
+        .block_number = 0, \
+        .last_block = block \
+    }; \
+    for(;(block = ex_inode_block_iterate(inode, &block##_iterator), block.data);)
+
+#define foreach_inode_block_cleanup(inode, block) \
+    ex_inode_block_iterate(inode, &block##_iterator)
 
 #define foreach_block_entry(block, entry) \
     struct ex_dir_entry *entry = NULL; \
     for(size_t entry##_no = 0; \
             entry##_no < EX_BLOCK_SIZE / sizeof(struct ex_dir_entry) && \
-            (entry = (struct ex_dir_entry *)&block[entry##_no], 1); \
+            (entry = (struct ex_dir_entry *)&block.data[entry##_no], 1); \
             entry##_no += sizeof(struct ex_dir_entry))
 #endif
