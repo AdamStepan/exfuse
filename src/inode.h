@@ -33,7 +33,6 @@ struct ex_inode {
     // change time (time when attribute was changed)
     struct timespec ctime;
 
-    inode_address parent_inode;
     inode_address address;
 
     // number of links
@@ -94,7 +93,7 @@ struct ex_inode *ex_inode_load(inode_address ino_addr);
 
 struct ex_inode *ex_inode_find(struct ex_path *path);
 struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name);
-void ex_inode_fill_dir(struct ex_inode *inode);
+void ex_inode_fill_dir(struct ex_inode *inode, struct ex_inode *parent);
 struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name);
 struct ex_dir_entry **ex_inode_get_all(struct ex_inode *inode);
 

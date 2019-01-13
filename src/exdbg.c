@@ -98,19 +98,18 @@ void print_inode(const char *device, size_t address) {
 
     struct ex_inode *inode = ex_inode_load(address);
 
-    printf("inode:\n");
-
     if(!inode) {
         printf("\tno inode at %lu\n", address);
         return;
     }
+
+    printf("inode:\n");
 
     printf("\tmode: %u (", inode->mode);
     ex_print_mode(inode->mode);
     printf(")\n");
 
     printf("\tmagic: %x\n", inode->magic);
-    printf("\tparent: %lu\n", inode->parent_inode);
     printf("\taddress: %lu\n", inode->address);
     printf("\tnlinks: %u\n", inode->nlinks);
     printf("\tino = %lu\n", inode->number);

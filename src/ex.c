@@ -359,7 +359,7 @@ int ex_mkdir(const char *pathname, mode_t mode) {
         goto free_all;
     }
 
-    ex_inode_fill_dir(dir);
+    ex_inode_fill_dir(dir, destdir);
     ex_inode_set(destdir, dirpath->basename, dir);
     ex_inode_free(dir);
 

@@ -12,10 +12,10 @@ void ex_root_write(void) {
         fatal("unable to create root inode");
     }
 
-    root->parent_inode = super_block->root = root->address;
+    super_block->root = root->address;
 
     ex_inode_flush(root);
-    ex_inode_fill_dir(root);
+    ex_inode_fill_dir(root, root);
 
     ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
 }
@@ -94,7 +94,6 @@ struct ex_inode *ex_copy_inode(const struct ex_inode *inode) {
     copy->number = inode->number;
     copy->mode = inode->mode;
     copy->magic = inode->magic;
-    copy->parent_inode = inode->parent_inode;
 
     copy->mtime = inode->mtime;
     copy->ctime = inode->ctime;
@@ -111,22 +110,7 @@ struct ex_inode *ex_copy_inode(const struct ex_inode *inode) {
     return copy;
 }
 
-void ex_inode_fill_dir(struct ex_inode *inode) {
-
-    struct ex_inode *parent = NULL;
-
-    if(inode->parent_inode) {
-
-        parent = ex_inode_load(inode->parent_inode);
-
-        if(!parent) {
-            error("unable to load parent inode for %lu", inode->address);
-            return;
-        }
-
-    } else {
-        parent = inode;
-    }
+void ex_inode_fill_dir(struct ex_inode *inode, struct ex_inode *parent) {
 
     ex_inode_set(inode, ".", inode);
     ex_inode_set(inode, "..", parent);
@@ -136,24 +120,24 @@ void ex_inode_fill_dir(struct ex_inode *inode) {
 
 struct ex_inode *ex_inode_create(uint16_t mode) {
 
-    info("allocating inode block");
-
     struct ex_inode_block block = ex_super_allocate_inode_block();
 
     if(block.address == EX_BLOCK_INVALID_ADDRESS) {
         warning("inode block allocation failed");
-        return 0;
+        goto inode_creation_failed;
     }
 
     struct ex_inode *inode = ex_malloc(sizeof(struct ex_inode));
 
-    warning("number: %lu, address: %lu", block.id, block.address);
+    if(!inode) {
+        warning("unable to allocate memory for inode");
+        goto free_inode_block;
+    }
 
     inode->number = block.id;
     inode->address = block.address;
     inode->mode = mode;
     inode->magic = EX_INODE_MAGIC1;
-    inode->parent_inode = 0;
 
     ex_update_time_ns(&(inode->mtime));
     inode->ctime = inode->mtime;
@@ -168,75 +152,88 @@ struct ex_inode *ex_inode_create(uint16_t mode) {
     }
 
     if(!ex_inode_allocate_blocks(inode)) {
-        return 0;
+        goto free_inode_block;
     }
 
-    ex_device_write(inode->address, (void *)inode, sizeof(struct ex_inode));
+    ex_inode_flush(inode);
 
     return inode;
+
+free_inode_block:
+    ex_super_deallocate_inode_block(block.address);
+
+inode_creation_failed:
+    return NULL;
 }
 
-struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name, struct ex_inode *ino) {
+size_t ex_inode_find_free_entry_address(struct ex_inode *dir) {
 
-    size_t entry_address = 0;
-    struct ex_dir_entry *entry = NULL;
+    size_t address = 0;
 
     foreach_inode_block(dir, block) {
-        foreach_block_entry(block, ientry) {
+        foreach_block_entry(block, entry) {
 
-            entry = ientry;
-
-            info("free=%i, magic=%i", entry->free, entry->magic);
+            debug("free=%i, magic=%i", entry->free, entry->magic);
 
             if(!entry->free) {
                 continue;
             }
 
-            info("finded: block=%ld, i=%ld", block_no, ientry_no);
+            debug("finded: block=%ld, i=%ld", block_no, entry_no);
 
-            entry_address = block_addr + (ientry_no * sizeof(struct ex_dir_entry));
-            goto update_entry;
+            address = block_addr + (entry_no * sizeof(struct ex_dir_entry));
 
+            goto found;
         }
     }
 
-    info("unable to find space for inode in dirinode");
-    return NULL;
-
-update_entry:
-
-    entry->free = 0;
-    entry->magic = EX_DIR_MAGIC1;
-    strcpy(entry->name, name);
-    entry->address = ino->address;
-
-    info("entry address=%ld", entry_address);
-
-    ex_device_write(entry_address, (void *)entry, sizeof(struct ex_dir_entry));
-
-    info("update inode parent: ino=%ld, parent=%ld", ino->address, dir->address);
-
-    // XXX: this is probably bad idea, due to hardlinks
-    ino->parent_inode = dir->address;
-    ex_device_write(ino->address, (void *)ino, sizeof(struct ex_inode));
-
     free(block);
 
-    return ino;
+found:
+    return address;
 }
 
-// XXX: check that all calls check return value
-struct ex_inode *ex_inode_load(inode_address ino_addr) {
+void ex_inode_entry_update(size_t address, const char *name, size_t inode_address, int free) {
 
-    struct ex_inode *ino = ex_device_read(ino_addr, sizeof(struct ex_inode));
+    struct ex_dir_entry entry;
 
-    if(ino->magic != EX_INODE_MAGIC1) {
-        warning("inode (%lu) has bad magic (%x)", ino_addr, ino->magic);
-        //ex_inode_free(ino);
-        //return NULL;
+    entry.free = free;
+    entry.address = inode_address;
+    entry.magic = EX_DIR_MAGIC1;
+
+    strncpy(entry.name, name, EX_NAME_LEN);
+
+    debug("updating dir entry: address=%ld, name=%s", address, name);
+
+    ex_device_write(address, (void *)&entry, sizeof(entry));
+}
+
+struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name, struct ex_inode *inode) {
+
+    size_t entry_address = ex_inode_find_free_entry_address(dir);
+
+    if(!entry_address) {
+        info("unable to find space for inode in dirinode");
+        return NULL;
     }
 
-    return ino;
+    ex_inode_entry_update(entry_address, name, inode->address, 0);
+    ex_inode_flush(inode);
+
+    return inode;
+}
+
+struct ex_inode *ex_inode_load(inode_address address) {
+
+    struct ex_inode *inode = ex_device_read(address, sizeof(struct ex_inode));
+
+    if(inode->magic != EX_INODE_MAGIC1) {
+        warning("inode (%lu) has bad magic (%x)", address, inode->magic);
+        ex_inode_free(inode);
+        return NULL;
+    }
+
+    return inode;
 }
 
 struct ex_inode *ex_inode_find(struct ex_path *path) {
@@ -313,7 +310,7 @@ struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name) {
 
     debug("inode=%ld does not contain=%s", dir->address, name);
 
-    return 0;
+    return NULL;
 
 finded:
     free(block);
