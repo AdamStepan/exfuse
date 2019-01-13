@@ -72,15 +72,17 @@ void ex_inode_free(struct ex_inode *inode) {
 }
 
 void ex_inode_print(const struct ex_inode *inode) {
-    // XXX: add other attributes
-    info("{.size=%ld, magic=%x, .address=%lu, .mode=%o}",
-            inode->size, inode->magic, inode->address, inode->mode);
 
-#ifdef VERBOSE
-    for(size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
-        info("block[%lu] = %ld", i, inode->blocks[i]);
-    }
-#endif
+    info("number: %lu", inode->number);
+    info("mode: %o", inode->mode);
+    info("magic: %x", inode->magic);
+    info("address: %lu", inode->address);
+    info("links: %u", inode->nlinks);
+    info("size: %lu", inode->size);
+
+    info("mtime: %ld.%.9ld", inode->mtime.tv_sec, inode->mtime.tv_nsec);
+    info("atime: %ld.%.9ld", inode->mtime.tv_sec, inode->mtime.tv_nsec);
+    info("ctime: %ld.%.9ld", inode->mtime.tv_sec, inode->mtime.tv_nsec);
 }
 
 void ex_inode_flush(const struct ex_inode *inode) {
@@ -223,6 +225,10 @@ struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name, struct ex_
     return inode;
 }
 
+struct ex_inode *ex_inode_load_unsafe(inode_address address) {
+    return ex_device_read(address, sizeof(struct ex_inode));
+}
+
 struct ex_inode *ex_inode_load(inode_address address) {
 
     struct ex_inode *inode = ex_device_read(address, sizeof(struct ex_inode));
@@ -319,7 +325,7 @@ finded:
 }
 
 
-static size_t __ex_dir_entries(struct ex_inode *inode) {
+static size_t __ex_dir_entries_count(struct ex_inode *inode) {
     // check if directory is empty
     struct ex_dir_entry **entries = ex_inode_get_all(inode);
     size_t entries_count = 0;
@@ -347,7 +353,7 @@ static int __ex_inode_unlink(struct ex_inode *inode) {
     }
 
     // we cannot remove directory if it has more than two entries ('.', '..')
-    if(__ex_dir_entries(inode) > 2) {
+    if(__ex_dir_entries_count(inode) > 2) {
         return 0;
     } else {
         goto unlink_inode;
