@@ -321,100 +321,119 @@ finded:
     return inode;
 }
 
+int ex_dir_is_empty(struct ex_inode *inode) {
 
-static size_t __ex_dir_entries_count(struct ex_inode *inode) {
-    // check if directory is empty
     struct ex_dir_entry **entries = ex_inode_get_all(inode);
     size_t entries_count = 0;
 
-    for(; entries[entries_count]; entries_count++);
+    for(; entries[entries_count] && entries_count <= 3; entries_count++);
 
-    for(size_t i = 0; i < entries_count; i++) {
+    for(size_t i = 0; entries[i]; i++) {
         free(entries[entries_count]);
     }
 
     free(entries);
 
-    info("inode=%lu, entries_count=%lu", inode->address, entries_count);
-
-    return entries_count;
+    if(entries_count < 3) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
-static int __ex_inode_unlink(struct ex_inode *inode) {
+int ex_inode_is_unlinkable(struct ex_inode *inode) {
 
     // not a directory, we can deallocate blocks
     if (!(inode->mode & S_IFDIR)) {
-        info("not a directory");
-        goto unlink_inode;
+        return 1;
 
     }
 
-    // we cannot remove directory if it has more than two entries ('.', '..')
-    if(__ex_dir_entries_count(inode) > 2) {
-        return 0;
-    } else {
-        goto unlink_inode;
+    if(ex_dir_is_empty(inode)) {
+        return 1;
     }
 
-unlink_inode:
-    return 1;
+    return 0;
 }
 
+size_t ex_inode_find_entry_address(struct ex_inode *dir, const char *name) {
 
-struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name) {
-
-    struct ex_inode *inode = NULL;
+    size_t address = 0;
 
     foreach_inode_block(dir, block) {
         foreach_block_entry(block, entry) {
 
-            size_t entry_address = block.address + (entry_no * sizeof(struct ex_dir_entry));
+            debug("free=%i, magic=%i, name=%s", entry->free, entry->magic, entry->name);
 
-            if(entry->free || strcmp(entry->name, name) != 0) {
+            if(strcmp(name, entry->name)) {
                 continue;
             }
 
-            info("entry {.name=%s, .iaddress=%lu}", entry->name, entry->address);
+            debug("finded: block=%ld, i=%ld", block_iterator.block_number, entry_no);
 
-            inode = ex_inode_load(entry->address);
+            address = block.address + (entry_no * sizeof(struct ex_dir_entry));
 
-            if(!inode) {
-                error("unable to load inode from %lu", entry->address);
-                goto done;
-            }
-
-            if(!__ex_inode_unlink(inode)) {
-                info("unable to unlink");
-                goto fail;
-            }
-
-            if(inode->mode & S_IFDIR) {
-                inode->nlinks -= 2;
-            } else {
-                inode->nlinks -= 1;
-            }
-
-            if(!inode->nlinks) {
-                ex_inode_deallocate_blocks(inode);
-            }
-
-            ex_inode_flush(inode);
-
-            entry->free = 1;
-            ex_device_write(entry_address, (void *)entry, sizeof(struct ex_dir_entry));
-
-            goto done;
+            goto found;
         }
     }
 
-    info("unable to remove inode: %s", name);
+found:
+    foreach_inode_block_cleanup(dir, block);
+
+    return address;
+}
+
+void ex_inode_entry_flush(size_t address, struct ex_dir_entry *entry) {
+    ex_device_write(address, (void *)entry, sizeof(struct ex_dir_entry));
+}
+
+struct ex_dir_entry *ex_dir_entry_load(size_t address) {
+    return ex_device_read(address, sizeof(struct ex_dir_entry));
+}
+
+void ex_dir_entry_free(struct ex_dir_entry *entry) {
+    free(entry);
+}
+
+struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name) {
+
+    size_t entry_address = ex_inode_find_entry_address(dir, name);
+    struct ex_dir_entry *entry = ex_dir_entry_load(entry_address);
+
+    struct ex_inode *inode = ex_inode_load(entry->address);
+
+    if (!inode) {
+        error("unable to load inode from: %lu", entry->address);
+        goto fail;
+    }
+
+    if (!ex_inode_is_unlinkable(inode)) {
+        debug("inode (%lu) is not unlinkable", inode->address);
+        goto fail;
+    }
+
+    if(inode->mode & S_IFDIR) {
+        inode->nlinks -= 2;
+    } else {
+        inode->nlinks -= 1;
+    }
+
+    if(!inode->nlinks) {
+        ex_inode_deallocate_blocks(inode);
+    }
+
+    entry->free = 1;
+
+    ex_inode_flush(inode);
+    ex_inode_entry_flush(entry_address, entry);
+
+    goto done;
 
 fail:
-    ex_inode_free(inode);
     inode = NULL;
-
+    ex_inode_free(inode);
 done:
-    foreach_inode_block_cleanup(dir, block);
+    free(entry);
     return inode;
 }
 
@@ -428,10 +447,6 @@ struct ex_dir_entry *ex_dir_entry_copy(const struct ex_dir_entry *entry) {
     strcpy(new_entry->name, entry->name);
 
     return new_entry;
-}
-
-void ex_dir_entry_free(struct ex_dir_entry *entry) {
-    free(entry);
 }
 
 struct ex_dir_entry **ex_inode_get_all(struct ex_inode *dir) {

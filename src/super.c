@@ -181,6 +181,11 @@ void ex_super_write(size_t device_size) {
 
     super_block = ex_malloc(sizeof(struct ex_super_block));
 
+    if(!super_block) {
+        // XXX: we should return ENOMEM to user
+        fatal("unable to allocate memory for super block");
+    }
+
     *super_block = (struct ex_super_block){
         .root = 0,
         .device_size = device_size,
