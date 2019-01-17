@@ -432,6 +432,7 @@ struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name) {
 fail:
     inode = NULL;
     ex_inode_free(inode);
+
 done:
     free(entry);
     return inode;

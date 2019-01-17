@@ -49,7 +49,8 @@ void print_super(const char *device) {
     printf("super:\n");
     printf("\troot = %lu\n", super_block->root);
     printf("\tmagic = %x\n", super_block->magic);
-
+    printf("\tdevice_size = %lu (%s)\n", super_block->device_size,
+        readable_size(super_block->device_size));
     print_bitmap("data_bitmap", &super_block->bitmap);
     print_bitmap("inode_bitmap", &super_block->inode_bitmap);
 
@@ -66,13 +67,13 @@ void print_info(const char *device) {
     size_t max_dir_entries = (EX_BLOCK_SIZE / sizeof(struct ex_dir_entry)) * (EX_DIRECT_BLOCKS - 2);
     printf("\tmax_dir_entries: %lu\n", max_dir_entries);
 
-    printf("\tdir_entry_size: %lu\n", sizeof(struct ex_dir_entry));
+    printf("\tdir_entry_size: %luB\n", sizeof(struct ex_dir_entry));
 
     size_t max_size = EX_DIRECT_BLOCKS * 4096;
-    printf("\tmax_file_size: %lu (%s)\n", max_size, readable_size(max_size));
+    printf("\tmax_file_size: %luB (%s)\n", max_size, readable_size(max_size));
 
-    printf("\tinode_size: %lu\n", sizeof(struct ex_inode));
-    printf("\tsuper_block_size: %lu\n", sizeof(struct ex_super_block));
+    printf("\tinode_size: %luB\n", sizeof(struct ex_inode));
+    printf("\tsuper_block_size: %luB\n", sizeof(struct ex_super_block));
 
 
 }
@@ -105,20 +106,25 @@ void print_inode(const char *device, size_t address) {
 
     printf("inode:\n");
 
-    printf("\tmode: %u (", inode->mode);
-    ex_print_mode(inode->mode);
-    printf(")\n");
-
+    printf("\tnumber: %lu\n", inode->number);
+    printf("\tsize: %lu\n", inode->size);
     printf("\tmagic: %x\n", inode->magic);
     printf("\taddress: %lu\n", inode->address);
     printf("\tnlinks: %u\n", inode->nlinks);
-    printf("\tino = %lu\n", inode->number);
+
+    printf("\tmode: %o (", inode->mode);
+    ex_print_mode(inode->mode);
+    printf(")\n");
+
+
+    printf("\tmtime: %ld.%.9ld\n", inode->mtime.tv_sec, inode->mtime.tv_nsec);
+    printf("\tatime: %ld.%.9ld\n", inode->mtime.tv_sec, inode->mtime.tv_nsec);
+    printf("\tctime: %ld.%.9ld\n", inode->mtime.tv_sec, inode->mtime.tv_nsec);
 
     if(inode->mode & S_IFDIR) {
         printf("\tentries:\n");
         print_directory_entries(inode);
     }
-
 }
 
 void help(void) {
@@ -141,8 +147,12 @@ int main(int argc, char** argv) {
     };
 
     int opt;
-    struct options options;
-    memset(&options, 0, sizeof(struct options));
+    struct options options = {
+        .inode = -1,
+        .print_super = 0,
+        .print_info = 0,
+        .device = NULL
+    };
 
     while((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1) {
         switch(opt) {
@@ -177,12 +187,10 @@ int main(int argc, char** argv) {
         print_super(options.device);
     } else if(options.print_info) {
         print_info(options.device);
-    } else if(options.inode) {
+    } else if(options.inode != (size_t)-1) {
         print_inode(options.device, options.inode);
     } else {
-        printf("error: neither --inode | --super | --info was specified\n");
-        help();
-        return 1;
+        print_info(options.device);
     }
 
     return 0;
