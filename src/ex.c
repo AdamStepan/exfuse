@@ -120,6 +120,7 @@ int ex_getattr(const char *pathname, struct stat *st) {
     st->st_nlink = inode->nlinks;
     st->st_size = inode->size;
     st->st_mode = inode->mode;
+    st->st_ino = inode->number;
 
     st->st_mtim = inode->mtime;
     st->st_atim = inode->atime;
