@@ -67,7 +67,6 @@ int ex_create(const char *pathname, mode_t mode) {
     struct ex_path *path = ex_path_make(pathname);
 
     struct ex_inode *destdir = ex_inode_find(dirpath);
-
     if(!destdir) {
         rv = -ENOENT;
         goto free_destdir;
@@ -635,3 +634,117 @@ name_too_long:
 
     return rv;
 }
+
+int ex_symlink(const char *target, const char *link) {
+
+    ex_super_lock();
+
+    int rv = 0;
+
+    if(!ex_super_check_path_len(target) ||
+       !ex_super_check_path_len(link)) {
+        rv = -ENAMETOOLONG;
+        goto name_too_long;
+    }
+
+    // check if target exists
+    struct ex_path *target_path = ex_path_make(target);
+    struct ex_inode *target_inode = ex_inode_find(target_path);
+
+    if(!target_inode) {
+        rv = -ENOENT;
+        goto target_not_found;
+    }
+
+    // find directory where `link` will be placed
+    struct ex_path *link_dir_path = ex_path_make_dirpath(link);
+    struct ex_inode *link_dir_inode = ex_inode_find(link_dir_path);
+
+    if(!link_dir_path) {
+        rv = -ENOENT;
+        goto link_dir_is_invalid;
+    }
+
+    if(!(link_dir_inode->mode & S_IFDIR)) {
+        rv = -ENOTDIR;
+        goto link_dir_is_invalid;
+    }
+
+    // check that `link` does not exist
+    struct ex_path *link_path = ex_path_make(link);
+    struct ex_inode *link_inode = ex_inode_find(link_path);
+
+    if(link_inode) {
+        rv = -EEXIST;
+        goto link_exists;
+    }
+
+    // create link inode
+    link_inode = ex_inode_create(S_IFLNK | S_IRWXU | S_IRWXG | S_IRWXO);
+
+    if(!link_inode) {
+        rv = -ENOSPC;
+        goto fail;
+    }
+
+    // write target path into inode data blocks
+    size_t target_len = strlen(target);
+
+    if(ex_inode_write(link_inode, 0, target, target_len) != (ssize_t)target_len) {
+        rv = -EIO;
+        ex_inode_deallocate_blocks(link_inode);
+        goto fail;
+    }
+
+    // add link inode into link directory
+    if(!ex_inode_set(link_dir_inode, link_path->basename, link_inode)) {
+        rv = -ENOSPC;
+        ex_inode_deallocate_blocks(link_inode);
+    }
+
+fail:
+link_exists:
+    ex_path_free(link_path);
+    if(link_inode)
+        ex_inode_free(link_inode);
+
+link_dir_is_invalid:
+    ex_path_free(link_dir_path);
+    ex_inode_free(link_dir_inode);
+
+target_not_found:
+    ex_path_free(target_path);
+    ex_inode_free(target_inode);
+
+name_too_long:
+    ex_super_unlock();
+
+    return rv;
+}
+
+int ex_readlink(const char *pathname, char *buffer, size_t bufsize) {
+
+    ex_super_lock();
+
+    int rv = 0;
+
+    struct ex_path *path = ex_path_make(pathname);
+    struct ex_inode *inode = ex_inode_find(path);
+
+    if(!inode) {
+        rv = -ENOENT;
+        goto invalid_path;
+    }
+
+    size_t maxread = inode->size < bufsize ? inode->size : bufsize;
+
+    ex_inode_read(inode, 0, buffer, maxread);
+    ex_inode_free(inode);
+
+invalid_path:
+    ex_super_unlock();
+
+    free(path);
+    return rv;
+}
+

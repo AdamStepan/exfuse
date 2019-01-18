@@ -212,6 +212,7 @@ void ex_inode_entry_update(size_t address, const char *name, size_t inode_addres
 
 struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name, struct ex_inode *inode) {
 
+    // XXX: we should check if `name' is not present in a `dir`
     size_t entry_address = ex_inode_find_free_entry_address(dir);
 
     if(!entry_address) {

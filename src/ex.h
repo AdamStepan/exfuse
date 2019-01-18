@@ -28,5 +28,7 @@ int ex_rmdir(const char *pathname);
 int ex_statfs(struct statvfs *buffer);
 int ex_chmod(const char *pathname, mode_t mode);
 int ex_access(const char *pathname, int mode);
+int ex_symlink(const char *target, const char *link);
+int ex_readlink(const char *link, char *buffer, size_t bufsize);
 
 #endif /* EX_H */

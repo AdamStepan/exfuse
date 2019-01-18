@@ -125,6 +125,14 @@ static int do_access(const char *pathname, int mode) {
     return ex_access(pathname, mode);
 }
 
+static int do_symlink(const char *target, const char *link) {
+    return ex_symlink(target, link);
+}
+
+static int do_readlink(const char *link, char *buffer, size_t bufsize) {
+    return ex_readlink(link, buffer, bufsize);
+}
+
 static struct fuse_operations operations = {
     .getattr=do_getattr,
     .readdir=do_readdir,
@@ -142,7 +150,9 @@ static struct fuse_operations operations = {
     .rmdir=do_rmdir,
     .statfs=do_statfs,
     .chmod=do_chmod,
-    .access=do_access
+    .access=do_access,
+    .symlink=do_symlink,
+    .readlink=do_readlink
 };
 
 struct ex_args {
@@ -164,7 +174,6 @@ int main(int argc, char **argv) {
     struct ex_args exargs;
 
     ex_args_init(&exargs);
-
     fuse_opt_parse(&args, &exargs, ex_opts, NULL);
 
     if(exargs.loglevel) {
