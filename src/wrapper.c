@@ -133,6 +133,10 @@ static int do_readlink(const char *link, char *buffer, size_t bufsize) {
     return ex_readlink(link, buffer, bufsize);
 }
 
+static int do_rename(const char *from, const char *to) {
+    return ex_rename(from, to);
+}
+
 static struct fuse_operations operations = {
     .getattr=do_getattr,
     .readdir=do_readdir,
@@ -152,7 +156,8 @@ static struct fuse_operations operations = {
     .chmod=do_chmod,
     .access=do_access,
     .symlink=do_symlink,
-    .readlink=do_readlink
+    .readlink=do_readlink,
+    .rename=do_rename
 };
 
 struct ex_args {

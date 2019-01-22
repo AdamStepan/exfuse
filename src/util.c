@@ -79,6 +79,9 @@ void ex_print_mode(mode_t m) {
     if(m & S_IFDIR)
         printf("dir ");
 
+    if(m & S_IFLNK)
+        printf("symlink ");
+
     if(m & S_ISUID)
         printf("suid ");
 

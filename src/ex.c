@@ -622,7 +622,12 @@ int ex_access(const char *pathname, int mode) {
         goto free_inode;
     }
 
-    if (!(mode & inode->mode)) {
+    ex_print_mode(inode->mode);
+    printf("---%o %s\n", mode, pathname);
+
+    if (!(mode & inode->mode) &&
+        !(mode & (inode->mode >> 3)) &&
+        !(mode & (inode->mode >> 6))) {
         rv = -EACCES;
     }
 
@@ -747,5 +752,57 @@ invalid_path:
 
     free(path);
     return rv;
+}
+
+int ex_rename(const char *from, const char *to) {
+
+    debug("from: %s, to: %s", from, to);
+
+    ex_super_lock();
+
+    int rv = 0;
+
+    if(!ex_super_check_path_len(from) ||
+       !ex_super_check_path_len(to)) {
+        rv = -ENAMETOOLONG;
+        goto name_too_long;
+    }
+
+    // check if from exists
+    struct ex_path *from_path_dir = ex_path_make_dirpath(from);
+    struct ex_path *from_path = ex_path_make(from);
+    struct ex_inode *from_inode_dir = ex_inode_find(from_path_dir);
+
+    if(!from_inode_dir) {
+        rv = -ENOENT;
+        goto from_not_found;
+    }
+
+    // find directory where `to` will be placed
+    struct ex_path *to_path_dir = ex_path_make_dirpath(to);
+    struct ex_path *to_path = ex_path_make(to);
+    struct ex_inode *to_inode_dir = ex_inode_find(to_path_dir);
+
+    if(!to_inode_dir) {
+        rv = -ENOENT;
+        goto to_dir_is_invalid;
+    }
+
+    rv = ex_inode_rename(from_inode_dir, to_inode_dir,
+                         from_path->basename, to_path->basename);
+
+to_dir_is_invalid:
+    ex_path_free(to_path_dir);
+    ex_inode_free(to_inode_dir);
+
+from_not_found:
+    ex_path_free(from_path_dir);
+    ex_inode_free(from_inode_dir);
+
+name_too_long:
+    ex_super_unlock();
+
+    return rv;
+
 }
 

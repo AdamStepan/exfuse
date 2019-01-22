@@ -222,7 +222,15 @@ void ex_super_load(void) {
 }
 
 int ex_super_check_path_len(const char *pathname) {
-    return strlen(pathname) <= EX_NAME_LEN;
+
+    struct ex_path *path = ex_path_make(pathname);
+
+    for (size_t i = 0; i < path->ncomponents; i++) {
+        if (strlen(path->components[i]) >= EX_NAME_LEN)
+            return 0;
+    }
+
+    return 1;
 }
 
 void ex_super_lock(void) {

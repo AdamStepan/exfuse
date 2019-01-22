@@ -330,7 +330,7 @@ int ex_dir_is_empty(struct ex_inode *inode) {
     for(; entries[entries_count] && entries_count <= 3; entries_count++);
 
     for(size_t i = 0; entries[i]; i++) {
-        free(entries[entries_count]);
+        free(entries[i]);
     }
 
     free(entries);
@@ -366,6 +366,10 @@ size_t ex_inode_find_entry_address(struct ex_inode *dir, const char *name) {
 
             debug("free=%i, magic=%i, name=%s", entry->free, entry->magic, entry->name);
 
+            if(entry->magic == 97) {
+                goto not_found;
+            }
+
             if(strcmp(name, entry->name)) {
                 continue;
             }
@@ -378,13 +382,14 @@ size_t ex_inode_find_entry_address(struct ex_inode *dir, const char *name) {
         }
     }
 
+not_found:
 found:
     foreach_inode_block_cleanup(dir, block);
 
     return address;
 }
 
-void ex_inode_entry_flush(size_t address, struct ex_dir_entry *entry) {
+void ex_dir_entry_flush(size_t address, struct ex_dir_entry *entry) {
     ex_device_write(address, (void *)entry, sizeof(struct ex_dir_entry));
 }
 
@@ -426,7 +431,7 @@ struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name) {
     entry->free = 1;
 
     ex_inode_flush(inode);
-    ex_inode_entry_flush(entry_address, entry);
+    ex_dir_entry_flush(entry_address, entry);
 
     goto done;
 
@@ -523,6 +528,46 @@ ssize_t ex_inode_read(struct ex_inode *ino, size_t off, char *buffer, size_t amo
     size_t offset = ino->blocks[start_block_idx] + start_block_off;
 
     return ex_device_read_to_buffer(buffer, offset, amount);
+}
+
+int ex_inode_rename(struct ex_inode *from_inode, struct ex_inode *to_inode,
+                    const char *from_name, const char *to_name) {
+
+    if(!S_ISDIR(from_inode->mode) || !S_ISDIR(to_inode->mode)) {
+        return -ENOTDIR;
+    }
+
+    size_t from_entry_address = ex_inode_find_entry_address(from_inode, from_name);
+
+    if(!from_entry_address) {
+        debug("directory at (%lu) does not contain: %s", from_inode->address, from_name);
+        return -ENOENT;
+    }
+
+    size_t to_entry_address = ex_inode_find_entry_address(to_inode, to_name);
+
+    if(!to_entry_address) {
+        debug("directory at (%lu) does not contain: %s, allocating new space",
+              from_inode->address, from_name);
+
+        // XXX: check that we can find a new entry address
+        to_entry_address = ex_inode_find_free_entry_address(to_inode);
+
+        if (!to_entry_address) {
+            return -ENOSPC;
+        }
+    }
+
+    debug("from/to: %lu/%lu", from_entry_address, to_entry_address);
+
+    struct ex_dir_entry *from_entry = ex_dir_entry_load(from_entry_address);
+
+    ex_inode_entry_update(to_entry_address, to_name, from_entry->address, 0);
+
+    from_entry->free = 1;
+    ex_dir_entry_flush(from_entry_address, from_entry);
+
+    return 0;
 }
 
 struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode, struct ex_block_iterator *it) {
