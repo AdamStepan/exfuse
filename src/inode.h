@@ -130,6 +130,6 @@ struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode, struct ex_b
     struct ex_dir_entry *entry = NULL; \
     for(size_t entry##_no = 0; \
             entry##_no < EX_BLOCK_SIZE / sizeof(struct ex_dir_entry) && \
-            (entry = (struct ex_dir_entry *)&block.data[entry##_no], 1); \
-            entry##_no += sizeof(struct ex_dir_entry))
+            (entry = (struct ex_dir_entry *)&block.data[entry##_no * sizeof(struct ex_dir_entry)], 1); \
+            entry##_no++)
 #endif

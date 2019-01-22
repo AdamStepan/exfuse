@@ -175,9 +175,9 @@ size_t ex_inode_find_free_entry_address(struct ex_inode *dir) {
     foreach_inode_block(dir, block) {
         foreach_block_entry(block, entry) {
 
-            debug("free=%i, magic=%i", entry->free, entry->magic);
+            debug("free=%i, magic=%i, (%lu)", entry->free, entry->magic, block.address);
 
-            if(!entry->free) {
+            if(!entry->free && entry->magic != 97) {
                 continue;
             }
 

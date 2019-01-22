@@ -79,8 +79,6 @@ void ex_super_deallocate_block(block_address address) {
 
     ex_bitmap_free_bit(&super_block->bitmap, nth_bit);
 
-    debug("nth=%lu", nth_bit);
-
 }
 
 void ex_super_init_block(size_t address, char with) {
