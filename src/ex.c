@@ -622,8 +622,9 @@ int ex_access(const char *pathname, int mode) {
         goto free_inode;
     }
 
-    ex_print_mode(inode->mode);
-    printf("---%o %s\n", mode, pathname);
+    if(mode == F_OK) {
+        goto free_inode;
+    }
 
     if (!(mode & inode->mode) &&
         !(mode & (inode->mode >> 3)) &&
