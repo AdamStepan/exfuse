@@ -8,6 +8,7 @@
 struct options {
     char *device;
     size_t inode;
+    size_t inode_data;
     int print_super;
     int print_info;
 };
@@ -92,6 +93,25 @@ void print_directory_entries(struct ex_inode *inode) {
     }
 }
 
+void print_inode_data(const char *device, size_t address) {
+
+    ex_set_log_level(error);
+    ex_device_open(device);
+
+    struct ex_inode *inode = ex_inode_load(address);
+
+    if (!inode) {
+        printf("\tno inode at %lu\n", address);
+        return;
+    }
+
+    foreach_inode_block(inode, block) {
+        write(fileno(stdout), block.data, EX_BLOCK_SIZE);
+    }
+
+    foreach_inode_block_cleanup(inode, block);
+}
+
 void print_inode(const char *device, size_t address) {
 
     ex_set_log_level(info);
@@ -131,6 +151,7 @@ void help(void) {
     printf("exdbg: \n"
         "\t--device\t\tspecify ex device\n"
         "\t--inode addr\t\tdisplay information about inode\n"
+        "\t--inode-data\tdisplay inode data (binary)\n"
         "\t--super\t\t\tdisplay info about super block\n"
         "\t--info\t\t\tdisplay info about ex filesystem\n");
 }
@@ -140,6 +161,7 @@ int main(int argc, char** argv) {
     const struct option longopts[] = {
         {"device", required_argument, 0, 'd'},
         {"inode", required_argument, 0, 'i'},
+        {"inode-data", required_argument, 0, 'D'},
         {"super", no_argument, 0, 's'},
         {"info", no_argument, 0, 'I'},
         {"help", no_argument, 0, 'h'},
@@ -149,6 +171,7 @@ int main(int argc, char** argv) {
     int opt;
     struct options options = {
         .inode = -1,
+        .inode_data = -1,
         .print_super = 0,
         .print_info = 0,
         .device = NULL
@@ -158,6 +181,9 @@ int main(int argc, char** argv) {
         switch(opt) {
             case 'd':
                 options.device = strdup(optarg);
+                break;
+            case 'D':
+                options.inode_data = strtoull(optarg, NULL, 0);
                 break;
             case 'i':
                 options.inode = strtoull(optarg, NULL, 0);
@@ -189,8 +215,10 @@ int main(int argc, char** argv) {
         print_info(options.device);
     } else if(options.inode != (size_t)-1) {
         print_inode(options.device, options.inode);
+    } else if(options.inode_data != (size_t)-1) {
+        print_inode_data(options.device, options.inode_data);
     } else {
-        print_info(options.device);
+        print_super(options.device);
     }
 
     return 0;
