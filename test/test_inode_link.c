@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <err.h>
 #include <ex.h>
 
 static int check_links(const char *name, const char *info, int expected) {
@@ -15,7 +16,7 @@ static int check_links(const char *name, const char *info, int expected) {
 
     if(st.st_nlink != expected) {
         rv = 1;
-        printf(info);
+        warnx("%s", info);
         goto end;
     }
 
@@ -44,7 +45,7 @@ int main(int argc, char **argv) {
     rv = ex_link("/fname", "/link");
 
     if(rv) {
-        printf("%s", "ex_link");
+        warnx("%s", "ex_link");
         goto end;
     }
 

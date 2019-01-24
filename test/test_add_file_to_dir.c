@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
     int rv = ex_mkdir("/dir", S_IRWXU | S_IFDIR);
 
     if(rv) {
-        printf("create /dir");
+        warnx("create /dir");
         goto end;
     }
 
@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     rv = ex_create("/dir/file", S_IRWXU);
 
     if(rv) {
-        printf("create file");
+        warnx("create file");
         goto end;
     }
 
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     rv = ex_getattr("/dir/file", &st);
 
     if(rv) {
-        printf("getattr");
+        warnx("getattr");
         goto end;
     }
 
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     rv = ex_readdir("/dir/", &entries);
 
     if(rv) {
-        printf("readdir");
+        warnx("readdir");
         goto end;
     }
 
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    printf("readdir without 'file'");
+    warnx("readdir without 'file'");
     rv = 1;
 
 end:

@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <err.h>
 #include <ex.h>
 
 int main(int argc, char **argv) {
@@ -13,7 +14,7 @@ int main(int argc, char **argv) {
     int rv = ex_create("/fname", S_IRWXU | S_IFDIR);
 
     if(rv) {
-        printf("create");
+        warnx("create");
         goto end;
     }
 
@@ -23,13 +24,13 @@ int main(int argc, char **argv) {
     rv = ex_getattr("/fname", &st);
 
     if(rv) {
-        printf("gettatr");
+        warnx("gettatr");
         goto end;
     }
 
     if(!(st.st_mode & S_IFDIR)) {
         rv = 1;
-        printf("st_mode");
+        warnx("st_mode");
         goto end;
     }
 

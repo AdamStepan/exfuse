@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <err.h>
 #include <ex.h>
 
 int main(int argc, char **argv) {
@@ -12,7 +13,7 @@ int main(int argc, char **argv) {
     int rv = ex_create("/fname", S_IRWXU);
 
     if(rv) {
-        printf("create");
+        warnx("create");
         goto end;
     }
 
@@ -20,7 +21,7 @@ int main(int argc, char **argv) {
     rv = ex_write("/fname", "xxx", 3, 0);
     if(rv != 3) {
         rv = 1;
-        printf("write size != 3");
+        warnx("write size != 3");
     }
 
     // check file size > 0
@@ -29,13 +30,13 @@ int main(int argc, char **argv) {
     rv = ex_getattr("/fname", &st);
 
     if(rv) {
-        printf("getattr");
+        warnx("getattr");
         goto end;
     }
 
     if(st.st_size != 3) {
         rv = 1;
-        printf("st.st_size != 3");
+        warnx("st.st_size != 3");
         goto end;
     }
 
@@ -44,7 +45,7 @@ int main(int argc, char **argv) {
     rv = ex_truncate("/fname");
 
     if(rv) {
-        printf("truncate");
+        warnx("truncate");
         goto end;
     }
 
@@ -52,12 +53,12 @@ int main(int argc, char **argv) {
     rv = ex_getattr("/fname", &st);
 
     if(rv) {
-        printf("getattr1");
+        warnx("getattr1");
         goto end;
     }
 
     if(st.st_size != 0) {
-        printf("st.st_size != 0");
+        warnx("st.st_size != 0");
         rv = 1;
         goto end;
     }

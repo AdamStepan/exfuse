@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <err.h>
 #include <ex.h>
 
 int main(int argc, char **argv) {
@@ -14,7 +15,7 @@ int main(int argc, char **argv) {
     int rv = ex_statfs(&statbuf);
 
     if(rv) {
-        fprintf(stderr, "ex_statvfs");
+        warnx("ex_statvfs");
         goto end;
     }
 
@@ -24,7 +25,7 @@ int main(int argc, char **argv) {
     rv = ex_create("/file", S_IRWXU);
 
     if(rv) {
-        fprintf(stderr, "ex_create");
+        warnx("ex_create");
         goto end;
     }
 
@@ -32,7 +33,7 @@ int main(int argc, char **argv) {
     rv = ex_unlink("/file");
 
     if(rv) {
-        fprintf(stderr, "ex_unlink");
+        warnx("ex_unlink");
         goto end;
     }
 
@@ -41,12 +42,12 @@ int main(int argc, char **argv) {
     rv = ex_statfs(&statbuf);
 
     if(rv) {
-        fprintf(stderr, "ex_statvfs1");
+        warnx("ex_statvfs1");
         goto end;
     }
 
     if(statbuf.f_bfree != allocated) {
-        fprintf(stderr, "statbuf.f_bfree != allocated");
+        warnx("statbuf.f_bfree != allocated");
         goto end;
     }
 

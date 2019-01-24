@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <err.h>
 #include <ex.h>
 
 int main(int argc, char **argv) {
@@ -13,7 +14,7 @@ int main(int argc, char **argv) {
     int rv = ex_mkdir("/dir", S_IRWXU | S_IFDIR);
 
     if(rv) {
-        fprintf(stderr, "ex_create");
+        warnx("ex_create");
         goto end;
     }
 
@@ -21,7 +22,7 @@ int main(int argc, char **argv) {
     rv = ex_create("/dir/file", S_IRWXU);
 
     if(rv) {
-        fprintf(stderr, "ex_create1");
+        warnx("ex_create1");
         goto end;
     }
 
@@ -29,7 +30,7 @@ int main(int argc, char **argv) {
     rv = ex_rmdir("/dir");
 
     if(rv != -ENOTEMPTY) {
-        fprintf(stderr, "ex_rmdir (%d)", rv);
+        warnx("ex_rmdir (%d)", rv);
         rv = 1;
         goto end;
     }
@@ -38,7 +39,7 @@ int main(int argc, char **argv) {
     rv = ex_unlink("/dir/file");
 
     if(rv) {
-        fprintf(stderr, "ex_unlink");
+        warnx("ex_unlink");
         goto end;
     }
 
@@ -46,7 +47,7 @@ int main(int argc, char **argv) {
     rv = ex_rmdir("/dir");
 
     if(rv) {
-        fprintf(stderr, "ex_rmdir");
+        warnx("ex_rmdir");
         goto end;
     }
 
@@ -56,7 +57,7 @@ int main(int argc, char **argv) {
 
     if(!rv) {
         rv = 1;
-        fprintf(stderr, "ex_getattr1");
+        warnx("ex_getattr1");
         goto end;
     } else {
         rv = 0;

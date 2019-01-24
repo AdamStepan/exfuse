@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <err.h>
 #include <ex.h>
 
 int main(int argc, char **argv) {
@@ -17,28 +18,28 @@ int main(int argc, char **argv) {
     int rv = ex_create("/file", S_IRWXU);
 
     if(rv) {
-        fprintf(stderr, "ex_create");
+        warnx("ex_create");
         goto end;
     }
 
     rv = ex_write("/file", data, max_size, 0);
 
     if((size_t)rv != max_size) {
-        fprintf(stderr, "ex_write: written: %i", rv);
+        warnx("ex_write: written: %i", rv);
         goto end;
     }
 
     rv = ex_write("/file", data, max_size + 1, 0);
 
     if(rv != -EFBIG) {
-        fprintf(stderr, "ex_write1: maximum file size exceeded: written: %i", rv);
+        warnx("ex_write1: maximum file size exceeded: written: %i", rv);
         goto end;
     }
 
     rv = ex_write("/file", data, 0, max_size + 1);
 
     if(rv != -EFBIG) {
-        fprintf(stderr, "ex_write2: maximum file size exceeded: written: %i", rv);
+        warnx("ex_write2: maximum file size exceeded: written: %i", rv);
         goto end;
     }
 

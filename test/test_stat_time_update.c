@@ -1,6 +1,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <err.h>
 #include <ex.h>
 
 int main(int argc, char **argv) {
@@ -12,7 +13,7 @@ int main(int argc, char **argv) {
     int rv = ex_create("/fname", S_IRWXU);
 
     if(rv) {
-        printf("create");
+        warnx("create");
         goto end;
     }
 
@@ -22,7 +23,7 @@ int main(int argc, char **argv) {
     rv = ex_getattr("/fname", &st);
 
     if(rv) {
-        printf("getattr");
+        warnx("getattr");
         goto end;
     }
 
@@ -30,7 +31,7 @@ int main(int argc, char **argv) {
     rv = ex_truncate("/fname");
 
     if(rv) {
-        printf("truncate");
+        warnx("truncate");
         goto end;
     }
 
@@ -40,12 +41,12 @@ int main(int argc, char **argv) {
     rv = ex_getattr("/fname", &st1);
 
     if(rv) {
-        printf("getattr1");
+        warnx("getattr1");
         goto end;
     }
 
     if(st.st_mtim.tv_nsec == st1.st_mtim.tv_nsec) {
-        printf("st.st_mtim == st1.st_mtim");
+        warnx("st.st_mtim == st1.st_mtim");
         rv = 1;
         goto end;
     }

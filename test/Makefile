@@ -40,11 +40,12 @@ all: $(BIN)
 
 test:
 	@for testfile in $(sort $(BIN)); do \
-			/bin/echo -en "$$testfile ("; \
-			LD_LIBRARY_PATH=$(BUILDDIR) ./$$testfile >> log; \
+			/bin/echo -en "$$testfile "; \
+			LD_LIBRARY_PATH=$(BUILDDIR) ./$$testfile > $$testfile.log 2> $$testfile.out; \
 			rv=$$?; \
-			/bin/echo ") --> $$rv"; \
+			/bin/echo "--> $$rv"; \
 			if [ "$$rv" != "0" ]; then \
+				cat $$testfile.out; \
 				exit $$rv; \
 				break; \
 			fi \

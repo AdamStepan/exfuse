@@ -1,8 +1,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <err.h>
 #include <ex.h>
-
 
 int main(int argc, char **argv) {
 
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     rv = ex_symlink("/target", "/link");
 
     if(rv) {
-        printf("ex_symlink");
+        warnx("ex_symlink");
         goto end;
     }
 
@@ -33,12 +33,12 @@ int main(int argc, char **argv) {
     rv = ex_readlink("/target", buffer, sizeof(buffer));
 
     if(rv) {
-        printf("ex_readlink");
+        warnx("ex_readlink");
         goto end;
     }
 
     if(!strcmp("/target", buffer)) {
-        printf("target: %s instead of '/target'", buffer);
+        warnx("target: %s instead of '/target'", buffer);
         rv = 1;
         goto end;
     }
@@ -48,12 +48,12 @@ int main(int argc, char **argv) {
     rv = ex_getattr("/link", &statbuf);
 
     if(!rv) {
-        printf("ex_getattr");
+        warnx("ex_getattr");
         goto end;
     }
 
     if(!(statbuf.st_mode & S_IFLNK)) {
-        printf("st_mode & S_IFLINK == 0");
+        warnx("st_mode & S_IFLINK == 0");
         rv = 2;
         goto end;
     }

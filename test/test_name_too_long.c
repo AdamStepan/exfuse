@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <err.h>
 #include <ex.h>
 
 int main(int argc, char **argv) {
@@ -14,7 +15,7 @@ int main(int argc, char **argv) {
     int rv = ex_statfs(&statbuf);
 
     if(rv) {
-        printf("ex_statvfs");
+        warnx("ex_statvfs");
         goto end;
     }
 
@@ -26,7 +27,7 @@ int main(int argc, char **argv) {
     rv = ex_create(name, S_IRWXU);
 
     if(rv != -ENAMETOOLONG) {
-        printf("ex_create");
+        warnx("ex_create");
         rv = ENAMETOOLONG;
         goto end;
     } else {

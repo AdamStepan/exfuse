@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <err.h>
 #include <ex.h>
 
 int main(int argc, char **argv) {
@@ -13,7 +14,7 @@ int main(int argc, char **argv) {
     int rv = ex_create("/file", S_IRWXU);
 
     if(rv) {
-        fprintf(stderr, "create file");
+        warnx("create file");
         goto end;
     }
 
@@ -22,21 +23,21 @@ int main(int argc, char **argv) {
     rv = ex_getattr("/file", &st);
 
     if(rv) {
-        fprintf(stderr, "getattr");
+        warnx("getattr");
         goto end;
     }
 
     rv = ex_unlink("/file");
 
     if(rv) {
-        fprintf(stderr, "unlink");
+        warnx("unlink");
         goto end;
     }
 
     rv = ex_getattr("/file", &st);
 
     if(!rv) {
-        fprintf(stderr, "getattr removed");
+        warnx("getattr removed");
         goto end;
     } else {
         rv = 0;
