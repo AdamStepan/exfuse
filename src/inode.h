@@ -108,7 +108,16 @@ struct ex_block_iterator {
     size_t block_number;
 };
 
-struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode, struct ex_block_iterator *it);
+struct ex_entry_iterator {
+    size_t entry_number;
+    struct ex_dir_entry last_entry;
+    struct ex_inode_block block;
+};
+
+struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode,
+                                             struct ex_block_iterator *it);
+struct ex_dir_entry ex_inode_entry_iterate(struct ex_inode_block block,
+                                           struct ex_entry_iterator *it);
 
 #define foreach_inode_block(inode, block) \
     struct ex_inode_block block = { \
@@ -127,9 +136,17 @@ struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode, struct ex_b
     ex_inode_block_iterate(inode, &block##_iterator)
 
 #define foreach_block_entry(block, entry) \
-    struct ex_dir_entry *entry = NULL; \
-    for(size_t entry##_no = 0; \
-            entry##_no < EX_BLOCK_SIZE / sizeof(struct ex_dir_entry) && \
-            (entry = (struct ex_dir_entry *)&block.data[entry##_no * sizeof(struct ex_dir_entry)], 1); \
-            entry##_no++)
+    struct ex_dir_entry entry = { \
+        .address = EX_BLOCK_INVALID_ADDRESS, \
+        .name = {0}, \
+        .free = 0, \
+        .magic = 0 \
+    }; \
+    struct ex_entry_iterator entry##_iterator = { \
+        .entry_number = 0, \
+        .last_entry = entry, \
+        .block = block \
+    }; \
+    for(;(entry = ex_inode_entry_iterate(block, &entry##_iterator), entry.magic);)
+
 #endif

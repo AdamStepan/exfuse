@@ -84,11 +84,11 @@ void print_directory_entries(struct ex_inode *inode) {
     foreach_inode_block(inode, block) {
         foreach_block_entry(block, entry) {
 
-            if(entry->free || entry->magic != EX_DIR_MAGIC1) {
+            if(entry.free || entry.magic != EX_DIR_MAGIC1) {
                 continue;
             }
 
-            printf("\t\tname: '%s', address: %lu\n", entry->name, entry->address);
+            printf("\t\tname: '%s', address: %lu\n", entry.name, entry.address);
         }
     }
 }

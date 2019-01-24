@@ -175,15 +175,15 @@ size_t ex_inode_find_free_entry_address(struct ex_inode *dir) {
     foreach_inode_block(dir, block) {
         foreach_block_entry(block, entry) {
 
-            debug("free=%i, magic=%i, (%lu)", entry->free, entry->magic, block.address);
+            debug("free=%i, magic=%i, (%lu)", entry.free, entry.magic, block.address);
 
-            if(!entry->free && entry->magic != 97) {
+            if(!entry.free && entry.magic != 97) {
                 continue;
             }
 
-            debug("finded: block=%ld, i=%ld", block_iterator.block_number, entry_no);
+            debug("finded: block=%ld, i=%ld", block_iterator.block_number, entry_iterator.entry_number);
 
-            address = block.address + (entry_no * sizeof(struct ex_dir_entry));
+            address = block.address + (entry_iterator.entry_number * sizeof(struct ex_dir_entry));
 
             goto found;
         }
@@ -297,18 +297,18 @@ struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name) {
     foreach_inode_block(dir, block) {
         foreach_block_entry(block, entry) {
 
-            if(entry->free || entry->magic != EX_DIR_MAGIC1) {
+            if(entry.free || entry.magic != EX_DIR_MAGIC1) {
                 continue;
             }
 
-            if(strcmp(entry->name, name)) {
+            if(strcmp(entry.name, name)) {
                 continue;
             }
 
-            inode = ex_inode_load(entry->address);
+            inode = ex_inode_load(entry.address);
 
             if(!inode) {
-                error("unable to load inode at: %lu", entry->address);
+                error("unable to load inode at: %lu", entry.address);
             }
 
             goto finded;
@@ -364,19 +364,20 @@ size_t ex_inode_find_entry_address(struct ex_inode *dir, const char *name) {
     foreach_inode_block(dir, block) {
         foreach_block_entry(block, entry) {
 
-            debug("free=%i, magic=%i, name=%s", entry->free, entry->magic, entry->name);
+            debug("free=%i, magic=%i, name=%s", entry.free, entry.magic, entry.name);
 
-            if(entry->magic == 97) {
+            if(entry.magic == 97) {
                 goto not_found;
             }
 
-            if(strcmp(name, entry->name)) {
+            if(strcmp(name, entry.name)) {
                 continue;
             }
 
-            debug("finded: block=%ld, i=%ld", block_iterator.block_number, entry_no);
+            debug("finded: block=%ld, i=%ld", block_iterator.block_number,
+                  entry_iterator.entry_number);
 
-            address = block.address + (entry_no * sizeof(struct ex_dir_entry));
+            address = block.address + (entry_iterator.entry_number * sizeof(struct ex_dir_entry));
 
             goto found;
         }
@@ -469,16 +470,16 @@ struct ex_dir_entry **ex_inode_get_all(struct ex_inode *dir) {
     foreach_inode_block(dir, block) {
         foreach_block_entry(block, entry) {
 
-            if(entry->free) {
+            if(entry.free) {
                 continue;
             }
 
             // no more entries are present in current block
-            if(entry->magic != EX_DIR_MAGIC1) {
+            if(entry.magic != EX_DIR_MAGIC1) {
                 break;
             }
 
-            entries[dir_entry_no++] = ex_dir_entry_copy(entry);
+            entries[dir_entry_no++] = ex_dir_entry_copy(&entry);
             entries[dir_entry_no] = NULL;
 
             if(dir_entry_no >= max_direntries) {
@@ -570,7 +571,8 @@ int ex_inode_rename(struct ex_inode *from_inode, struct ex_inode *to_inode,
     return 0;
 }
 
-struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode, struct ex_block_iterator *it) {
+struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode,
+                                             struct ex_block_iterator *it) {
 
     // not first iteration
     if(it->last_block.data) {
@@ -596,4 +598,29 @@ struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode, struct ex_b
 done:
     it->last_block = block;
     return block;
+}
+
+struct ex_dir_entry ex_inode_entry_iterate(struct ex_inode_block block,
+                                           struct ex_entry_iterator *it) {
+
+    // not a first iteration
+    if (block.data && it->last_entry.magic) {
+        it->entry_number++;
+    }
+
+    if (it->entry_number >= EX_BLOCK_SIZE / sizeof(struct ex_dir_entry)) {
+        goto end;
+    }
+
+    size_t entry_offset = it->entry_number * sizeof(struct ex_dir_entry);
+    char *entry_data = &block.data[entry_offset];
+
+    it->last_entry = *((struct ex_dir_entry *)entry_data);
+
+    return it->last_entry;
+
+end:
+    it->last_entry.magic = 0;
+
+    return it->last_entry;
 }
