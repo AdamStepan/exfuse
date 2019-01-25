@@ -33,11 +33,12 @@ struct ex_inode_block {
 };
 
 struct ex_bitmap {
-    // where on disk is this structure stored
+    // where on disk is *this* structure stored
     size_t head;
-    // address of bitmap
+    // address of a bitmap
     size_t address;
     // max number of allocated blocks
+    // actual size in bytes is this value divided by 8
     size_t size;
     // number of allocated blocks
     size_t allocated;
