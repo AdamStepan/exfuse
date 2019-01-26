@@ -3,11 +3,12 @@
 #include <unistd.h>
 #include <err.h>
 #include <ex.h>
+#include <mkfs.h>
 
 int main(int argc, char **argv) {
     // create new device
     unlink(EX_DEVICE);
-    ex_init();
+    ex_mkfs_test_init();
 
     size_t max_size = EX_DIRECT_BLOCKS * EX_BLOCK_SIZE - 1;
     char data[max_size];

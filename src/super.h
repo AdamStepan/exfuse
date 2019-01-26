@@ -35,11 +35,12 @@ struct ex_inode_block {
 struct ex_bitmap {
     // where on disk is *this* structure stored
     size_t head;
+    // size of the bitmap in bytes
+    size_t size;
     // address of a bitmap
     size_t address;
-    // max number of allocated blocks
-    // actual size in bytes is this value divided by 8
-    size_t size;
+    // maximum number of items in a bitmap
+    size_t max_items;
     // number of allocated blocks
     size_t allocated;
 };
@@ -72,7 +73,7 @@ void ex_super_print(const struct ex_super_block *block);
 void ex_super_write(size_t device_size);
 void ex_super_load(void);
 void ex_super_statfs(struct statvfs *statbuf);
-
+int ex_super_create(size_t size, struct ex_bitmap *ino, struct ex_bitmap *data);
 int ex_super_check_path_len(const char *pathname);
 
 void ex_super_lock(void);

@@ -50,7 +50,7 @@ size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap) {
                 continue;
             }
 
-            // flip bit, compute absolute btt position
+            // flip bit, compute absolute bit position
             bitdata[bytepos] |= (1 << bit);
             bitpos = (8 * bytepos) + bit;
 
@@ -61,6 +61,7 @@ size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap) {
     }
 
 found:
+
     ex_device_write(bitmap->address + bytepos, bitdata + bytepos, sizeof(char));
     ex_device_write(bitmap->head, (void *)bitmap, sizeof(struct ex_bitmap));
 
@@ -151,6 +152,30 @@ void ex_super_statfs(struct statvfs *statbuf) {
     statbuf->f_ffree = statbuf->f_files - super_block->inode_bitmap.allocated;
 }
 
+int ex_super_create(size_t device_size,
+                    struct ex_bitmap *inode_bitmap,
+                    struct ex_bitmap *data_bitmap) {
+
+    super_block = ex_malloc(sizeof(struct ex_super_block));
+
+    if(!super_block) {
+        return -ENOMEM;
+    }
+
+    *super_block = (struct ex_super_block){
+        // we don't know address of root inode yet
+        .root = 0,
+        .device_size = device_size,
+        .bitmap = *data_bitmap,
+        .inode_bitmap = *inode_bitmap,
+        .magic = EX_SUPER_MAGIC
+    };
+
+    ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
+
+    return 0;
+}
+
 void ex_super_write(size_t device_size) {
 
 #define EX_MAX_INODES 128
@@ -169,6 +194,10 @@ void ex_super_write(size_t device_size) {
         .allocated = 0,
         .size = inode_bitmap_size
     };
+
+    char buffer[2014];
+    memset(buffer, '\0', sizeof(buffer));
+    ex_device_write(inode_bitmap.address, buffer, inode_bitmap.size);
 
     struct ex_bitmap bitmap = {
         .head = offsetof(struct ex_super_block, bitmap),

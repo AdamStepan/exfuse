@@ -624,3 +624,7 @@ end:
 
     return it->last_entry;
 }
+
+size_t ex_inode_max_blocks(void) {
+    return EX_DIRECT_BLOCKS;
+}

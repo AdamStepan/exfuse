@@ -49,6 +49,7 @@ void print_bitmap(const char *name, struct ex_bitmap *bitmap) {
     printf("\taddress = %lu\n", bitmap->address);
     printf("\tsize = %lu\n", bitmap->size);
     printf("\tallocated = %lu\n", bitmap->allocated);
+    printf("\tmaxitems = %lu\n", bitmap->max_items);
 }
 
 void print_bitmap_data(const char *device, size_t head) {
@@ -58,25 +59,9 @@ void print_bitmap_data(const char *device, size_t head) {
     ex_super_load();
 
     struct ex_bitmap *bitmap = ex_device_read(head, sizeof(struct ex_bitmap));
-    char *bitmap_data = ex_device_read(bitmap->address, bitmap->size / 8);
+    char *bitmap_data = ex_device_read(bitmap->address, bitmap->size);
 
-    for (size_t nthbyte = 0; nthbyte < bitmap->size / 8; nthbyte++) {
-
-        char byte = bitmap_data[nthbyte];
-
-        if (nthbyte % 4 == 0 || nthbyte == 0) {
-            printf("\n[ %03zx ] ", nthbyte);
-        }
-
-        for (int8_t nthbit = 7; nthbit >= 0; nthbit--) {
-            printf("%i", byte & (1 >> nthbit));
-        }
-
-        printf(" ");
-
-    }
-
-    printf("\n");
+    write(fileno(stdout), bitmap_data, bitmap->size);
 }
 
 void print_super(const char *device) {

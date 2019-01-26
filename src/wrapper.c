@@ -14,6 +14,11 @@
 #include <fuse.h>
 #include <ex.h>
 
+struct ex_args {
+    char *loglevel;
+    char *device;
+};
+
 static int do_create(const char *pathname, mode_t mode, struct fuse_file_info *fi) {
     (void)fi;
     return ex_create(pathname, mode);
@@ -106,7 +111,20 @@ static int do_statfs(const char *pathname, struct statvfs *statbuffer) {
 static void* do_init(struct fuse_conn_info *conn) {
     (void)conn;
 
-    ex_init();
+    struct fuse_context *ctx = fuse_get_context();
+
+    if (!ctx) {
+        fatal("unable to get fuse context");
+    }
+
+    struct ex_args *args = (struct ex_args *)ctx->private_data;
+
+    if (!args->device) {
+        fatal("device was not specified");
+    }
+
+    ex_logging_init(args->loglevel);
+    ex_init(args->device);
 
     return NULL;
 }
@@ -160,16 +178,15 @@ static struct fuse_operations operations = {
     .rename=do_rename
 };
 
-struct ex_args {
-    char *loglevel;
-};
 
 static void ex_args_init(struct ex_args *args) {
     args->loglevel = NULL;
+    args->device = NULL;
 }
 
 static struct fuse_opt ex_opts[] = {
     {"--log-level %s", offsetof(struct ex_args, loglevel), FUSE_OPT_KEY_OPT},
+    {"--device %s", offsetof(struct ex_args, device), FUSE_OPT_KEY_OPT},
     {NULL, 0, 0}
 };
 
@@ -181,18 +198,5 @@ int main(int argc, char **argv) {
     ex_args_init(&exargs);
     fuse_opt_parse(&args, &exargs, ex_opts, NULL);
 
-    if(exargs.loglevel) {
-
-        enum loglevel level = ex_parse_log_level(exargs.loglevel);
-
-        if(level == notset) {
-            warning("invalid log level: %s", exargs.loglevel);
-            return 1;
-        } else {
-            ex_set_log_level(level);
-        }
-
-    }
-
-    return fuse_main(args.argc, args.argv, &operations, NULL);
+    return fuse_main(args.argc, args.argv, &operations, &exargs);
 }

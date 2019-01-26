@@ -3,11 +3,12 @@
 #include <unistd.h>
 #include <err.h>
 #include <ex.h>
+#include <mkfs.h>
 
 int main(int argc, char **argv) {
     // create new device
     unlink(EX_DEVICE);
-    ex_init();
+    ex_mkfs_test_init();
 
     // check # of allocated blocks
     struct statvfs statbuf;

@@ -10,7 +10,7 @@
 #include <device.h>
 #include <super.h>
 
-void ex_init(void);
+void ex_init(const char *device);
 void ex_deinit(void);
 
 int ex_create(const char *pathname, mode_t mode);

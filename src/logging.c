@@ -27,3 +27,21 @@ enum loglevel ex_parse_log_level(const char *name) {
     return notset;
 }
 
+void ex_logging_init(const char *loglevel) {
+
+    if (!loglevel) {
+        return;
+    }
+
+    enum loglevel level = ex_parse_log_level(loglevel);
+
+    if (level == notset) {
+        warning("invalid log level: %s", loglevel);
+    } else {
+        ex_set_log_level(level);
+    }
+
+}
+
+
+

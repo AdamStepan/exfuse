@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <err.h>
 #include <ex.h>
+#include <mkfs.h>
 
 int main(int argc, char **argv) {
 
@@ -11,7 +12,7 @@ int main(int argc, char **argv) {
 
     // create new device
     unlink(EX_DEVICE);
-    ex_init();
+    ex_mkfs_test_init();
 
     // create new file
     int rv = ex_create("/target", S_IRWXU);

@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <err.h>
 #include <ex.h>
+#include <mkfs.h>
 
 static int check_links(const char *name, const char *info, int expected) {
 
@@ -27,7 +28,7 @@ end:
 int main(int argc, char **argv) {
     // create new device
     unlink(EX_DEVICE);
-    ex_init();
+    ex_mkfs_test_init();
 
     // create new file
     int rv = ex_create("/fname", S_IRWXU);

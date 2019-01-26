@@ -8,22 +8,18 @@ size_t ex_device_size(size_t ninodes) {
         ninodes * EX_DIRECT_BLOCKS / 8;                 // size of data bitmap
 }
 
-void ex_init(void) {
+void ex_init(const char *device) {
 
-    size_t device_size = ex_device_size(256);
-    int created = ex_device_create(EX_DEVICE, device_size);
+    info("open device: %s", device);
 
-    info("device created: %d", created);
+    int fd = ex_device_open(device);
 
-    ex_device_open(EX_DEVICE);
-
-    if(created) {
-        ex_super_write(device_size);
-        ex_root_write();
-    } else {
-        ex_super_load();
-        ex_root_load();
+    if (fd == -1) {
+        fatal("unable to open device: %s", device);
     }
+
+    ex_super_load();
+    ex_root_load();
 }
 
 void ex_deinit(void) {

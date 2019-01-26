@@ -32,6 +32,7 @@ extern const char *level2str[notset];
 extern enum loglevel current_level;
 
 void ex_set_log_level(enum loglevel new_level);
+void ex_logging_init(const char *loglevel);
 enum loglevel ex_get_log_level(void);
 enum loglevel ex_parse_log_level(const char *name);
 

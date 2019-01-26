@@ -22,7 +22,10 @@ debug:: exfuse umount | dir
 	gdb --args ./exfuse -f mp
 
 mount: exfuse umount | dir
-	./exfuse -f mp
+	if [ ! -f exdev ]; then \
+		./exmkfs --create --device exdev; \
+	fi
+	./exfuse -f mp --device exdev
 
 umount:
 	fusermount -u mp || true
