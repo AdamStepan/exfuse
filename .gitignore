@@ -1,6 +1,7 @@
 *
 !*.c
 !*.h
+!*.sh
 !src/
 !test/
 !zsh-completions/
