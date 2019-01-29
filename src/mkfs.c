@@ -30,7 +30,7 @@ int ex_mkfs_check_device(struct ex_mkfs_params *params) {
     };
 
     if (access(params->device, R_OK | W_OK)) {
-        error("access(%s): errno %s", params->device, strerror(errno));
+        error("access(%s): %s", params->device, strerror(errno));
         return -EACCES;
     }
 
@@ -338,8 +338,12 @@ int ex_mkfs(struct ex_mkfs_params *params) {
         goto error;
     }
 
-    return ex_mkfs_create_root(&ctx);
+    rv = ex_mkfs_create_root(&ctx);
 error:
+    if (!rv) {
+        info("fs was successfully created");
+    }
+
     return rv;
 }
 

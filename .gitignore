@@ -3,6 +3,7 @@
 !*.h
 !src/
 !test/
+!zsh-completions/
 !Makefile
 !.gitignore
 !README.md

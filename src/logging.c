@@ -42,6 +42,3 @@ void ex_logging_init(const char *loglevel) {
     }
 
 }
-
-
-
