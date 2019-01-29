@@ -74,4 +74,4 @@ $(BUILDDIR)/libexfuse.so: $(filter-out $(BUILDDIR)/wrapper.o, $(OBJ)) | $(TARGET
 
 clean:
 	$(RM) -rf $(BUILDDIR) $(TARGETDIR)/exfuse $(TARGETDIR)/libexfuse.so \
-			$(TARGETDIR)/exdbg
+			$(TARGETDIR)/exdbg $(TARGETDIR)/exmkfs
