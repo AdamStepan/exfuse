@@ -1,4 +1,6 @@
 *
+!*.c
+!*.h
 !src/
 !test/
 !Makefile

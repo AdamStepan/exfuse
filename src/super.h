@@ -48,7 +48,7 @@ struct ex_bitmap {
 struct ex_super_block {
     // address of root inode
     inode_address root;
-    // size of whole device (sizeof(super block) + bitmap.size * 4096)
+    // size of a device
     size_t device_size;
     // data allocation bitmap
     struct ex_bitmap bitmap;
