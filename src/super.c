@@ -4,13 +4,13 @@ struct ex_super_block *super_block = NULL;
 
 // super | inode bitmap | data bitmap | inodes | data
 #define inode_bitmap_end \
-    (super_block->inode_bitmap.address + (super_block->inode_bitmap.size / 8))
+    (super_block->inode_bitmap.address + super_block->inode_bitmap.size)
 
 #define data_bitmap_end \
-    (super_block->bitmap.address + (super_block->bitmap.size / 8))
+    (super_block->bitmap.address + super_block->bitmap.size)
 
 #define first_data_block \
-    (first_inode_block + (EX_BLOCK_SIZE * super_block->inode_bitmap.size))
+    (first_inode_block + (EX_BLOCK_SIZE * super_block->inode_bitmap.max_items))
 
 #define first_inode_block (data_bitmap_end)
 
@@ -34,7 +34,7 @@ void ex_bitmap_free_bit(struct ex_bitmap *bitmap, size_t nth_bit) {
 
 size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap) {
 
-    if(bitmap->allocated == bitmap->size) {
+    if(bitmap->allocated == bitmap->max_items) {
         info("bitmap is full");
         return -1;
     }

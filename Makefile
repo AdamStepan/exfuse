@@ -19,7 +19,10 @@ dir::
 	fi
 
 debug:: exfuse umount | dir
-	gdb --args ./exfuse -f mp
+	if [ ! -f exdev ]; then \
+		./exmkfs --create --device exdev --inodes 8; \
+	fi
+	gdb --args ./exfuse -f mp --device exdev
 
 mount: exfuse umount | dir
 	if [ ! -f exdev ]; then \
