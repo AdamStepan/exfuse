@@ -144,11 +144,11 @@ void ex_super_statfs(struct statvfs *statbuf) {
     statbuf->f_bsize = EX_BLOCK_SIZE;
     statbuf->f_namemax = EX_NAME_LEN;
 
-    statbuf->f_blocks = super_block->bitmap.size;
-    statbuf->f_bfree = super_block->bitmap.size - super_block->bitmap.allocated;
+    statbuf->f_blocks = super_block->bitmap.max_items;
+    statbuf->f_bfree = super_block->bitmap.max_items - super_block->bitmap.allocated;
     statbuf->f_bavail = statbuf->f_bfree;
 
-    statbuf->f_files = super_block->inode_bitmap.size;
+    statbuf->f_files = super_block->inode_bitmap.max_items;
     statbuf->f_ffree = statbuf->f_files - super_block->inode_bitmap.allocated;
 }
 
