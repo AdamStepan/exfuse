@@ -26,7 +26,7 @@ struct options {
 char* readable_size(double size) {
 
     static const char* units[] = {
-        "B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"
+        "B", "kiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"
     };
 
     static char buf[512];
@@ -46,6 +46,7 @@ void print_bitmap(const char *name, struct ex_bitmap *bitmap) {
 
     printf("%s:\n", name);
     printf("\thead = %lu\n", bitmap->head);
+    printf("\tlast = %lu\n", bitmap->last);
     printf("\taddress = %lu\n", bitmap->address);
     printf("\tsize = %lu\n", bitmap->size);
     printf("\tallocated = %lu\n", bitmap->allocated);

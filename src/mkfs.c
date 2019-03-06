@@ -120,6 +120,8 @@ int ex_mkfs_dbitmap_create(struct ex_mkfs_params *params,
     }
 
     ctx->data_bitmap.allocated = 0;
+    ctx->data_bitmap.last = 0;
+
     // data bitmap starts after end of an ibitmap
     ctx->data_bitmap.address = ctx->inode_bitmap.address + \
                                round_block(ctx->inode_bitmap.size);
@@ -166,6 +168,8 @@ int ex_mkfs_ibitmap_create(struct ex_mkfs_params *params,
     }
 
     ctx->inode_bitmap.allocated = 0;
+    ctx->inode_bitmap.last = 0;
+
     ctx->inode_bitmap.address = round_block(sizeof(struct ex_super_block));
     ctx->inode_bitmap.head = offsetof(struct ex_super_block, inode_bitmap);
 

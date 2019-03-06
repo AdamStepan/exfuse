@@ -40,13 +40,18 @@ size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap) {
     }
 
     char *bitdata = ex_device_read(bitmap->address, bitmap->size);
-    size_t bitpos = -1, bytepos;
+    size_t bitpos = -1, bytepos = bitmap->last, startpos = bitmap->last;
+    char flipped = 0;
 
     // go through all bits in bitmap, find first free bit
-    for(bytepos = 0; bytepos < bitmap->size; bytepos++) {
-        for(uint8_t bit = 0; bit < 8; bit++) {
+    while (1) {
+
+        // XXX: check bitmap->last < bitmap->size
+
+        for (uint8_t bit = 0; bit < 8; bit++) {
+
             // n = (8 * i) + bit, nth block is occupied
-            if(bitdata[bytepos] & (1 << bit)) {
+            if (bitdata[bytepos] & (1 << bit)) {
                 continue;
             }
 
@@ -55,18 +60,31 @@ size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap) {
             bitpos = (8 * bytepos) + bit;
 
             bitmap->allocated += 1;
+            bitmap->last = bytepos;
 
             goto found;
+        }
+
+        bytepos++;
+
+        // we went through the whole bitmap
+        if (flipped && startpos == bytepos) {
+            bitpos = -1;
+            goto not_found;
+        }
+
+        if (bytepos >= bitmap->size) {
+            flipped = 1;
+            bytepos = 0;
         }
     }
 
 found:
-
     ex_device_write(bitmap->address + bytepos, bitdata + bytepos, sizeof(char));
     ex_device_write(bitmap->head, (void *)bitmap, sizeof(struct ex_bitmap));
 
+not_found:
     free(bitdata);
-
     return bitpos;
 }
 
@@ -192,7 +210,8 @@ void ex_super_write(size_t device_size) {
         .head = offsetof(struct ex_super_block, inode_bitmap),
         .address = sizeof(struct ex_super_block),
         .allocated = 0,
-        .size = inode_bitmap_size
+        .size = inode_bitmap_size,
+        .last = 0
     };
 
     char buffer[2014];
@@ -203,7 +222,8 @@ void ex_super_write(size_t device_size) {
         .head = offsetof(struct ex_super_block, bitmap),
         .address = inode_bitmap.address + inode_bitmap.size / 8,
         .allocated = 0,
-        .size = data_bitmap_size
+        .size = data_bitmap_size,
+        .last = 0
     };
 
     super_block = ex_malloc(sizeof(struct ex_super_block));

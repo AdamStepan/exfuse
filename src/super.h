@@ -43,6 +43,7 @@ struct ex_bitmap {
     size_t max_items;
     // number of allocated blocks
     size_t allocated;
+    size_t last;
 };
 
 struct ex_super_block {
