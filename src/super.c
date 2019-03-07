@@ -194,56 +194,6 @@ int ex_super_create(size_t device_size,
     return 0;
 }
 
-void ex_super_write(size_t device_size) {
-
-#define EX_MAX_INODES 128
-
-    size_t size = device_size - sizeof(struct ex_super_block);
-    info("populating device, size=%lu", size);
-
-    size_t inode_bitmap_size = EX_MAX_INODES;
-    size_t data_bitmap_size = ((size / EX_BLOCK_SIZE) - EX_MAX_INODES) * 8;
-    info("inode_bitmap_size=%lu, data_bitmap_size=%lu", inode_bitmap_size,
-            data_bitmap_size);
-
-    struct ex_bitmap inode_bitmap = {
-        .head = offsetof(struct ex_super_block, inode_bitmap),
-        .address = sizeof(struct ex_super_block),
-        .allocated = 0,
-        .size = inode_bitmap_size,
-        .last = 0
-    };
-
-    char buffer[2014];
-    memset(buffer, '\0', sizeof(buffer));
-    ex_device_write(inode_bitmap.address, buffer, inode_bitmap.size);
-
-    struct ex_bitmap bitmap = {
-        .head = offsetof(struct ex_super_block, bitmap),
-        .address = inode_bitmap.address + inode_bitmap.size / 8,
-        .allocated = 0,
-        .size = data_bitmap_size,
-        .last = 0
-    };
-
-    super_block = ex_malloc(sizeof(struct ex_super_block));
-
-    if(!super_block) {
-        // XXX: we should return ENOMEM to user
-        fatal("unable to allocate memory for super block");
-    }
-
-    *super_block = (struct ex_super_block){
-        .root = 0,
-        .device_size = device_size,
-        .bitmap = bitmap,
-        .inode_bitmap = inode_bitmap,
-        .magic = EX_SUPER_MAGIC
-    };
-
-    ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
-}
-
 pthread_mutex_t super_lock;
 pthread_mutexattr_t super_lock_attr;
 

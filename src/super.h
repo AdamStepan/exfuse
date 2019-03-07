@@ -71,7 +71,6 @@ struct ex_inode_block ex_super_allocate_inode_block(void);
 void ex_super_deallocate_inode_block(size_t inode_number);
 
 void ex_super_print(const struct ex_super_block *block);
-void ex_super_write(size_t device_size);
 void ex_super_load(void);
 void ex_super_statfs(struct statvfs *statbuf);
 int ex_super_create(size_t size, struct ex_bitmap *ino, struct ex_bitmap *data);
