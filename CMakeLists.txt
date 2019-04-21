@@ -27,6 +27,8 @@ set(LDFLAGS "-lm -lpthread")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CFLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LDFLAGS}")
 
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+
 add_subdirectory(src)
 
 enable_testing()
