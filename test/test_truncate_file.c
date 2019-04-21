@@ -4,68 +4,36 @@
 #include <err.h>
 #include <ex.h>
 #include <mkfs.h>
+#include <glib.h>
 
-int main(int argc, char **argv) {
+void test_truncate_file(void) {
     // create new device
     unlink(EX_DEVICE);
     ex_mkfs_test_init();
 
     // create new file
     int rv = ex_create("/fname", S_IRWXU);
-
-    if(rv) {
-        warnx("create");
-        goto end;
-    }
+    g_assert(!rv);
 
     // write something to file
     rv = ex_write("/fname", "xxx", 3, 0);
-    if(rv != 3) {
-        rv = 1;
-        warnx("write size != 3");
-    }
+    g_assert_cmpint(rv, ==, 3);
 
     // check file size > 0
     struct stat st;
 
     rv = ex_getattr("/fname", &st);
-
-    if(rv) {
-        warnx("getattr");
-        goto end;
-    }
-
-    if(st.st_size != 3) {
-        rv = 1;
-        warnx("st.st_size != 3");
-        goto end;
-    }
-
+    g_assert(!rv);
+    g_assert_cmpint(st.st_size, ==, 3);
 
     // truncate file
     rv = ex_truncate("/fname");
-
-    if(rv) {
-        warnx("truncate");
-        goto end;
-    }
+    g_assert(!rv);
 
     // check file size == 0
     rv = ex_getattr("/fname", &st);
+    g_assert(!rv);
+    g_assert_cmpint(st.st_size, ==, 0);
 
-    if(rv) {
-        warnx("getattr1");
-        goto end;
-    }
-
-    if(st.st_size != 0) {
-        warnx("st.st_size != 0");
-        rv = 1;
-        goto end;
-    }
-
-end:
     ex_deinit();
-
-    return rv;
 }

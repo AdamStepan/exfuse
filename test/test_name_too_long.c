@@ -4,8 +4,9 @@
 #include <err.h>
 #include <ex.h>
 #include <mkfs.h>
+#include <glib.h>
 
-int main(int argc, char **argv) {
+void test_name_too_long(void) {
     // create new device
     unlink(EX_DEVICE);
     ex_mkfs_test_init();
@@ -14,11 +15,7 @@ int main(int argc, char **argv) {
     struct statvfs statbuf;
 
     int rv = ex_statfs(&statbuf);
-
-    if(rv) {
-        warnx("ex_statvfs");
-        goto end;
-    }
+    g_assert(!rv);
 
     size_t namemax = statbuf.f_namemax;
     char *name = ex_malloc(namemax + 1);
@@ -26,17 +23,7 @@ int main(int argc, char **argv) {
     memset(name, 'x', namemax + 1);
 
     rv = ex_create(name, S_IRWXU);
+    g_assert_cmpint(rv, ==, -ENAMETOOLONG);
 
-    if(rv != -ENAMETOOLONG) {
-        warnx("ex_create");
-        rv = ENAMETOOLONG;
-        goto end;
-    } else {
-        rv = 0;
-    }
-
-end:
     ex_deinit();
-
-    return rv;
 }

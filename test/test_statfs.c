@@ -4,9 +4,9 @@
 #include <err.h>
 #include <ex.h>
 #include <mkfs.h>
+#include <glib.h>
 
-int main(int argc, char **argv) {
-
+void test_statfs(void) {
 
     const size_t ninodes = 8;
 
@@ -20,57 +20,23 @@ int main(int argc, char **argv) {
     ex_mkfs_check_params(&params);
 
     int rv = ex_mkfs(&params);
-
-    if (rv) {
-        warnx("ex_mkfs: unable to create fs");
-        goto end;
-    }
+    g_assert(!rv);
 
     // check # of allocated blocks
     struct statvfs statbuf;
 
     rv = ex_statfs(&statbuf);
-
-    if (rv) {
-        warnx("ex_statvfs");
-        goto end;
-    }
-
-    if (statbuf.f_files != ninodes) {
-        warnx("ex_statbuf: invalid number of total inodes");
-        rv = 1;
-        goto end;
-    }
-
+    g_assert(!rv);
+    g_assert_cmpint(statbuf.f_files, ==, ninodes);
     // NOTE: -1 is here becase of root
-    if (statbuf.f_ffree != ninodes - 1) {
-        warnx("ex_statbuf: invalid number of free inodes");
-        rv = 2;
-        goto end;
-    }
+    g_assert_cmpint(statbuf.f_ffree, ==, ninodes -1);
 
     rv = ex_create("/file0", S_IRWXU);
-
-    if (rv) {
-        warnx("ex_create");
-        goto end;
-    }
+    g_assert(!rv);
 
     rv = ex_statfs(&statbuf);
+    g_assert(!rv);
+    g_assert_cmpint(statbuf.f_ffree, ==, ninodes -2);
 
-    if (rv) {
-        warnx("ex_statvfs1");
-        goto end;
-    }
-
-    if (statbuf.f_ffree != ninodes - 2) {
-        warnx("ex_statbuf: invalid number of free inodes");
-        rv = 2;
-        goto end;
-    }
-
-end:
     ex_deinit();
-
-    return rv;
 }

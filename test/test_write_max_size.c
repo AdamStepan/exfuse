@@ -4,8 +4,9 @@
 #include <err.h>
 #include <ex.h>
 #include <mkfs.h>
+#include <glib.h>
 
-int main(int argc, char **argv) {
+void test_write_max_size(void) {
     // create new device
     unlink(EX_DEVICE);
     ex_mkfs_test_init();
@@ -17,37 +18,16 @@ int main(int argc, char **argv) {
 
     // create new file
     int rv = ex_create("/file", S_IRWXU);
-
-    if(rv) {
-        warnx("ex_create");
-        goto end;
-    }
+    g_assert(!rv);
 
     rv = ex_write("/file", data, max_size, 0);
-
-    if((size_t)rv != max_size) {
-        warnx("ex_write: written: %i", rv);
-        goto end;
-    }
+    g_assert_cmpint((size_t)rv, ==, max_size);
 
     rv = ex_write("/file", data, max_size + 1, 0);
-
-    if(rv != -EFBIG) {
-        warnx("ex_write1: maximum file size exceeded: written: %i", rv);
-        goto end;
-    }
+    g_assert_cmpint(rv, ==, -EFBIG);
 
     rv = ex_write("/file", data, 0, max_size + 1);
+    g_assert_cmpint(rv, ==, -EFBIG);
 
-    if(rv != -EFBIG) {
-        warnx("ex_write2: maximum file size exceeded: written: %i", rv);
-        goto end;
-    }
-
-    rv = 0;
-
-end:
     ex_deinit();
-
-    return 0;
 }

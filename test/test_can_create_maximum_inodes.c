@@ -1,8 +1,9 @@
 #include <ex.h>
 #include <mkfs.h>
 #include <err.h>
+#include <glib.h>
 
-int main(int argc, char **argv) {
+void test_can_create_maximum_inodes(void) {
 
     unlink("exdev");
 
@@ -18,11 +19,7 @@ int main(int argc, char **argv) {
     ex_mkfs_check_params(&params);
 
     int rv = ex_mkfs(&params);
-
-    if (rv) {
-        warnx("ex_mkfs: unable to create fs");
-        goto end;
-    }
+    g_assert(!rv);
 
     ex_super_load();
 
@@ -33,11 +30,8 @@ int main(int argc, char **argv) {
         snprintf(buffer, sizeof(buffer), "/file%zu", i);
 
         rv = ex_create(buffer, S_IRWXU);
+        g_assert(!rv);
 
-        if(rv) {
-            warnx("ex_create(%s)", buffer);
-            goto end;
-        }
     }
 
     for (size_t i = 0; i < ninodes - 1; i++) {
@@ -47,12 +41,8 @@ int main(int argc, char **argv) {
         struct stat buf;
 
         rv = ex_getattr(buffer, &buf);
+        g_assert(!rv);
 
-        if(rv) {
-            warnx("ex_getattr(%s)", buffer);
-            goto end;
-        }
     }
-end:
-    return rv;
+
 }

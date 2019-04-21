@@ -1,13 +1,14 @@
 language: c
 compiler:
     - clang
-    - gcc
 os: linux
 install:
-    - sudo apt-get install pkg-config
-    - sudo apt-get install libfuse2 libfuse-dev
+    - sudo apt-get install pkg-config cmake
+    - sudo apt-get install libfuse2 libfuse-dev libglib2.0-0 libglib2.0-dev
 branches:
   only:
     - master
 script:
-  - make test
+  - cmake .
+  - make
+  - ./test/testexfuse

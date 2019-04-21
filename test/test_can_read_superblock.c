@@ -1,8 +1,9 @@
 #include <ex.h>
 #include <mkfs.h>
 #include <err.h>
+#include <glib.h>
 
-int main(int argc, char **argv) {
+void test_can_read_superblock(void) {
 
     unlink("exdev");
 
@@ -18,32 +19,11 @@ int main(int argc, char **argv) {
     ex_mkfs_check_params(&params);
 
     int rv = ex_mkfs(&params);
-
-    if (rv) {
-        warnx("ex_mkfs: unable to create fs");
-        goto end;
-    }
+    g_assert(!rv);
 
     ex_super_load();
+    g_assert_cmpint(super_block->magic, ==, EX_SUPER_MAGIC);
+    g_assert(super_block->root);
+    g_assert_cmpint(super_block->inode_bitmap.max_items, ==, ninodes);
 
-    if (super_block->magic != EX_SUPER_MAGIC) {
-        rv = 1;
-        warnx("ex_super_load: invalid super block magic");
-        goto end;
-    }
-
-    if (!super_block->root) {
-        rv = 2;
-        warnx("ex_super_load: root address is not set");
-        goto end;
-    }
-
-    if (super_block->inode_bitmap.max_items != ninodes) {
-        rv = 3;
-        warnx("ex_super_load: inode bitmap has invalid number of items");
-        goto end;
-    }
-
-end:
-    return rv;
 }

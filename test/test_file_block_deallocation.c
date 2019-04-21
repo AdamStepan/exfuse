@@ -4,8 +4,9 @@
 #include <err.h>
 #include <ex.h>
 #include <mkfs.h>
+#include <glib.h>
 
-int main(int argc, char **argv) {
+void test_file_block_deallocation(void) {
     // create new device
     unlink(EX_DEVICE);
     ex_mkfs_test_init();
@@ -14,46 +15,23 @@ int main(int argc, char **argv) {
     struct statvfs statbuf;
 
     int rv = ex_statfs(&statbuf);
-
-    if(rv) {
-        warnx("ex_statvfs");
-        goto end;
-    }
+    g_assert(!rv);
 
     size_t allocated = statbuf.f_bfree;
 
     // create new file
     rv = ex_create("/file", S_IRWXU);
-
-    if(rv) {
-        warnx("ex_create");
-        goto end;
-    }
+    g_assert(!rv);
 
     // remove the file
     rv = ex_unlink("/file");
-
-    if(rv) {
-        warnx("ex_unlink");
-        goto end;
-    }
+    g_assert(!rv);
 
     // check that number of allocated blocks is the same
     // as before a file creation
     rv = ex_statfs(&statbuf);
+    g_assert(!rv);
+    g_assert_cmpint(statbuf.f_bfree, ==, allocated);
 
-    if(rv) {
-        warnx("ex_statvfs1");
-        goto end;
-    }
-
-    if(statbuf.f_bfree != allocated) {
-        warnx("statbuf.f_bfree != allocated");
-        goto end;
-    }
-
-end:
     ex_deinit();
-
-    return rv;
 }

@@ -1,8 +1,9 @@
 #include <ex.h>
 #include <mkfs.h>
 #include <err.h>
+#include <glib.h>
 
-int main(int argc, char **argv) {
+void test_mkfs_device_size(void) {
 
     unlink("exdev");
 
@@ -18,11 +19,8 @@ int main(int argc, char **argv) {
     ex_mkfs_check_params(&params);
 
     int rv = ex_mkfs(&params);
+    g_assert(!rv);
 
-    if (rv) {
-        warnx("ex_mkfs: unable to create fs");
-        goto end;
-    }
 
     ex_super_load();
 
@@ -33,14 +31,6 @@ int main(int argc, char **argv) {
     expected_device_size += EX_BLOCK_SIZE * ninodes;
     // number of data blocks for `ninodes` inodes
     expected_device_size += ex_inode_max_blocks() * ninodes * EX_BLOCK_SIZE;
+    g_assert_cmpint(super_block->device_size, ==, expected_device_size);
 
-    if (super_block->device_size != expected_device_size) {
-        rv = 1;
-        warnx("ex_super_load: invalid device size, expected: %zu, real: %zu",
-              expected_device_size, super_block->device_size);
-        goto end;
-    }
-
-end:
-    return rv;
 }

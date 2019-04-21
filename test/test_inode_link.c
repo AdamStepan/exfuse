@@ -4,8 +4,9 @@
 #include <err.h>
 #include <ex.h>
 #include <mkfs.h>
+#include <glib.h>
 
-static int check_links(const char *name, const char *info, int expected) {
+static int check_links(const char *name, const char *info, size_t expected) {
 
     struct stat st;
 
@@ -25,45 +26,26 @@ end:
     return rv;
 }
 
-int main(int argc, char **argv) {
+void test_inode_link(void) {
     // create new device
     unlink(EX_DEVICE);
     ex_mkfs_test_init();
 
     // create new file
     int rv = ex_create("/fname", S_IRWXU);
-
-    if(rv) {
-        goto end;
-    }
+    g_assert(!rv);
 
     rv = check_links("/fname", "st_nlinks", 1);
-
-    if(rv) {
-        goto end;
-    }
+    g_assert(!rv);
 
     rv = ex_link("/fname", "/link");
-
-    if(rv) {
-        warnx("%s", "ex_link");
-        goto end;
-    }
+    g_assert(!rv);
 
     rv = check_links("/fname", "st_nlinks1", 2);
-
-    if(rv) {
-        goto end;
-    }
+    g_assert(!rv);
 
     rv = check_links("/link", "st_nlinks2", 2);
+    g_assert(!rv);
 
-    if(rv) {
-        goto end;
-    }
-
-end:
     ex_deinit();
-
-    return rv;
 }

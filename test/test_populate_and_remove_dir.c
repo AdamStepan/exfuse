@@ -5,8 +5,9 @@
 #include <err.h>
 #include <ex.h>
 #include <mkfs.h>
+#include <glib.h>
 
-int main(int argc, char **argv) {
+void test_populate_and_remove_dir(void) {
 
     // create new device
     unlink(EX_DEVICE);
@@ -14,11 +15,7 @@ int main(int argc, char **argv) {
 
     // create new directory
     int rv = ex_mkdir("/dir", S_IRWXU | S_IFDIR);
-
-    if(rv) {
-        warnx("create /dir");
-        goto end;
-    }
+    g_assert(!rv);
 
     char buffer[16];
 
@@ -28,11 +25,8 @@ int main(int argc, char **argv) {
         snprintf(buffer, sizeof(buffer), "/dir/file%i", i);
 
         rv = ex_create(buffer, S_IRWXU);
+        g_assert(!rv);
 
-        if(rv) {
-            warnx("ex_create(%s)", buffer);
-            goto end;
-        }
     }
 
     // check that we can query files attributes
@@ -42,21 +36,12 @@ int main(int argc, char **argv) {
 
         struct stat st;
         rv = ex_getattr(buffer, &st);
-
-        if(rv) {
-            warnx("getattr");
-            goto end;
-        }
+        g_assert(!rv);
     }
 
     // check that we cannot remove the populated directory
     rv = ex_rmdir("/dir");
-
-    if (!rv) {
-        warnx("ex_rmdir removed non-empty directory");
-        rv = 1;
-        goto end;
-    }
+    g_assert(rv);
 
     // check that we are able to delete all files
     for (int i = 0; i < 16; i++) {
@@ -64,25 +49,12 @@ int main(int argc, char **argv) {
         snprintf(buffer, sizeof(buffer), "/dir/file%i", i);
 
         rv = ex_unlink(buffer);
-
-        if (rv) {
-            warnx("ex_unlink(%s) was unable to unlink file (%i)", buffer, rv);
-            rv = 1;
-            goto end;
-        }
+        g_assert(!rv);
     }
 
     // check that we can remove the populated directory
     rv = ex_rmdir("/dir");
-
-    if (rv) {
-        warnx("ex_rmdir did not remove an empty directory");
-    }
-
-
-end:
+    g_assert(!rv);
 
     ex_deinit();
-
-    return rv;
 }

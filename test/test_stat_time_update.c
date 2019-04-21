@@ -4,56 +4,33 @@
 #include <err.h>
 #include <ex.h>
 #include <mkfs.h>
+#include <glib.h>
 
-int main(int argc, char **argv) {
+void test_stat_time_update(void) {
     // create new device
     unlink(EX_DEVICE);
     ex_mkfs_test_init();
 
     // create new file
     int rv = ex_create("/fname", S_IRWXU);
-
-    if(rv) {
-        warnx("create");
-        goto end;
-    }
+    g_assert(!rv);
 
     // save atime and mtime
     struct stat st;
 
     rv = ex_getattr("/fname", &st);
-
-    if(rv) {
-        warnx("getattr");
-        goto end;
-    }
+    g_assert(!rv);
 
     // truncate file (change mtime and ctime)
     rv = ex_truncate("/fname");
-
-    if(rv) {
-        warnx("truncate");
-        goto end;
-    }
+    g_assert(!rv);
 
     // check file size
     struct stat st1;
 
     rv = ex_getattr("/fname", &st1);
+    g_assert(!rv);
+    g_assert_cmpint(st.st_mtim.tv_nsec, !=, st1.st_mtim.tv_nsec);
 
-    if(rv) {
-        warnx("getattr1");
-        goto end;
-    }
-
-    if(st.st_mtim.tv_nsec == st1.st_mtim.tv_nsec) {
-        warnx("st.st_mtim == st1.st_mtim");
-        rv = 1;
-        goto end;
-    }
-
-end:
     ex_deinit();
-
-    return rv;
 }

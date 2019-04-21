@@ -1,6 +1,7 @@
 #include <ex.h>
 #include <mkfs.h>
 #include <err.h>
+#include <glib.h>
 
 int populate_device(size_t ninodes) {
 
@@ -56,7 +57,7 @@ end:
     return rv;
 }
 
-int main(int argc, char **argv) {
+void test_repopulation_of_device(void) {
 
     unlink("exdev");
 
@@ -72,35 +73,16 @@ int main(int argc, char **argv) {
     ex_mkfs_check_params(&params);
 
     int rv = ex_mkfs(&params);
-
-    if (rv) {
-        warnx("ex_mkfs: unable to create fs");
-        goto end;
-    }
+    g_assert(!rv);
 
     ex_super_load();
 
     rv = populate_device(ninodes);
-
-    if (rv) {
-        warnx("populate_device0");
-        goto end;
-    }
+    g_assert(!rv);
 
     rv = clean_device(ninodes);
-
-    if (rv) {
-        warnx("clean_device");
-        goto end;
-    }
+    g_assert(!rv);
 
     rv = populate_device(ninodes);
-
-    if (rv) {
-        warnx("populate_device1");
-        goto end;
-    }
-
-end:
-    return rv;
+    g_assert(!rv);
 }
