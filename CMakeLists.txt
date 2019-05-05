@@ -1,10 +1,10 @@
-project(exfuse)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.2)
+project(exfuse VERSION 0.0.1 LANGUAGES C)
 
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -14,7 +14,7 @@ option(COVERAGE "Enable clang coverage flags" OFF)
 option(TESTS "Enable tests" OFF)
 option(DEBUG "Enable debug build" OFF)
 
-set(CFLAGS "-fPIC -Wall -I. -I../src -std=c11 -D_GNU_SOURCE -Wextra")
+set(CFLAGS "-fPIC -Wall -I${CMAKE_SOURCE_DIR}/src -D_GNU_SOURCE -Wextra")
 set(LDFLAGS "-lm ${CMAKE_THREAD_LIBS_INIT}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FUSE_CFLAGS} ${CFLAGS}")

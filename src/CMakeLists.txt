@@ -4,10 +4,10 @@ set(EXFUSE_SRC wrapper.c)
 add_library(libexfuse SHARED ${EXFUSE_LIB_SRC})
 
 add_executable(exfuse ${EXFUSE_SRC})
-target_link_libraries(exfuse libexfuse)
+target_link_libraries(exfuse PUBLIC libexfuse)
 
 add_executable(exmkfs exmkfs.c)
-target_link_libraries(exmkfs libexfuse)
+target_link_libraries(exmkfs PUBLIC libexfuse)
 
 add_executable(exdbg exdbg.c)
-target_link_libraries(exdbg libexfuse)
+target_link_libraries(exdbg PUBLIC libexfuse)
