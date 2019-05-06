@@ -551,10 +551,10 @@ int ex_inode_rename(struct ex_inode *from_inode, struct ex_inode *to_inode,
         debug("directory at (%lu) does not contain: %s, allocating new space",
               from_inode->address, from_name);
 
-        // XXX: check that we can find a new entry address
         to_entry_address = ex_inode_find_free_entry_address(to_inode);
 
         if (!to_entry_address) {
+            debug("unable to find a free entry address, inode: %ld", to_inode->number);
             return -ENOSPC;
         }
     }

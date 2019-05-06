@@ -1,12 +1,9 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.7)
 project(exfuse VERSION 0.0.1 LANGUAGES C)
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
-
-find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(FUSE REQUIRED)
 
@@ -14,15 +11,41 @@ option(COVERAGE "Enable clang coverage flags" OFF)
 option(TESTS "Enable tests" OFF)
 option(DEBUG "Enable debug build" OFF)
 
-set(CFLAGS "-fPIC -Wall -I${CMAKE_SOURCE_DIR}/src -D_GNU_SOURCE -Wextra")
-set(LDFLAGS "-lm ${CMAKE_THREAD_LIBS_INIT}")
+include_directories(${CMAKE_SOURCE_DIR}/src)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FUSE_CFLAGS} ${CFLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${FUSE_LDFLAGS} ${LDFLAGS}")
+add_definitions(-D_GNU_SOURCE)
+add_definitions(${FUSE_COMPILE_DEFINITIONS})
+
+add_compile_options(-Wall -Wextra)
+add_compile_options(${FUSE_COMPILE_OPTIONS})
 
 if (COVERAGE)
-    # TODO: check that we are using clang
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+
+    if(NOT "${CMAKE_C_COMPILER_ID}" MATCHES "[Cc]lang")
+        message(FATAL_ERROR "Code coverage is currently supported only for clang")
+    endif()
+
+    add_compile_options($<$<C_COMPILER_ID:Clang>:-fprofile-instr-generate>)
+    add_compile_options($<$<C_COMPILER_ID:Clang>:-fcoverage-mapping>)
+
+    find_program(LLVM_COV llvm-cov llvm-cov-7 llvm-cov-5.0 HINTS /usr/bin)
+
+    if(NOT LLVM_COV)
+        message(FATAL_ERROR "Cannot find llvm-cov")
+    endif()
+
+    find_program(LLVM_PROFDATA llvm-profdata llvm-profdata-7 HINTS /usr/bin)
+
+    if(NOT LLVM_PROFDATA)
+        message(FATAL_ERROR "Cannot find llvm-profdata")
+    endif()
+
+    add_custom_target(coverage
+        DEPENDS ${CMAKE_SOURCE_DIR}/test/testexfuse
+        COMMAND LLVM_PROFILE_FILE=${CMAKE_BINARY_DIR}/exfuse.profraw ${CMAKE_SOURCE_DIR}/test/testexfuse
+        COMMAND ${LLVM_PROFDATA} merge -sparse ${CMAKE_BINARY_DIR}/exfuse.profraw -o ${CMAKE_BINARY_DIR}/exfuse.profdata
+        COMMAND ${LLVM_COV} report -ignore-filename-regex "\\(.*test.*\\|.*glib.*\\)" ${CMAKE_SOURCE_DIR}/test/testexfuse -instr-profile ${CMAKE_BINARY_DIR}/exfuse.profdata)
+
 endif()
 
 if (TESTS)
@@ -30,7 +53,7 @@ if (TESTS)
 endif()
 
 if (DEBUG)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb")
+    add_compile_options($<$<C_COMPILER_ID:Clang>:-ggdb>)
 endif()
 
 add_subdirectory(src)
@@ -54,8 +77,4 @@ add_custom_target(distclean
         COMMAND rm -vrf Testing
         COMMAND rm -vf exdev test/exdev)
 
-add_custom_target(coverage
-    DEPENDS ./test/testexfuse
-    COMMAND LLVM_PROFILE_FILE=exfuse.profraw ./test/testexfuse
-    COMMAND llvm-profdata-7 merge -sparse exfuse.profraw -o exfuse.profdata
-    COMMAND llvm-cov-7 report -ignore-filename-regex "\\(.*test.*\\|.*glib.*\\)" ./test/testexfuse -instr-profile exfuse.profdata)
+
