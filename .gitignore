@@ -10,3 +10,4 @@
 !CMakeLists.txt
 !cmake/
 !cmake/*.cmake
+!.clang-format
