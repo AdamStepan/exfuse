@@ -1,14 +1,14 @@
 #ifndef EX_SUPER_H
 #define EX_SUPER_H
 
-#include <sys/statvfs.h>
+#include <device.h>
+#include <logging.h>
+#include <path.h>
 #include <pthread.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stddef.h>
-#include <logging.h>
-#include <device.h>
-#include <path.h>
+#include <sys/statvfs.h>
 #include <util.h>
 
 // how large block will be

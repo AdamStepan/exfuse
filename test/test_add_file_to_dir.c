@@ -1,10 +1,10 @@
-#include <linux/stat.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <ex.h>
-#include <mkfs.h>
 #include <glib.h>
+#include <linux/stat.h>
+#include <mkfs.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 void test_add_file_to_dir(void) {
     // create new device
@@ -24,21 +24,19 @@ void test_add_file_to_dir(void) {
     rv = ex_getattr("/dir/file", &st);
     g_assert(!rv);
 
-
     // check that readdir return our file
     struct ex_dir_entry **entries;
 
     rv = ex_readdir("/dir/", &entries);
     g_assert(!rv);
 
-    for(size_t i = 0; entries[i]; i++) {
-        if(!strcmp(entries[i]->name, "file")) {
+    for (size_t i = 0; entries[i]; i++) {
+        if (!strcmp(entries[i]->name, "file")) {
             goto end;
         }
     }
 
     g_assert(0);
 
-end:
-    ;
+end:;
 }

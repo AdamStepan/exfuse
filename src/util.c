@@ -2,22 +2,22 @@
 
 void *ex_malloc(size_t size) {
 
-   void *buff = malloc(size);
+    void *buff = malloc(size);
 
-   if(buff) {
-      memset(buff, '\0', size);
-   } else {
-      err(errno, "malloc");
-   }
+    if (buff) {
+        memset(buff, '\0', size);
+    } else {
+        err(errno, "malloc");
+    }
 
-   return buff;
+    return buff;
 }
 
 void *ex_realloc(void *ptr, size_t size) {
 
     void *newptr = realloc(ptr, size);
 
-    if(!newptr) {
+    if (!newptr) {
         err(errno, "malloc");
     }
 
@@ -28,7 +28,7 @@ char *ex_strdup(const char *s) {
 
     char *dup = strdup(s);
 
-    if(!dup) {
+    if (!dup) {
         err(errno, "strdup");
     }
 
@@ -40,7 +40,7 @@ size_t ex_str_cnt(const char *haystack, const char *needle) {
     size_t occurences = 0;
     const char *tmp = haystack;
 
-    while((tmp = strstr(tmp, needle))) {
+    while ((tmp = strstr(tmp, needle))) {
         occurences++;
         tmp++;
     }
@@ -58,7 +58,7 @@ char **ex_str_split(const char *str, const char *delim) {
     char *token = NULL, *lastpos = NULL, *src = ex_strdup(str);
     size_t i = 0;
 
-    while((token = strtok_r(token ? NULL : src, delim, &lastpos))) {
+    while ((token = strtok_r(token ? NULL : src, delim, &lastpos))) {
         tokens[i++] = ex_strdup(token);
     }
 
@@ -68,27 +68,25 @@ char **ex_str_split(const char *str, const char *delim) {
 }
 
 void ex_print_permissions(const char *prefix, uint8_t mode) {
-    printf("%s=%c%c%c ", prefix,
-        mode & 0x4 ? 'r' : '-',
-        mode & 0x2 ? 'w' : '-',
-        mode & 0x1 ? 'x' : '-');
+    printf("%s=%c%c%c ", prefix, mode & 0x4 ? 'r' : '-', mode & 0x2 ? 'w' : '-',
+           mode & 0x1 ? 'x' : '-');
 }
 
 void ex_print_mode(mode_t m) {
 
-    if(m & S_IFDIR)
+    if (m & S_IFDIR)
         printf("dir ");
 
-    if(m & S_IFLNK)
+    if (m & S_IFLNK)
         printf("symlink ");
 
-    if(m & S_ISUID)
+    if (m & S_ISUID)
         printf("suid ");
 
-    if(m & S_ISGID)
+    if (m & S_ISGID)
         printf("sgid ");
 
-    if(m & S_ISVTX)
+    if (m & S_ISVTX)
         printf("sticky ");
 
     ex_print_permissions("other", m & 7);
@@ -100,7 +98,7 @@ void ex_update_time_ns(struct timespec *dest) {
 
     struct timespec now;
 
-    if(clock_gettime(CLOCK_REALTIME, &now) == -1) {
+    if (clock_gettime(CLOCK_REALTIME, &now) == -1) {
         warning("clock_gettime: errno=%d (time will remain the same)", errno);
     } else {
         dest->tv_sec = now.tv_sec;

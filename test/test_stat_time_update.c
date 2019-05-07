@@ -1,10 +1,10 @@
+#include <err.h>
+#include <ex.h>
+#include <glib.h>
+#include <mkfs.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <err.h>
-#include <ex.h>
-#include <mkfs.h>
-#include <glib.h>
 
 void test_stat_time_update(void) {
     // create new device

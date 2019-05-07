@@ -1,10 +1,10 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <err.h>
 #include <ex.h>
-#include <mkfs.h>
 #include <glib.h>
+#include <mkfs.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 void test_write_max_size(void) {
     // create new device

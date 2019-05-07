@@ -1,14 +1,14 @@
 #ifndef EX_H
 #define EX_H
 
-#include <sys/statvfs.h>
-#include <fcntl.h>
-#include <stdint.h>
-#include <limits.h>
-#include <time.h>
-#include <inode.h>
 #include <device.h>
+#include <fcntl.h>
+#include <inode.h>
+#include <limits.h>
+#include <stdint.h>
 #include <super.h>
+#include <sys/statvfs.h>
+#include <time.h>
 
 void ex_init(const char *device);
 void ex_deinit(void);

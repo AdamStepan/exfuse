@@ -1,25 +1,26 @@
 #define FUSE_USE_VERSION 30
 
-#include <sys/vfs.h>
-#include <linux/stat.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <errno.h>
-#include <libgen.h>
-#include <fuse.h>
 #include <ex.h>
+#include <fuse.h>
+#include <libgen.h>
+#include <linux/stat.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/vfs.h>
+#include <time.h>
+#include <unistd.h>
 
 struct ex_args {
     char *loglevel;
     char *device;
 };
 
-static int do_create(const char *pathname, mode_t mode, struct fuse_file_info *fi) {
+static int do_create(const char *pathname, mode_t mode,
+                     struct fuse_file_info *fi) {
     (void)fi;
     return ex_create(pathname, mode);
 }
@@ -37,8 +38,9 @@ static int do_open(const char *pathname, struct fuse_file_info *fi) {
     return ex_open(pathname);
 }
 
-static int do_readdir(const char *pathname, void *buffer, fuse_fill_dir_t filler,
-                      off_t offset, struct fuse_file_info *fi) {
+static int do_readdir(const char *pathname, void *buffer,
+                      fuse_fill_dir_t filler, off_t offset,
+                      struct fuse_file_info *fi) {
     (void)fi;
 
     assert(!offset);
@@ -46,18 +48,18 @@ static int do_readdir(const char *pathname, void *buffer, fuse_fill_dir_t filler
     struct ex_dir_entry **entries;
     int rv = ex_readdir(pathname, &entries);
 
-    if(rv) {
+    if (rv) {
         goto free_entries;
     }
 
-    for(size_t i = 0; entries[i]; i++) {
+    for (size_t i = 0; entries[i]; i++) {
         debug("inode name=%s", entries[i]->name);
         filler(buffer, entries[i]->name, NULL, 0);
     }
 
 free_entries:
 
-    for(size_t i = 0; entries[i]; i++) {
+    for (size_t i = 0; entries[i]; i++) {
         ex_dir_entry_free(entries[i]);
     }
 
@@ -87,9 +89,7 @@ static int do_write(const char *path, const char *buf, size_t size,
     return ex_write(path, buf, size, offset);
 }
 
-static int do_unlink(const char *pathname) {
-    return ex_unlink(pathname);
-}
+static int do_unlink(const char *pathname) { return ex_unlink(pathname); }
 
 static int do_utimens(const char *pathname, const struct timespec tv[2]) {
     return ex_utimens(pathname, tv);
@@ -99,16 +99,14 @@ static int do_link(const char *srcpath, const char *destpath) {
     return ex_link(srcpath, destpath);
 }
 
-static int do_rmdir(const char *pathname) {
-    return ex_rmdir(pathname);
-}
+static int do_rmdir(const char *pathname) { return ex_rmdir(pathname); }
 
 static int do_statfs(const char *pathname, struct statvfs *statbuffer) {
     (void)pathname;
     return ex_statfs(statbuffer);
 }
 
-static void* do_init(struct fuse_conn_info *conn) {
+static void *do_init(struct fuse_conn_info *conn) {
     (void)conn;
 
     struct fuse_context *ctx = fuse_get_context();
@@ -155,29 +153,26 @@ static int do_rename(const char *from, const char *to) {
     return ex_rename(from, to);
 }
 
-static struct fuse_operations operations = {
-    .getattr=do_getattr,
-    .readdir=do_readdir,
-    .read=do_read,
-    .create=do_create,
-    .open=do_open,
-    .write=do_write,
-    .unlink=do_unlink,
-    .mkdir=do_mkdir,
-    .utimens=do_utimens,
-    .init=do_init,
-    .destroy=do_destroy,
-    .truncate=do_truncate,
-    .link=do_link,
-    .rmdir=do_rmdir,
-    .statfs=do_statfs,
-    .chmod=do_chmod,
-    .access=do_access,
-    .symlink=do_symlink,
-    .readlink=do_readlink,
-    .rename=do_rename
-};
-
+static struct fuse_operations operations = {.getattr = do_getattr,
+                                            .readdir = do_readdir,
+                                            .read = do_read,
+                                            .create = do_create,
+                                            .open = do_open,
+                                            .write = do_write,
+                                            .unlink = do_unlink,
+                                            .mkdir = do_mkdir,
+                                            .utimens = do_utimens,
+                                            .init = do_init,
+                                            .destroy = do_destroy,
+                                            .truncate = do_truncate,
+                                            .link = do_link,
+                                            .rmdir = do_rmdir,
+                                            .statfs = do_statfs,
+                                            .chmod = do_chmod,
+                                            .access = do_access,
+                                            .symlink = do_symlink,
+                                            .readlink = do_readlink,
+                                            .rename = do_rename};
 
 static void ex_args_init(struct ex_args *args) {
     args->loglevel = NULL;
@@ -187,8 +182,7 @@ static void ex_args_init(struct ex_args *args) {
 static struct fuse_opt ex_opts[] = {
     {"--log-level %s", offsetof(struct ex_args, loglevel), FUSE_OPT_KEY_OPT},
     {"--device %s", offsetof(struct ex_args, device), FUSE_OPT_KEY_OPT},
-    {NULL, 0, 0}
-};
+    {NULL, 0, 0}};
 
 int main(int argc, char **argv) {
 

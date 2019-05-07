@@ -1,10 +1,10 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <err.h>
 #include <ex.h>
-#include <mkfs.h>
 #include <glib.h>
+#include <mkfs.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 static int check_links(const char *name, const char *info, size_t expected) {
 
@@ -12,11 +12,11 @@ static int check_links(const char *name, const char *info, size_t expected) {
 
     int rv = ex_getattr(name, &st);
 
-    if(rv) {
+    if (rv) {
         goto end;
     }
 
-    if(st.st_nlink != expected) {
+    if (st.st_nlink != expected) {
         rv = 1;
         warnx("%s", info);
         goto end;

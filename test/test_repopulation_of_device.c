@@ -1,7 +1,7 @@
-#include <ex.h>
-#include <mkfs.h>
 #include <err.h>
+#include <ex.h>
 #include <glib.h>
+#include <mkfs.h>
 
 int populate_device(size_t ninodes) {
 
@@ -14,7 +14,7 @@ int populate_device(size_t ninodes) {
 
         rv = ex_create(buffer, S_IRWXU);
 
-        if(rv) {
+        if (rv) {
             warnx("ex_create(%s)", buffer);
             goto end;
         }
@@ -28,7 +28,7 @@ int populate_device(size_t ninodes) {
 
         rv = ex_getattr(buffer, &buf);
 
-        if(rv) {
+        if (rv) {
             warnx("ex_getattr(%s)", buffer);
             goto end;
         }
@@ -48,7 +48,7 @@ int clean_device(size_t ninodes) {
 
         rv = ex_unlink(buffer);
 
-        if(rv) {
+        if (rv) {
             warnx("ex_create(%s)", buffer);
             goto end;
         }

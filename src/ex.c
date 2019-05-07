@@ -1,11 +1,12 @@
 #include <ex.h>
 
 size_t ex_device_size(size_t ninodes) {
-    return ninodes * EX_DIRECT_BLOCKS * EX_BLOCK_SIZE + // space for n-1 inode data
-        ninodes * EX_DIRECT_BLOCKS +                    // space for n-1 inodes
-        sizeof(struct ex_super_block) +                 // space for superblock
-        ninodes / 8 +                                   // size of inode bitmap
-        ninodes * EX_DIRECT_BLOCKS / 8;                 // size of data bitmap
+    return ninodes * EX_DIRECT_BLOCKS *
+               EX_BLOCK_SIZE +             // space for n-1 inode data
+           ninodes * EX_DIRECT_BLOCKS +    // space for n-1 inodes
+           sizeof(struct ex_super_block) + // space for superblock
+           ninodes / 8 +                   // size of inode bitmap
+           ninodes * EX_DIRECT_BLOCKS / 8; // size of data bitmap
 }
 
 void ex_init(const char *device) {
@@ -26,17 +27,17 @@ void ex_deinit(void) {
 
     info("deinitialize");
 
-    if(device_fd != -1) {
+    if (device_fd != -1) {
         info("closing device: %i", device_fd);
         close(device_fd);
     }
 
-    if(super_block) {
+    if (super_block) {
         info("freeing super_block");
         free(super_block);
     }
 
-    if(root) {
+    if (root) {
         info("freeing root");
         free(root);
     }
@@ -54,7 +55,7 @@ int ex_create(const char *pathname, mode_t mode) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(pathname)) {
+    if (!ex_super_check_path_len(pathname)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -63,20 +64,20 @@ int ex_create(const char *pathname, mode_t mode) {
     struct ex_path *path = ex_path_make(pathname);
 
     struct ex_inode *destdir = ex_inode_find(dirpath);
-    if(!destdir) {
+    if (!destdir) {
         rv = -ENOENT;
         goto free_destdir;
     }
 
     struct ex_inode *inode = ex_inode_create(mode);
     // we do not have enough space for a new inode
-    if(!inode) {
+    if (!inode) {
         rv = -ENOSPC;
         goto free_destdir;
     }
 
     // check if directory has enough space for a new inode
-    if(!ex_inode_set(destdir, path->basename, inode)) {
+    if (!ex_inode_set(destdir, path->basename, inode)) {
         ex_inode_deallocate_blocks(inode);
         rv = -ENOSPC;
     }
@@ -100,7 +101,7 @@ int ex_getattr(const char *pathname, struct stat *st) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(pathname)) {
+    if (!ex_super_check_path_len(pathname)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -108,7 +109,7 @@ int ex_getattr(const char *pathname, struct stat *st) {
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
 
-    if(!inode) {
+    if (!inode) {
         rv = -ENOENT;
         goto free_path;
     }
@@ -146,7 +147,7 @@ int ex_unlink(const char *pathname) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(pathname)) {
+    if (!ex_super_check_path_len(pathname)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -154,7 +155,7 @@ int ex_unlink(const char *pathname) {
     struct ex_path *dirpath = ex_path_make_dirpath(pathname);
     struct ex_inode *dir = ex_inode_find(dirpath);
 
-    if(!dir) {
+    if (!dir) {
         rv = -ENOENT;
         goto free_dir;
     }
@@ -162,7 +163,7 @@ int ex_unlink(const char *pathname) {
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_unlink(dir, path->basename);
 
-    if(!inode) {
+    if (!inode) {
         rv = -ENOENT;
         goto free_all;
     }
@@ -187,8 +188,8 @@ int ex_link(const char *src_pathname, const char *dest_pathname) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(src_pathname) ||
-       !ex_super_check_path_len(dest_pathname)) {
+    if (!ex_super_check_path_len(src_pathname) ||
+        !ex_super_check_path_len(dest_pathname)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -196,17 +197,17 @@ int ex_link(const char *src_pathname, const char *dest_pathname) {
     struct ex_path *src_path = ex_path_make(src_pathname);
     struct ex_inode *src_inode = ex_inode_find(src_path);
 
-    if(!src_inode) {
+    if (!src_inode) {
         rv = -ENOENT;
         goto free_src_inode;
     }
 
-    if(src_inode->mode & S_IFDIR) {
+    if (src_inode->mode & S_IFDIR) {
         rv = -EPERM;
         goto free_src_inode;
     }
 
-    if(src_inode->nlinks == USHRT_MAX) {
+    if (src_inode->nlinks == USHRT_MAX) {
         rv = -EMLINK;
         goto free_src_inode;
     }
@@ -214,19 +215,19 @@ int ex_link(const char *src_pathname, const char *dest_pathname) {
     struct ex_path *dest_dir_path = ex_path_make_dirpath(dest_pathname);
     struct ex_inode *dest_dir_inode = ex_inode_find(dest_dir_path);
 
-    if(!dest_dir_inode) {
+    if (!dest_dir_inode) {
         rv = -ENOENT;
         goto free_dest_dir_inode;
     }
 
-    if(!(dest_dir_inode->mode & S_IFDIR)) {
+    if (!(dest_dir_inode->mode & S_IFDIR)) {
         rv = -ENOTDIR;
         goto free_src_inode;
     }
 
     struct ex_path *dest_path = ex_path_make(dest_pathname);
 
-    if(!ex_inode_set(dest_dir_inode, dest_path->basename, src_inode)) {
+    if (!ex_inode_set(dest_dir_inode, dest_path->basename, src_inode)) {
         rv = -ENOSPC;
     }
 
@@ -260,7 +261,7 @@ int ex_read(const char *pathname, char *buffer, size_t size, off_t offset) {
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
 
-    if(!inode) {
+    if (!inode) {
         rv = -ENOENT;
         goto free_inode;
     }
@@ -293,19 +294,19 @@ int ex_write(const char *pathname, const char *buf, size_t size, off_t offset) {
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
 
-    if(!inode) {
+    if (!inode) {
         rv = -ENOENT;
         goto free_inode;
     }
 
     rv = ex_inode_write(inode, offset, buf, size);
 
-    if(!rv) {
+    if (!rv) {
         rv = -EIO;
         goto free_inode;
     }
 
-    if(rv == -1) { // ENOSPC?
+    if (rv == -1) { // ENOSPC?
         rv = -EFBIG;
         goto free_inode;
     }
@@ -333,7 +334,7 @@ int ex_mkdir(const char *pathname, mode_t mode) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(pathname)) {
+    if (!ex_super_check_path_len(pathname)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -341,7 +342,7 @@ int ex_mkdir(const char *pathname, mode_t mode) {
     struct ex_path *destpath = ex_path_make_dirpath(pathname);
     struct ex_inode *destdir = ex_inode_find(destpath);
 
-    if(!destdir) {
+    if (!destdir) {
         rv = -ENOENT;
         goto free_inode;
     }
@@ -350,7 +351,7 @@ int ex_mkdir(const char *pathname, mode_t mode) {
     struct ex_inode *dir = ex_inode_create(mode | S_IFDIR);
 
     // we do not have enough space for a new inode
-    if(!dir) {
+    if (!dir) {
         rv = -ENOSPC;
         goto free_all;
     }
@@ -378,7 +379,7 @@ int ex_truncate(const char *pathname) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(pathname)) {
+    if (!ex_super_check_path_len(pathname)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -386,12 +387,12 @@ int ex_truncate(const char *pathname) {
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
 
-    if(!inode) {
+    if (!inode) {
         rv = -ENOENT;
         goto free_inode;
     }
 
-    if(inode->mode & S_IFDIR) {
+    if (inode->mode & S_IFDIR) {
         rv = -EISDIR;
         goto free_inode;
     }
@@ -419,21 +420,20 @@ int ex_readdir(const char *pathname, struct ex_dir_entry ***entries) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(pathname)) {
+    if (!ex_super_check_path_len(pathname)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
 
-
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
 
-    if(!inode) {
+    if (!inode) {
         rv = -ENOENT;
         goto free_inode;
     }
 
-    if(!(inode->mode & S_IFDIR)) {
+    if (!(inode->mode & S_IFDIR)) {
         rv = -ENOTDIR;
         goto free_inode;
     }
@@ -462,12 +462,12 @@ int ex_utimens(const char *pathname, const struct timespec tv[2]) {
 
     ex_super_lock();
 
-    #define ATIM 0
-    #define MTIM 1
+#define ATIM 0
+#define MTIM 1
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(pathname)) {
+    if (!ex_super_check_path_len(pathname)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -475,7 +475,7 @@ int ex_utimens(const char *pathname, const struct timespec tv[2]) {
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
 
-    if(!inode) {
+    if (!inode) {
         rv = -ENOENT;
         goto free_inode;
     }
@@ -501,7 +501,7 @@ int ex_rmdir(const char *pathname) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(pathname)) {
+    if (!ex_super_check_path_len(pathname)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -509,12 +509,12 @@ int ex_rmdir(const char *pathname) {
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
 
-    if(!inode) {
+    if (!inode) {
         rv = -ENOENT;
         goto free_path;
     }
 
-    if(!(inode->mode & S_IFDIR)) {
+    if (!(inode->mode & S_IFDIR)) {
         rv = -ENOTDIR;
         goto free_inode;
     }
@@ -522,12 +522,12 @@ int ex_rmdir(const char *pathname) {
     struct ex_path *dirpath = ex_path_make_dirpath(pathname);
     struct ex_inode *dir = ex_inode_find(dirpath);
 
-    if(!dir) {
-        rv =  -ENOENT;
+    if (!dir) {
+        rv = -ENOENT;
         goto free_dir_inode;
     }
 
-    if(!ex_inode_unlink(dir, path->basename)) {
+    if (!ex_inode_unlink(dir, path->basename)) {
         rv = -ENOTEMPTY;
     }
 
@@ -565,7 +565,7 @@ int ex_chmod(const char *pathname, mode_t mode) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(pathname)) {
+    if (!ex_super_check_path_len(pathname)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -573,7 +573,7 @@ int ex_chmod(const char *pathname, mode_t mode) {
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
 
-    if(!inode) {
+    if (!inode) {
         rv = -ENOENT;
         goto free_inode;
     }
@@ -605,7 +605,7 @@ int ex_access(const char *pathname, int mode) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(pathname)) {
+    if (!ex_super_check_path_len(pathname)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -613,17 +613,16 @@ int ex_access(const char *pathname, int mode) {
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
 
-    if(!inode) {
+    if (!inode) {
         rv = -ENOENT;
         goto free_inode;
     }
 
-    if(mode == F_OK) {
+    if (mode == F_OK) {
         goto free_inode;
     }
 
-    if (!(mode & inode->mode) &&
-        !(mode & (inode->mode >> 3)) &&
+    if (!(mode & inode->mode) && !(mode & (inode->mode >> 3)) &&
         !(mode & (inode->mode >> 6))) {
         rv = -EACCES;
     }
@@ -644,8 +643,7 @@ int ex_symlink(const char *target, const char *link) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(target) ||
-       !ex_super_check_path_len(link)) {
+    if (!ex_super_check_path_len(target) || !ex_super_check_path_len(link)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -654,7 +652,7 @@ int ex_symlink(const char *target, const char *link) {
     struct ex_path *target_path = ex_path_make(target);
     struct ex_inode *target_inode = ex_inode_find(target_path);
 
-    if(!target_inode) {
+    if (!target_inode) {
         rv = -ENOENT;
         goto target_not_found;
     }
@@ -663,12 +661,12 @@ int ex_symlink(const char *target, const char *link) {
     struct ex_path *link_dir_path = ex_path_make_dirpath(link);
     struct ex_inode *link_dir_inode = ex_inode_find(link_dir_path);
 
-    if(!link_dir_path) {
+    if (!link_dir_path) {
         rv = -ENOENT;
         goto link_dir_is_invalid;
     }
 
-    if(!(link_dir_inode->mode & S_IFDIR)) {
+    if (!(link_dir_inode->mode & S_IFDIR)) {
         rv = -ENOTDIR;
         goto link_dir_is_invalid;
     }
@@ -677,7 +675,7 @@ int ex_symlink(const char *target, const char *link) {
     struct ex_path *link_path = ex_path_make(link);
     struct ex_inode *link_inode = ex_inode_find(link_path);
 
-    if(link_inode) {
+    if (link_inode) {
         rv = -EEXIST;
         goto link_exists;
     }
@@ -685,7 +683,7 @@ int ex_symlink(const char *target, const char *link) {
     // create link inode
     link_inode = ex_inode_create(S_IFLNK | S_IRWXU | S_IRWXG | S_IRWXO);
 
-    if(!link_inode) {
+    if (!link_inode) {
         rv = -ENOSPC;
         goto fail;
     }
@@ -693,14 +691,15 @@ int ex_symlink(const char *target, const char *link) {
     // write target path into inode data blocks
     size_t target_len = strlen(target);
 
-    if(ex_inode_write(link_inode, 0, target, target_len) != (ssize_t)target_len) {
+    if (ex_inode_write(link_inode, 0, target, target_len) !=
+        (ssize_t)target_len) {
         rv = -EIO;
         ex_inode_deallocate_blocks(link_inode);
         goto fail;
     }
 
     // add link inode into link directory
-    if(!ex_inode_set(link_dir_inode, link_path->basename, link_inode)) {
+    if (!ex_inode_set(link_dir_inode, link_path->basename, link_inode)) {
         rv = -ENOSPC;
         ex_inode_deallocate_blocks(link_inode);
     }
@@ -708,7 +707,7 @@ int ex_symlink(const char *target, const char *link) {
 fail:
 link_exists:
     ex_path_free(link_path);
-    if(link_inode)
+    if (link_inode)
         ex_inode_free(link_inode);
 
 link_dir_is_invalid:
@@ -734,7 +733,7 @@ int ex_readlink(const char *pathname, char *buffer, size_t bufsize) {
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
 
-    if(!inode) {
+    if (!inode) {
         rv = -ENOENT;
         goto invalid_path;
     }
@@ -759,8 +758,7 @@ int ex_rename(const char *from, const char *to) {
 
     int rv = 0;
 
-    if(!ex_super_check_path_len(from) ||
-       !ex_super_check_path_len(to)) {
+    if (!ex_super_check_path_len(from) || !ex_super_check_path_len(to)) {
         rv = -ENAMETOOLONG;
         goto name_too_long;
     }
@@ -770,7 +768,7 @@ int ex_rename(const char *from, const char *to) {
     struct ex_path *from_path = ex_path_make(from);
     struct ex_inode *from_inode_dir = ex_inode_find(from_path_dir);
 
-    if(!from_inode_dir) {
+    if (!from_inode_dir) {
         rv = -ENOENT;
         goto from_not_found;
     }
@@ -780,13 +778,13 @@ int ex_rename(const char *from, const char *to) {
     struct ex_path *to_path = ex_path_make(to);
     struct ex_inode *to_inode_dir = ex_inode_find(to_path_dir);
 
-    if(!to_inode_dir) {
+    if (!to_inode_dir) {
         rv = -ENOENT;
         goto to_dir_is_invalid;
     }
 
-    rv = ex_inode_rename(from_inode_dir, to_inode_dir,
-                         from_path->basename, to_path->basename);
+    rv = ex_inode_rename(from_inode_dir, to_inode_dir, from_path->basename,
+                         to_path->basename);
 
 to_dir_is_invalid:
     ex_path_free(to_path_dir);
@@ -800,6 +798,4 @@ name_too_long:
     ex_super_unlock();
 
     return rv;
-
 }
-

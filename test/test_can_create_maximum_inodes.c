@@ -1,7 +1,7 @@
-#include <ex.h>
-#include <mkfs.h>
 #include <err.h>
+#include <ex.h>
 #include <glib.h>
+#include <mkfs.h>
 
 void test_can_create_maximum_inodes(void) {
 
@@ -31,7 +31,6 @@ void test_can_create_maximum_inodes(void) {
 
         rv = ex_create(buffer, S_IRWXU);
         g_assert(!rv);
-
     }
 
     for (size_t i = 0; i < ninodes - 1; i++) {
@@ -42,7 +41,5 @@ void test_can_create_maximum_inodes(void) {
 
         rv = ex_getattr(buffer, &buf);
         g_assert(!rv);
-
     }
-
 }

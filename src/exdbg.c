@@ -1,5 +1,5 @@
-#include <stdlib.h>
 #include <getopt.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "ex.h"
@@ -23,11 +23,10 @@ struct options {
     enum action action;
 };
 
-char* readable_size(double size) {
+char *readable_size(double size) {
 
-    static const char* units[] = {
-        "B", "kiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"
-    };
+    static const char *units[] = {"B",   "kiB", "MiB", "GiB", "TiB",
+                                  "PiB", "EiB", "ZiB", "YiB"};
 
     static char buf[512];
 
@@ -75,7 +74,7 @@ void print_super(const char *device) {
     printf("\troot = %lu\n", super_block->root);
     printf("\tmagic = %x\n", super_block->magic);
     printf("\tdevice_size = %lu (%s)\n", super_block->device_size,
-        readable_size(super_block->device_size));
+           readable_size(super_block->device_size));
     print_bitmap("data_bitmap", &super_block->bitmap);
     print_bitmap("inode_bitmap", &super_block->inode_bitmap);
 }
@@ -88,7 +87,8 @@ void print_info(const char *device) {
 
     printf("info:\n");
 
-    size_t max_dir_entries = (EX_BLOCK_SIZE / sizeof(struct ex_dir_entry)) * (EX_DIRECT_BLOCKS - 2);
+    size_t max_dir_entries =
+        (EX_BLOCK_SIZE / sizeof(struct ex_dir_entry)) * (EX_DIRECT_BLOCKS - 2);
     printf("\tmax_dir_entries: %lu\n", max_dir_entries);
 
     printf("\tdir_entry_size: %luB\n", sizeof(struct ex_dir_entry));
@@ -105,7 +105,7 @@ void print_directory_entries(struct ex_inode *inode) {
     foreach_inode_block(inode, block) {
         foreach_block_entry(block, entry) {
 
-            if(entry.free || entry.magic != EX_DIR_MAGIC1) {
+            if (entry.free || entry.magic != EX_DIR_MAGIC1) {
                 continue;
             }
 
@@ -140,7 +140,7 @@ void print_inode(const char *device, size_t address) {
 
     struct ex_inode *inode = ex_inode_load(address);
 
-    if(!inode) {
+    if (!inode) {
         printf("\tno inode at %lu\n", address);
         return;
     }
@@ -157,12 +157,11 @@ void print_inode(const char *device, size_t address) {
     ex_print_mode(inode->mode);
     printf(")\n");
 
-
     printf("\tmtime: %ld.%.9ld\n", inode->mtime.tv_sec, inode->mtime.tv_nsec);
     printf("\tatime: %ld.%.9ld\n", inode->mtime.tv_sec, inode->mtime.tv_nsec);
     printf("\tctime: %ld.%.9ld\n", inode->mtime.tv_sec, inode->mtime.tv_nsec);
 
-    if(inode->mode & S_IFDIR) {
+    if (inode->mode & S_IFDIR) {
         printf("\tentries:\n");
         print_directory_entries(inode);
     }
@@ -170,15 +169,15 @@ void print_inode(const char *device, size_t address) {
 
 void help(void) {
     printf("exdbg: \n"
-        "\t--device\t\tspecify ex device\n"
-        "\t--inode addr\t\tdisplay information about inode\n"
-        "\t--inode-data\t\tdisplay inode data (binary)\n"
-        "\t--bitmap-data\t\tdisplay bitmap data\n"
-        "\t--super\t\t\tdisplay info about super block\n"
-        "\t--info\t\t\tdisplay info about ex filesystem\n");
+           "\t--device\t\tspecify ex device\n"
+           "\t--inode addr\t\tdisplay information about inode\n"
+           "\t--inode-data\t\tdisplay inode data (binary)\n"
+           "\t--bitmap-data\t\tdisplay bitmap data\n"
+           "\t--super\t\t\tdisplay info about super block\n"
+           "\t--info\t\t\tdisplay info about ex filesystem\n");
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
 
     const struct option longopts[] = {
         {"device", required_argument, 0, 'd'},
@@ -188,73 +187,70 @@ int main(int argc, char** argv) {
         {"super", no_argument, 0, 's'},
         {"info", no_argument, 0, 'I'},
         {"help", no_argument, 0, 'h'},
-        {0, 0, 0, 0}
-    };
-
-
+        {0, 0, 0, 0}};
 
     int opt;
     struct options options;
     memset(&options, '\0', sizeof(options));
 
-    while((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1) {
-        switch(opt) {
-            case 'b':
-                options.bitmap_data = strtoull(optarg, NULL, 0);
-                options.action = PRINT_BITMAP_DATA;
-                break;
-            case 'd':
-                options.device = strdup(optarg);
-                break;
-            case 'D':
-                options.inode_data = strtoull(optarg, NULL, 0);
-                options.action = PRINT_INODE_DATA;
-                break;
-            case 'i':
-                options.inode = strtoull(optarg, NULL, 0);
-                options.action = PRINT_INODE;
-                break;
-            case 's':
-                options.print_super = 1;
-                options.action = PRINT_SUPER;
-                break;
-            case 'I':
-                options.print_info = 1;
-                options.action = PRINT_INFO;
-                break;
-            case 'h':
-                help();
-                return 0;
-            default:
-                help();
-                return 1;
+    while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1) {
+        switch (opt) {
+        case 'b':
+            options.bitmap_data = strtoull(optarg, NULL, 0);
+            options.action = PRINT_BITMAP_DATA;
+            break;
+        case 'd':
+            options.device = strdup(optarg);
+            break;
+        case 'D':
+            options.inode_data = strtoull(optarg, NULL, 0);
+            options.action = PRINT_INODE_DATA;
+            break;
+        case 'i':
+            options.inode = strtoull(optarg, NULL, 0);
+            options.action = PRINT_INODE;
+            break;
+        case 's':
+            options.print_super = 1;
+            options.action = PRINT_SUPER;
+            break;
+        case 'I':
+            options.print_info = 1;
+            options.action = PRINT_INFO;
+            break;
+        case 'h':
+            help();
+            return 0;
+        default:
+            help();
+            return 1;
         }
     }
 
-    if(!options.device) {
+    if (!options.device) {
         printf("error: no device name supplied\n");
         help();
         return 1;
     }
 
     switch (options.action) {
-        case PRINT_SUPER:
-            print_super(options.device);
-            break;
-        case PRINT_INFO:
-            print_info(options.device);
-            break;
-        case PRINT_INODE:
-            print_inode(options.device, options.inode);
-            break;
-        case PRINT_INODE_DATA:
-            print_inode_data(options.device, options.inode_data);
-            break;
-        case PRINT_BITMAP_DATA:
-            print_bitmap_data(options.device, options.bitmap_data);
-            break;
-        default:
-            print_super(options.device);
+    case PRINT_SUPER:
+        print_super(options.device);
+        break;
+    case PRINT_INFO:
+        print_info(options.device);
+        break;
+    case PRINT_INODE:
+        print_inode(options.device, options.inode);
+        break;
+    case PRINT_INODE_DATA:
+        print_inode_data(options.device, options.inode_data);
+        break;
+    case PRINT_BITMAP_DATA:
+        print_bitmap_data(options.device, options.bitmap_data);
+        break;
+    default:
+        print_super(options.device);
     }
 
     return 0;

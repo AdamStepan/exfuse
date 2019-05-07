@@ -2,19 +2,17 @@
 
 int device_fd = -1;
 
-int ex_device_fd(void) {
-    return device_fd;
-}
+int ex_device_fd(void) { return device_fd; }
 
 int ex_device_create(const char *name, size_t size) {
 
-    if(access(name, F_OK) != -1) {
+    if (access(name, F_OK) != -1) {
         return 0;
     }
 
     int fd = open(name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 
-    if(fd == -1) {
+    if (fd == -1) {
         err(errno, "%s", name);
     }
 
@@ -29,7 +27,7 @@ int ex_device_open(const char *device_name) {
 
     device_fd = open(device_name, O_RDWR);
 
-    if(device_fd == -1) {
+    if (device_fd == -1) {
         err(errno, "%s", device_name);
     }
 
@@ -52,14 +50,14 @@ void *ex_device_read(size_t off, size_t amount) {
         goto failure;
     }
 
-    if((size_t)offset != off) {
+    if ((size_t)offset != off) {
         warnx("lseek: offset=%lu, wanted=%lu", offset, off);
         goto failure;
     }
 
     size_t readed = read(fd, data, amount);
 
-    if(readed != amount) {
+    if (readed != amount) {
         warnx("read: readed=%lu, wanted=%lu", readed, amount);
         goto failure;
     }
@@ -83,7 +81,7 @@ ssize_t ex_device_read_to_buffer(char *buffer, size_t off, size_t amount) {
         goto failure;
     }
 
-    if((size_t)offset != off) {
+    if ((size_t)offset != off) {
         warnx("lseek: offset=%lu, wanted=%lu", offset, off);
         goto failure;
     }
@@ -93,7 +91,6 @@ ssize_t ex_device_read_to_buffer(char *buffer, size_t off, size_t amount) {
 failure:
     return -1;
 }
-
 
 void ex_device_write(size_t off, const char *data, size_t amount) {
 
@@ -106,16 +103,15 @@ void ex_device_write(size_t off, const char *data, size_t amount) {
         goto failure;
     }
 
-    if((size_t)offset != off) {
+    if ((size_t)offset != off) {
         warn("lseek: offset=%lu, off=%lu", offset, off);
         goto failure;
     }
 
     size_t written = write(fd, data, amount);
 
-    if(written != amount) {
+    if (written != amount) {
         warn("write: written=%lu, amount=%lu", written, amount);
     }
-failure:
-    ;
+failure:;
 }

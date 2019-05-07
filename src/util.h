@@ -1,17 +1,17 @@
 #ifndef EX_UTIL_H
 #define EX_UTIL_H
 
-#include <linux/stat.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <err.h>
 #include <errno.h>
-#include <time.h>
+#include <linux/stat.h>
 #include <logging.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
 void *ex_malloc(size_t size);
 void *ex_realloc(void *ptr, size_t size);

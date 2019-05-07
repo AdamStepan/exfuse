@@ -1,11 +1,11 @@
-#include <linux/stat.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <err.h>
 #include <ex.h>
-#include <mkfs.h>
 #include <glib.h>
+#include <linux/stat.h>
+#include <mkfs.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 void test_populate_and_remove_dir(void) {
 
@@ -26,7 +26,6 @@ void test_populate_and_remove_dir(void) {
 
         rv = ex_create(buffer, S_IRWXU);
         g_assert(!rv);
-
     }
 
     // check that we can query files attributes

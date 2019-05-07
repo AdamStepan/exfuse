@@ -77,4 +77,6 @@ add_custom_target(distclean
         COMMAND rm -vrf Testing
         COMMAND rm -vf exdev test/exdev)
 
-
+add_custom_target(format
+    COMMAND find ${CMAKE_SOURCE_DIR} -iname '*.h' -o -iname '*.c' | xargs clang-format -i
+)

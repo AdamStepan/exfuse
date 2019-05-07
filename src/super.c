@@ -3,13 +3,12 @@
 struct ex_super_block *super_block = NULL;
 
 // super | inode bitmap | data bitmap | inodes | data
-#define inode_bitmap_end \
+#define inode_bitmap_end                                                       \
     (super_block->inode_bitmap.address + super_block->inode_bitmap.size)
 
-#define data_bitmap_end \
-    (super_block->bitmap.address + super_block->bitmap.size)
+#define data_bitmap_end (super_block->bitmap.address + super_block->bitmap.size)
 
-#define first_data_block \
+#define first_data_block                                                       \
     (first_inode_block + (EX_BLOCK_SIZE * super_block->inode_bitmap.max_items))
 
 #define first_inode_block (data_bitmap_end)
@@ -23,7 +22,7 @@ void ex_bitmap_free_bit(struct ex_bitmap *bitmap, size_t nth_bit) {
 
     *bitdata &= ~(1UL << nth_bit_in_byte);
 
-    if(bitmap->allocated)
+    if (bitmap->allocated)
         bitmap->allocated -= 1;
 
     ex_device_write(bitmap->address + nth_byte, bitdata, sizeof(char));
@@ -34,7 +33,7 @@ void ex_bitmap_free_bit(struct ex_bitmap *bitmap, size_t nth_bit) {
 
 size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap) {
 
-    if(bitmap->allocated == bitmap->max_items) {
+    if (bitmap->allocated == bitmap->max_items) {
         info("bitmap is full");
         return -1;
     }
@@ -97,7 +96,6 @@ void ex_super_deallocate_block(block_address address) {
     size_t nth_bit = address_without_offset / EX_BLOCK_SIZE;
 
     ex_bitmap_free_bit(&super_block->bitmap, nth_bit);
-
 }
 
 void ex_super_init_block(size_t address, char with) {
@@ -110,18 +108,15 @@ void ex_super_init_block(size_t address, char with) {
 
 struct ex_inode_block ex_super_allocate_inode_block(void) {
 
-    struct ex_inode_block block = {
-        .address = EX_BLOCK_INVALID_ADDRESS,
-        .id = EX_BLOCK_INVALID_ID
-    };
+    struct ex_inode_block block = {.address = EX_BLOCK_INVALID_ADDRESS,
+                                   .id = EX_BLOCK_INVALID_ID};
 
     block.id = ex_bitmap_find_free_bit(&super_block->inode_bitmap);
 
-    if(block.id == EX_BLOCK_INVALID_ID) {
+    if (block.id == EX_BLOCK_INVALID_ID) {
         warning("unable to find free inode block");
         goto returnblock;
     }
-
 
     block.address = first_inode_block + block.id * EX_BLOCK_SIZE;
 
@@ -139,7 +134,7 @@ block_address ex_super_allocate_block(void) {
     size_t free_block_pos = ex_bitmap_find_free_bit(&super_block->bitmap);
     size_t address = -1;
 
-    if(free_block_pos == EX_BLOCK_INVALID_ID) {
+    if (free_block_pos == EX_BLOCK_INVALID_ID) {
         warning("unable to find free block");
     } else {
         debug("found free block: position=%lu", free_block_pos);
@@ -152,9 +147,10 @@ block_address ex_super_allocate_block(void) {
 }
 
 void ex_super_print(const struct ex_super_block *block) {
-    info("{.root=%lu, .device_size=%lu, .bitmap={head=%lu, .address=%lu .size=%lu, .allocated=%lu}}",
-            block->root, block->device_size, block->bitmap.head, block->bitmap.address,
-            block->bitmap.size, block->bitmap.allocated);
+    info("{.root=%lu, .device_size=%lu, .bitmap={head=%lu, .address=%lu "
+         ".size=%lu, .allocated=%lu}}",
+         block->root, block->device_size, block->bitmap.head,
+         block->bitmap.address, block->bitmap.size, block->bitmap.allocated);
 }
 
 void ex_super_statfs(struct statvfs *statbuf) {
@@ -163,7 +159,8 @@ void ex_super_statfs(struct statvfs *statbuf) {
     statbuf->f_namemax = EX_NAME_LEN;
 
     statbuf->f_blocks = super_block->bitmap.max_items;
-    statbuf->f_bfree = super_block->bitmap.max_items - super_block->bitmap.allocated;
+    statbuf->f_bfree =
+        super_block->bitmap.max_items - super_block->bitmap.allocated;
     statbuf->f_bavail = statbuf->f_bfree;
 
     statbuf->f_files = super_block->inode_bitmap.max_items;
@@ -172,24 +169,22 @@ void ex_super_statfs(struct statvfs *statbuf) {
     statbuf->f_flag = ST_SYNCHRONOUS | ST_NOSUID | ST_NODEV;
 }
 
-int ex_super_create(size_t device_size,
-                    struct ex_bitmap *inode_bitmap,
+int ex_super_create(size_t device_size, struct ex_bitmap *inode_bitmap,
                     struct ex_bitmap *data_bitmap) {
 
     super_block = ex_malloc(sizeof(struct ex_super_block));
 
-    if(!super_block) {
+    if (!super_block) {
         return -ENOMEM;
     }
 
-    *super_block = (struct ex_super_block){
-        // we don't know address of root inode yet
-        .root = 0,
-        .device_size = device_size,
-        .bitmap = *data_bitmap,
-        .inode_bitmap = *inode_bitmap,
-        .magic = EX_SUPER_MAGIC
-    };
+    *super_block =
+        (struct ex_super_block){// we don't know address of root inode yet
+                                .root = 0,
+                                .device_size = device_size,
+                                .bitmap = *data_bitmap,
+                                .inode_bitmap = *inode_bitmap,
+                                .magic = EX_SUPER_MAGIC};
 
     ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
 
@@ -205,13 +200,13 @@ void ex_super_load(void) {
 
     super_block = ex_device_read(0, sizeof(struct ex_super_block));
 
-    if(!super_block) {
+    if (!super_block) {
         fatal("unable to load super block");
     }
 
-    if(super_block->magic != EX_SUPER_MAGIC) {
-        fatal("invalid super block magic: %x, expected: %x",
-                super_block->magic, EX_SUPER_MAGIC);
+    if (super_block->magic != EX_SUPER_MAGIC) {
+        fatal("invalid super block magic: %x, expected: %x", super_block->magic,
+              EX_SUPER_MAGIC);
     }
 
     pthread_mutexattr_init(&super_lock_attr);
@@ -232,10 +227,6 @@ int ex_super_check_path_len(const char *pathname) {
     return 1;
 }
 
-void ex_super_lock(void) {
-    pthread_mutex_lock(&super_lock);
-}
+void ex_super_lock(void) { pthread_mutex_lock(&super_lock); }
 
-void ex_super_unlock(void) {
-    pthread_mutex_unlock(&super_lock);
-}
+void ex_super_unlock(void) { pthread_mutex_unlock(&super_lock); }

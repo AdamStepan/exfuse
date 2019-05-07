@@ -1,14 +1,14 @@
 #ifndef EX_DEVICE_H
 #define EX_DEVICE_H
 
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <stdint.h>
 #include <err.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <logging.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <util.h>
 
 #define EX_DEVICE "exdev"

@@ -1,5 +1,5 @@
-#include <logging.h>
 #include <glib.h>
+#include <logging.h>
 
 void test_write_max_size(void);
 void test_truncate_file(void);
@@ -20,7 +20,7 @@ void test_create_dir(void);
 void test_can_create_maximum_inodes(void);
 void test_inode_link(void);
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     ex_set_log_level(fatal);
 
     g_test_init(&argc, &argv, NULL);

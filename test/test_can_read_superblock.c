@@ -1,7 +1,7 @@
-#include <ex.h>
-#include <mkfs.h>
 #include <err.h>
+#include <ex.h>
 #include <glib.h>
+#include <mkfs.h>
 
 void test_can_read_superblock(void) {
 
@@ -25,5 +25,4 @@ void test_can_read_superblock(void) {
     g_assert_cmpint(super_block->magic, ==, EX_SUPER_MAGIC);
     g_assert(super_block->root);
     g_assert_cmpint(super_block->inode_bitmap.max_items, ==, ninodes);
-
 }

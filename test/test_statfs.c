@@ -1,10 +1,10 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <err.h>
 #include <ex.h>
-#include <mkfs.h>
 #include <glib.h>
+#include <mkfs.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 void test_statfs(void) {
 
@@ -29,14 +29,14 @@ void test_statfs(void) {
     g_assert(!rv);
     g_assert_cmpint(statbuf.f_files, ==, ninodes);
     // NOTE: -1 is here becase of root
-    g_assert_cmpint(statbuf.f_ffree, ==, ninodes -1);
+    g_assert_cmpint(statbuf.f_ffree, ==, ninodes - 1);
 
     rv = ex_create("/file0", S_IRWXU);
     g_assert(!rv);
 
     rv = ex_statfs(&statbuf);
     g_assert(!rv);
-    g_assert_cmpint(statbuf.f_ffree, ==, ninodes -2);
+    g_assert_cmpint(statbuf.f_ffree, ==, ninodes - 2);
 
     ex_deinit();
 }

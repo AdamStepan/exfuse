@@ -16,7 +16,7 @@ struct ex_path *ex_path_make(const char *path) {
     p->ncomponents = 0;
 
     // we can return count of components from split_by_string function
-    while(p->components[p->ncomponents]) {
+    while (p->components[p->ncomponents]) {
         p->ncomponents++;
     }
 
@@ -26,7 +26,7 @@ struct ex_path *ex_path_make(const char *path) {
 struct ex_path *ex_path_make_dirpath(const char *pathname) {
 
     char *copy_of_path = ex_strdup(pathname);
-    struct ex_path *path =  ex_path_make(dirname(copy_of_path));
+    struct ex_path *path = ex_path_make(dirname(copy_of_path));
 
     free(copy_of_path);
 
@@ -38,7 +38,7 @@ void ex_path_free(struct ex_path *path) {
     free(path->dirname_to_free);
     free(path->basename_to_free);
 
-    for(size_t i = 0; i < path->ncomponents; i++) {
+    for (size_t i = 0; i < path->ncomponents; i++) {
         free(path->components[i]);
     }
 
@@ -53,7 +53,7 @@ void ex_path_print(const struct ex_path *path) {
     printf("ncomponents: %lu\n", path->ncomponents);
     printf("components:");
 
-    for(size_t i = 0; path->components[i]; i++) {
+    for (size_t i = 0; path->components[i]; i++) {
         printf(" %s", path->components[i]);
     }
 

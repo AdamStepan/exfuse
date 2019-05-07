@@ -1,7 +1,7 @@
-#include <stdlib.h>
 #include <getopt.h>
-#include <string.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 
 #include "ex.h"
@@ -40,7 +40,8 @@ int ex_mkfs_check_device(struct ex_mkfs_params *params) {
 
         if (stat(params->device, &buf)) {
             rv = errno;
-            error("stat(%s): unable to get device size: %i", params->device, rv);
+            error("stat(%s): unable to get device size: %i", params->device,
+                  rv);
             return -rv;
         }
 
@@ -64,11 +65,12 @@ int ex_mkfs_check_device(struct ex_mkfs_params *params) {
 
 int ex_mkfs_device_clear(size_t off, size_t amount) {
 
-    char *buffer = mmap(NULL, amount, PROT_WRITE, MAP_SHARED, ex_device_fd(), off);
+    char *buffer =
+        mmap(NULL, amount, PROT_WRITE, MAP_SHARED, ex_device_fd(), off);
 
     if (buffer == MAP_FAILED) {
-        fatal("mmap failed: off=%zu, amount=%zu, error: %s",
-               off, amount, strerror(errno));
+        fatal("mmap failed: off=%zu, amount=%zu, error: %s", off, amount,
+              strerror(errno));
     }
 
     // XXX: we gat SIGBUS is len(file/device) < [off, off + amount]
@@ -123,11 +125,12 @@ int ex_mkfs_dbitmap_create(struct ex_mkfs_params *params,
     ctx->data_bitmap.last = 0;
 
     // data bitmap starts after end of an ibitmap
-    ctx->data_bitmap.address = ctx->inode_bitmap.address + \
-                               round_block(ctx->inode_bitmap.size);
+    ctx->data_bitmap.address =
+        ctx->inode_bitmap.address + round_block(ctx->inode_bitmap.size);
     ctx->data_bitmap.head = offsetof(struct ex_super_block, bitmap);
 
-    ctx->data_bitmap.max_items = params->number_of_inodes * ex_inode_max_blocks();
+    ctx->data_bitmap.max_items =
+        params->number_of_inodes * ex_inode_max_blocks();
     ctx->data_bitmap.size = ctx->data_bitmap.max_items / 8;
 
     ctx->free_device_space -= ctx->data_bitmap.max_items * EX_BLOCK_SIZE;
@@ -148,8 +151,8 @@ int ex_mkfs_check_ibitmap_params(struct ex_mkfs_params *params,
     ssize_t bitmap_space = params->number_of_inodes / 8;
     ssize_t needed_space = inodes_space + bitmap_space;
 
-    debug("inodes_space: %zd, bitmap_space: %zd, free_space: %zd",
-          inodes_space, bitmap_space, ctx->free_device_space);
+    debug("inodes_space: %zd, bitmap_space: %zd, free_space: %zd", inodes_space,
+          bitmap_space, ctx->free_device_space);
 
     if (needed_space > ctx->free_device_space) {
         error("not enough space for inode bitmap: got %zd, need: %zd",
@@ -228,20 +231,20 @@ int ex_mkfs_create_root(struct ex_mkfs_context *ctx) {
 int ex_mkfs_create_super_block(struct ex_mkfs_params *params,
                                struct ex_mkfs_context *ctx) {
 
-    ctx->super_block = (struct ex_super_block) {
+    ctx->super_block = (struct ex_super_block){
         // we can set root until we put super block on disk
         .root = 0,
         .device_size = params->device_size,
         .bitmap = ctx->data_bitmap,
         .inode_bitmap = ctx->inode_bitmap,
-        .magic = EX_SUPER_MAGIC
-    };
+        .magic = EX_SUPER_MAGIC};
 
     // XXX: we should do at least some checks
     return 0;
 }
 
-int ex_mkfs_prepare(struct ex_mkfs_params *params, struct ex_mkfs_context *ctx) {
+int ex_mkfs_prepare(struct ex_mkfs_params *params,
+                    struct ex_mkfs_context *ctx) {
 
     // adjust avaible free space
     debug("available free space: %zi", ctx->free_device_space);
@@ -276,7 +279,6 @@ int ex_mkfs_prepare(struct ex_mkfs_params *params, struct ex_mkfs_context *ctx) 
 
 end:
     return rv;
-
 }
 
 int ex_mkfs_test_init(void) {
@@ -308,11 +310,11 @@ void ex_mkfs_check_params(struct ex_mkfs_params *params) {
     }
 
     if (!params->device_size) {
-        params->device_size = ex_mkfs_get_size_for_inodes(params->number_of_inodes);
+        params->device_size =
+            ex_mkfs_get_size_for_inodes(params->number_of_inodes);
         info("device size was not specified, setting size to %zu",
              params->device_size);
     }
-
 }
 
 int ex_mkfs(struct ex_mkfs_params *params) {

@@ -2,11 +2,11 @@
 #define PATH_H
 
 #include <dirent.h>
-#include <errno.h>
 #include <err.h>
+#include <errno.h>
 #include <libgen.h>
-#include <util.h>
 #include <stdio.h>
+#include <util.h>
 
 struct ex_path {
 
