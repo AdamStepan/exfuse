@@ -4,6 +4,7 @@
 #include <err.h>
 #include <errno.h>
 #include <linux/stat.h>
+#include <sys/stat.h>
 #include <logging.h>
 #include <stdint.h>
 #include <stdio.h>
