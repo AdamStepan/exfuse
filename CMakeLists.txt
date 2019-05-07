@@ -40,11 +40,13 @@ if (COVERAGE)
         message(FATAL_ERROR "Cannot find llvm-profdata")
     endif()
 
+    set(TEST_DIR ${CMAKE_BINARY_DIR}/test)
+
     add_custom_target(coverage
-        DEPENDS ${CMAKE_SOURCE_DIR}/test/testexfuse
-        COMMAND LLVM_PROFILE_FILE=${CMAKE_BINARY_DIR}/exfuse.profraw ${CMAKE_SOURCE_DIR}/test/testexfuse
-        COMMAND ${LLVM_PROFDATA} merge -sparse ${CMAKE_BINARY_DIR}/exfuse.profraw -o ${CMAKE_BINARY_DIR}/exfuse.profdata
-        COMMAND ${LLVM_COV} report -ignore-filename-regex "\\(.*test.*\\|.*glib.*\\)" ${CMAKE_SOURCE_DIR}/test/testexfuse -instr-profile ${CMAKE_BINARY_DIR}/exfuse.profdata)
+        DEPENDS ${TEST_DIR}/testexfuse
+        COMMAND LLVM_PROFILE_FILE=${TEST_DIR}/exfuse.profraw ${TEST_DIR}/testexfuse
+        COMMAND ${LLVM_PROFDATA} merge -sparse ${TEST_DIR}/exfuse.profraw -o ${TEST_DIR}/exfuse.profdata
+        COMMAND ${LLVM_COV} report -ignore-filename-regex "\\(.*test.*\\|.*glib.*\\)" ${TEST_DIR}/testexfuse -instr-profile ${TEST_DIR}/exfuse.profdata)
 
 endif()
 
