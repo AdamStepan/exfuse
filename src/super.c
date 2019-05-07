@@ -168,6 +168,8 @@ void ex_super_statfs(struct statvfs *statbuf) {
 
     statbuf->f_files = super_block->inode_bitmap.max_items;
     statbuf->f_ffree = statbuf->f_files - super_block->inode_bitmap.allocated;
+
+    statbuf->f_flag = ST_SYNCHRONOUS | ST_NOSUID | ST_NODEV;
 }
 
 int ex_super_create(size_t device_size,
