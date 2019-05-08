@@ -28,20 +28,25 @@ int main(int argc, char **argv) {
     g_test_add_func("/exfuse/test_write_max_size", test_write_max_size);
     g_test_add_func("/exfuse/test_truncate_file", test_truncate_file);
     g_test_add_func("/exfuse/test_unlink_file", test_unlink_file);
-    g_test_add_func("/exfuse/test_repopulation_of_device", test_repopulation_of_device);
+    g_test_add_func("/exfuse/test_repopulation_of_device",
+                    test_repopulation_of_device);
     g_test_add_func("/exfuse/test_statfs", test_statfs);
     g_test_add_func("/exfuse/test_stat_time_update", test_stat_time_update);
-    g_test_add_func("/exfuse/test_populate_and_remove_dir", test_populate_and_remove_dir);
+    g_test_add_func("/exfuse/test_populate_and_remove_dir",
+                    test_populate_and_remove_dir);
     g_test_add_func("/exfuse/test_remove_dir", test_remove_dir);
     g_test_add_func("/exfuse/test_mkfs_device_size", test_mkfs_device_size);
     g_test_add_func("/exfuse/test_add_file_to_dir", test_add_file_to_dir);
     g_test_add_func("/exfuse/test_inode_symlink", test_inode_symlink);
     g_test_add_func("/exfuse/test_name_too_long", test_name_too_long);
-    g_test_add_func("/exfuse/test_can_read_superblock", test_can_read_superblock);
-    g_test_add_func("/exfuse/test_file_block_deallocation", test_file_block_deallocation);
+    g_test_add_func("/exfuse/test_can_read_superblock",
+                    test_can_read_superblock);
+    g_test_add_func("/exfuse/test_file_block_deallocation",
+                    test_file_block_deallocation);
     g_test_add_func("/exfuse/test_create_file", test_create_file);
     g_test_add_func("/exfuse/test_create_dir", test_create_dir);
-    g_test_add_func("/exfuse/test_can_create_maximum_inodes", test_can_create_maximum_inodes);
+    g_test_add_func("/exfuse/test_can_create_maximum_inodes",
+                    test_can_create_maximum_inodes);
     g_test_add_func("/exfuse/test_inode_link", test_inode_link);
 
     return g_test_run();

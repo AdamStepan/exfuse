@@ -117,8 +117,6 @@ static void *do_init(struct fuse_conn_info *conn) {
 
     struct ex_args *args = (struct ex_args *)ctx->private_data;
 
-
-
     ex_logging_init(args->loglevel);
     ex_init(args->device);
 
