@@ -20,34 +20,7 @@ add_compile_options(-Wall -Wextra)
 add_compile_options(${FUSE_COMPILE_OPTIONS})
 
 if (COVERAGE)
-
-    if(NOT "${CMAKE_C_COMPILER_ID}" MATCHES "[Cc]lang")
-        message(FATAL_ERROR "Code coverage is currently supported only for clang")
-    endif()
-
-    add_compile_options($<$<C_COMPILER_ID:Clang>:-fprofile-instr-generate>)
-    add_compile_options($<$<C_COMPILER_ID:Clang>:-fcoverage-mapping>)
-
-    find_program(LLVM_COV llvm-cov llvm-cov-7 llvm-cov-5.0 HINTS /usr/bin)
-
-    if(NOT LLVM_COV)
-        message(FATAL_ERROR "Cannot find llvm-cov")
-    endif()
-
-    find_program(LLVM_PROFDATA llvm-profdata llvm-profdata-7 HINTS /usr/bin)
-
-    if(NOT LLVM_PROFDATA)
-        message(FATAL_ERROR "Cannot find llvm-profdata")
-    endif()
-
-    set(TEST_DIR ${CMAKE_BINARY_DIR}/test)
-
-    add_custom_target(coverage
-        DEPENDS ${TEST_DIR}/testexfuse
-        COMMAND LLVM_PROFILE_FILE=${TEST_DIR}/exfuse.profraw ${TEST_DIR}/testexfuse
-        COMMAND ${LLVM_PROFDATA} merge -sparse ${TEST_DIR}/exfuse.profraw -o ${TEST_DIR}/exfuse.profdata
-        COMMAND ${LLVM_COV} report -ignore-filename-regex "\\(.*test.*\\|.*glib.*\\)" ${TEST_DIR}/testexfuse -instr-profile ${TEST_DIR}/exfuse.profdata)
-
+    include(Coverage)
 endif()
 
 if (TESTS)
@@ -73,11 +46,12 @@ add_custom_target(distclean
         COMMAND find . -name "CTestTestfile.cmake" | xargs rm -rfv
         COMMAND find . -name "*.profdata" | xargs rm -rfv
         COMMAND find . -name "*.profraw" | xargs rm -rfv
-        COMMAND rm -vrf bin
-        COMMAND rm -vrf lib
+        COMMAND find . -name "exdev" | xargs rm -rfv
+        COMMAND rm -vrf bin build lib
         COMMAND rm -vrf compile_commands.json
         COMMAND rm -vrf Testing
-        COMMAND rm -vf exdev test/exdev)
+        VERBATIM
+)
 
 add_custom_target(format
     COMMAND find ${CMAKE_SOURCE_DIR} -iname '*.h' -o -iname '*.c' | xargs clang-format -i

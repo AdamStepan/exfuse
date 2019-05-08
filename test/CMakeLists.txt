@@ -11,5 +11,3 @@ target_link_libraries(testexfuse
     PRIVATE Threads::Threads)
 
 target_include_directories(testexfuse PUBLIC ${GLIB_INCLUDE_DIRS})
-# TODO: this should be set in parent CMakeLists.txt
-set_target_properties(testexfuse PROPERTIES LINK_FLAGS "-fcoverage-mapping -fprofile-instr-generate")
