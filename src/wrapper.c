@@ -117,9 +117,7 @@ static void *do_init(struct fuse_conn_info *conn) {
 
     struct ex_args *args = (struct ex_args *)ctx->private_data;
 
-    if (!args->device) {
-        fatal("device was not specified");
-    }
+
 
     ex_logging_init(args->loglevel);
     ex_init(args->device);
@@ -179,6 +177,22 @@ static void ex_args_init(struct ex_args *args) {
     args->device = NULL;
 }
 
+static void ex_args_finalize(struct ex_args *args) {
+
+    if (!args->device) {
+        fatal("device was not specified");
+    }
+
+    char *absolute_path = ex_malloc(PATH_MAX);
+
+    if (!realpath(args->device, absolute_path)) {
+        err(errno, "realpath: %s", args->device);
+    }
+
+    free(args->device);
+    args->device = absolute_path;
+}
+
 static struct fuse_opt ex_opts[] = {
     {"--log-level %s", offsetof(struct ex_args, loglevel), FUSE_OPT_KEY_OPT},
     {"--device %s", offsetof(struct ex_args, device), FUSE_OPT_KEY_OPT},
@@ -191,6 +205,7 @@ int main(int argc, char **argv) {
 
     ex_args_init(&exargs);
     fuse_opt_parse(&args, &exargs, ex_opts, NULL);
+    ex_args_finalize(&exargs);
 
     return fuse_main(args.argc, args.argv, &operations, &exargs);
 }
