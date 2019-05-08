@@ -35,7 +35,6 @@ add_subdirectory(src)
 
 if (TESTS)
     add_subdirectory(test)
-    add_test(testexfuse test/testexfuse)
 endif()
 
 add_custom_target(distclean
