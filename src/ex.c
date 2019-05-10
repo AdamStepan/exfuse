@@ -11,7 +11,7 @@ size_t ex_device_size(size_t ninodes) {
 
 void ex_init(const char *device) {
 
-    info("open device: %s", device);
+    info("opening device: %s", device);
 
     int fd = ex_device_open(device);
 
@@ -25,7 +25,7 @@ void ex_init(const char *device) {
 
 void ex_deinit(void) {
 
-    info("deinitialize");
+    info("deinitializing fs");
 
     if (device_fd != -1) {
         info("closing device: %i", device_fd);

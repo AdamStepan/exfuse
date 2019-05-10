@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
             params.number_of_inodes = strtoull(optarg, NULL, 0);
             break;
         case 'l':
-            ex_logging_init(optarg);
+            ex_logging_init(optarg, 1);
             break;
         case 's':
             params.device_size = strtoull(optarg, NULL, 0);

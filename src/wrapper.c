@@ -17,6 +17,7 @@
 struct ex_args {
     char *loglevel;
     char *device;
+    int foreground;
 };
 
 static int do_create(const char *pathname, mode_t mode,
@@ -117,7 +118,7 @@ static void *do_init(struct fuse_conn_info *conn) {
 
     struct ex_args *args = (struct ex_args *)ctx->private_data;
 
-    ex_logging_init(args->loglevel);
+    ex_logging_init(args->loglevel, args->foreground);
     ex_init(args->device);
 
     return NULL;
@@ -125,7 +126,6 @@ static void *do_init(struct fuse_conn_info *conn) {
 
 static void do_destroy(void *private_data) {
     (void)private_data;
-
     ex_deinit();
 }
 
@@ -173,6 +173,7 @@ static struct fuse_operations operations = {.getattr = do_getattr,
 static void ex_args_init(struct ex_args *args) {
     args->loglevel = NULL;
     args->device = NULL;
+    args->foreground = 0;
 }
 
 static void ex_args_finalize(struct ex_args *args) {
@@ -191,6 +192,25 @@ static void ex_args_finalize(struct ex_args *args) {
     args->device = absolute_path;
 }
 
+static int ex_check_foreground_option(void *data, const char *arg, int key,
+                                      struct fuse_args *args) {
+
+    (void)key;
+    (void)args;
+
+    static const char *fshort = "-f";
+    static const char *dshort = "-d";
+
+    const size_t fshortl = strlen(fshort);
+    const size_t dshortl = strlen(dshort);
+
+    if (!strncmp(fshort, arg, fshortl) || !strncmp(dshort, arg, dshortl)) {
+        ((struct ex_args *)data)->foreground = 1;
+    }
+
+    return 1;
+}
+
 static struct fuse_opt ex_opts[] = {
     {"--log-level %s", offsetof(struct ex_args, loglevel), FUSE_OPT_KEY_OPT},
     {"--device %s", offsetof(struct ex_args, device), FUSE_OPT_KEY_OPT},
@@ -202,8 +222,11 @@ int main(int argc, char **argv) {
     struct ex_args exargs;
 
     ex_args_init(&exargs);
-    fuse_opt_parse(&args, &exargs, ex_opts, NULL);
+    fuse_opt_parse(&args, &exargs, ex_opts, ex_check_foreground_option);
     ex_args_finalize(&exargs);
 
-    return fuse_main(args.argc, args.argv, &operations, &exargs);
+    int rv = fuse_main(args.argc, args.argv, &operations, &exargs);
+    fuse_opt_free_args(&args);
+
+    return rv;
 }
