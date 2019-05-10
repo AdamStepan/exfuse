@@ -11,4 +11,4 @@ target_link_libraries(testexfuse
     PRIVATE Threads::Threads)
 
 target_include_directories(testexfuse PUBLIC ${GLIB_INCLUDE_DIRS})
-add_test(testexfuse ${CMAKE_CURRENT_BINARY_DIR}/testexfuse)
+add_test(testexfuse ${CMAKE_SOURCE_DIR}/test/testexfuse)
