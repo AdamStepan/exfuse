@@ -7,7 +7,7 @@ void *ex_malloc(size_t size) {
     if (buff) {
         memset(buff, '\0', size);
     } else {
-        err(errno, "malloc");
+        fatal("malloc failed: errno: %d", errno);
     }
 
     return buff;
@@ -18,7 +18,7 @@ void *ex_realloc(void *ptr, size_t size) {
     void *newptr = realloc(ptr, size);
 
     if (!newptr) {
-        err(errno, "malloc");
+        fatal("realloc failed: errno: %d", errno);
     }
 
     return newptr;
@@ -29,7 +29,7 @@ char *ex_strdup(const char *s) {
     char *dup = strdup(s);
 
     if (!dup) {
-        err(errno, "strdup");
+        fatal("strdup failed: errno: %d", errno);
     }
 
     return dup;
