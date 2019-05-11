@@ -1,12 +1,12 @@
 #ifndef PATH_H
 #define PATH_H
 
+#include "util.h"
 #include <dirent.h>
 #include <err.h>
 #include <errno.h>
 #include <libgen.h>
 #include <stdio.h>
-#include <util.h>
 
 struct ex_path {
 

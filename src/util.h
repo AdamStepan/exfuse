@@ -1,10 +1,10 @@
 #ifndef EX_UTIL_H
 #define EX_UTIL_H
 
+#include "logging.h"
 #include <err.h>
 #include <errno.h>
 #include <linux/stat.h>
-#include <logging.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

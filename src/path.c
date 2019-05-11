@@ -1,4 +1,4 @@
-#include <path.h>
+#include "path.h"
 
 struct ex_path *ex_path_make(const char *path) {
 

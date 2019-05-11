@@ -1,7 +1,7 @@
-#include <ex.h>
+#include "../src/ex.h"
+#include "../src/mkfs.h"
 #include <glib.h>
 #include <linux/stat.h>
-#include <mkfs.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>

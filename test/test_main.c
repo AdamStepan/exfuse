@@ -1,5 +1,5 @@
+#include "../src/logging.h"
 #include <glib.h>
-#include <logging.h>
 
 void test_write_max_size(void);
 void test_truncate_file(void);

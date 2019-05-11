@@ -1,7 +1,7 @@
+#include "../src/ex.h"
+#include "../src/mkfs.h"
 #include <err.h>
-#include <ex.h>
 #include <glib.h>
-#include <mkfs.h>
 
 void test_mkfs_device_size(void) {
 

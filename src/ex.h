@@ -1,12 +1,12 @@
 #ifndef EX_H
 #define EX_H
 
-#include <device.h>
+#include "device.h"
+#include "inode.h"
+#include "super.h"
 #include <fcntl.h>
-#include <inode.h>
 #include <limits.h>
 #include <stdint.h>
-#include <super.h>
 #include <sys/statvfs.h>
 #include <time.h>
 

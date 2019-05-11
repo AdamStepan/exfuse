@@ -1,4 +1,4 @@
-#include <inode.h>
+#include "inode.h"
 
 struct ex_inode *root = NULL;
 

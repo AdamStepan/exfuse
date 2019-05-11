@@ -1,12 +1,12 @@
 #ifndef EX_INODE_H
 #define EX_INODE_H
 
+#include "device.h"
+#include "logging.h"
+#include "super.h"
 #include <assert.h>
-#include <device.h>
 #include <fcntl.h>
-#include <logging.h>
 #include <stdint.h>
-#include <super.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>

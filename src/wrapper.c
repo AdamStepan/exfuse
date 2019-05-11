@@ -1,7 +1,7 @@
 #define FUSE_USE_VERSION 30
 
+#include "ex.h"
 #include <errno.h>
-#include <ex.h>
 #include <fuse.h>
 #include <libgen.h>
 #include <linux/stat.h>

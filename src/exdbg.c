@@ -1,9 +1,8 @@
+#include "ex.h"
+#include "logging.h"
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "ex.h"
-#include "logging.h"
 
 enum action {
     PRINT_SUPER,

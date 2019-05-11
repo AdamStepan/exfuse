@@ -1,15 +1,15 @@
 #ifndef EX_SUPER_H
 #define EX_SUPER_H
 
-#include <device.h>
-#include <logging.h>
-#include <path.h>
+#include "device.h"
+#include "logging.h"
+#include "path.h"
+#include "util.h"
 #include <pthread.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/statvfs.h>
-#include <util.h>
 
 // how large block will be
 #define EX_BLOCK_SIZE 4096
