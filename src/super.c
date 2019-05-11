@@ -147,10 +147,10 @@ block_address ex_super_allocate_block(void) {
 }
 
 void ex_super_print(const struct ex_super_block *block) {
-    info("{.root=%lu, .device_size=%lu, .bitmap={head=%lu, .address=%lu "
-         ".size=%lu, .allocated=%lu}}",
-         block->root, block->device_size, block->bitmap.head,
-         block->bitmap.address, block->bitmap.size, block->bitmap.allocated);
+    debug("{.root=%lu, .device_size=%lu, .bitmap={head=%lu, .address=%lu "
+          ".size=%lu, .allocated=%lu}}",
+          block->root, block->device_size, block->bitmap.head,
+          block->bitmap.address, block->bitmap.size, block->bitmap.allocated);
 }
 
 void ex_super_statfs(struct statvfs *statbuf) {
