@@ -1,10 +1,6 @@
 #include "ex.h"
 #include "logging.h"
-#include <getopt.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
+#include <stdint.h>
 
 // device layout:
 // super_block | inode_bitmap | data_bitmap | inode_blocks | data_blocks

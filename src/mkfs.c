@@ -79,12 +79,7 @@ int ex_mkfs_device_clear(size_t off, size_t amount) {
     return 0;
 }
 
-// XXX: use c11 macro
 size_t round_block(size_t size) {
-    return ceil((double)size / EX_BLOCK_SIZE) * EX_BLOCK_SIZE;
-}
-
-ssize_t round_block_signed(ssize_t size) {
     return ceil((double)size / EX_BLOCK_SIZE) * EX_BLOCK_SIZE;
 }
 

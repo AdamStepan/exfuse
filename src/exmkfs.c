@@ -1,5 +1,6 @@
 #include "logging.h"
 #include "mkfs.h"
+#include <getopt.h>
 
 void help(void) {
     printf("mkfs.exfuse: \n"
