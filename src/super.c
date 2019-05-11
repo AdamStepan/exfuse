@@ -169,28 +169,6 @@ void ex_super_statfs(struct statvfs *statbuf) {
     statbuf->f_flag = ST_SYNCHRONOUS | ST_NOSUID | ST_NODEV;
 }
 
-int ex_super_create(size_t device_size, struct ex_bitmap *inode_bitmap,
-                    struct ex_bitmap *data_bitmap) {
-
-    super_block = ex_malloc(sizeof(struct ex_super_block));
-
-    if (!super_block) {
-        return -ENOMEM;
-    }
-
-    *super_block =
-        (struct ex_super_block){// we don't know address of root inode yet
-                                .root = 0,
-                                .device_size = device_size,
-                                .bitmap = *data_bitmap,
-                                .inode_bitmap = *inode_bitmap,
-                                .magic = EX_SUPER_MAGIC};
-
-    ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
-
-    return 0;
-}
-
 pthread_mutex_t super_lock;
 pthread_mutexattr_t super_lock_attr;
 
