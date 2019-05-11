@@ -7,13 +7,15 @@
     (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
 #define __ex_log(level, fmt, ...)                                              \
-    if (use_syslog) {                                                          \
-        ex_log(level, "%s: %s: " fmt "\n", __FILENAME__, __func__,             \
-               ##__VA_ARGS__);                                                 \
-    } else {                                                                   \
-        ex_log(level, "%s: %s: %s: " fmt "\n", level2str[level], __FILENAME__, \
-               __func__, ##__VA_ARGS__);                                       \
-    }
+    do {                                                                       \
+        if (use_syslog) {                                                      \
+            ex_log(level, "%s: %s: " fmt "\n", __FILENAME__, __func__,         \
+                   ##__VA_ARGS__);                                             \
+        } else {                                                               \
+            ex_log(level, "%s: %s: %s: " fmt "\n", level2str[level],           \
+                   __FILENAME__, __func__, ##__VA_ARGS__);                     \
+        }                                                                      \
+    } while (0)
 
 #define debug(fmt, ...) __ex_log(debug, fmt, ##__VA_ARGS__)
 #define info(fmt, ...) __ex_log(info, fmt, ##__VA_ARGS__)
