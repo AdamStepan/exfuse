@@ -74,10 +74,13 @@ void ex_print_permissions(const char *prefix, uint8_t mode) {
 
 void ex_print_mode(mode_t m) {
 
-    if (m & S_IFDIR)
+    if ((m & S_IFDIR) == S_IFDIR)
         printf("dir ");
 
-    if (m & S_IFLNK)
+    if ((m & S_IFREG) == S_IFREG)
+        printf("regular ");
+
+    if ((m & S_IFLNK) == S_IFLNK)
         printf("symlink ");
 
     if (m & S_ISUID)
