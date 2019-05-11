@@ -68,29 +68,33 @@ char **ex_str_split(const char *str, const char *delim) {
 }
 
 void ex_print_permissions(const char *prefix, uint8_t mode) {
-    printf("%s=%c%c%c ", prefix, mode & 0x4 ? 'r' : '-', mode & 0x2 ? 'w' : '-',
-           mode & 0x1 ? 'x' : '-');
+
+    char r = mode & 0x4 ? 'r' : '-';
+    char w = mode & 0x2 ? 'w' : '-';
+    char x = mode & 0x1 ? 'x' : '-';
+
+    info("%s=%c%c%c ", prefix, r, w, x);
 }
 
 void ex_print_mode(mode_t m) {
 
     if ((m & S_IFDIR) == S_IFDIR)
-        printf("dir ");
+        info("dir ");
 
     if ((m & S_IFREG) == S_IFREG)
-        printf("regular ");
+        info("regular ");
 
     if ((m & S_IFLNK) == S_IFLNK)
-        printf("symlink ");
+        info("symlink ");
 
     if (m & S_ISUID)
-        printf("suid ");
+        info("suid ");
 
     if (m & S_ISGID)
-        printf("sgid ");
+        info("sgid ");
 
     if (m & S_ISVTX)
-        printf("sticky ");
+        info("sticky ");
 
     ex_print_permissions("other", m & 7);
     ex_print_permissions("group", (m >> 3) & 7);
