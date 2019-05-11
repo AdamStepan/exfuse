@@ -49,6 +49,11 @@ void ex_logging_init(const char *loglevel, int foreground) {
     }
 }
 
+void ex_logging_deinit(int foreground) {
+    if (!foreground) {
+        closelog();
+    }
+}
 void ex_log(enum loglevel lvl, const char *format, ...) {
 
     if (current_level > lvl) {

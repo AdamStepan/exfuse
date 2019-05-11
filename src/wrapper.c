@@ -125,7 +125,10 @@ static void *do_init(struct fuse_conn_info *conn) {
 }
 
 static void do_destroy(void *private_data) {
-    (void)private_data;
+
+    struct ex_args *args = (struct ex_args *)private_data;
+
+    ex_logging_deinit(args->foreground);
     ex_deinit();
 }
 
