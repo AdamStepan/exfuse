@@ -36,36 +36,20 @@ int ex_device_open(const char *device_name) {
     return device_fd;
 }
 
-// XXX: use ex_device_read_to_buffer here
 void *ex_device_read(size_t off, size_t amount) {
 
-    int fd = ex_device_fd();
-
-    void *data = ex_malloc(amount);
-
-    off_t offset = lseek(fd, off, SEEK_SET);
-
-    if ((off_t)off < 0) {
-        warning("lseek: underthrow (off > max(int))");
-        goto failure;
-    }
-
-    if ((size_t)offset != off) {
-        warning("lseek: offset=%lu, wanted=%lu", offset, off);
-        goto failure;
-    }
-
-    size_t readed = read(fd, data, amount);
+    void *buffer = ex_malloc(amount);
+    size_t readed = ex_device_read_to_buffer(buffer, off, amount);
 
     if (readed != amount) {
         warning("read: readed=%lu, wanted=%lu", readed, amount);
         goto failure;
     }
 
-    return data;
+    return buffer;
 
 failure:
-    free(data);
+    free(buffer);
 
     return NULL;
 }
