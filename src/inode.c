@@ -260,7 +260,11 @@ struct ex_inode *ex_inode_find(struct ex_path *path) {
             goto not_found;
         }
 
-        // TODO: free inode
+        // free inode from a previous iteration
+        if (searched) {
+            ex_inode_free(searched);
+        }
+
         searched = ex_inode_get(curdir, path->components[n]);
 
         if (!searched) {
