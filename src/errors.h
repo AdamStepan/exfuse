@@ -4,8 +4,9 @@
 #include "logging.h"
 
 typedef enum {
-    UNABLE_TO_OPEN_DEVICE,
+    DEVICE_CANNOT_BE_OPENED,
     DEVICE_IS_NOT_OPEN,
+    DEVICE_SIZE_CHANGE_FAILED,
     READ_FAILED,
     WRITE_FAILED,
     INVALID_OFFSET,
@@ -17,7 +18,7 @@ inline void ex_status_report(ex_status status, enum loglevel level) {
     const char * msg = NULL;
 
     switch (status) {
-        case UNABLE_TO_OPEN_DEVICE:
+        case DEVICE_CANNOT_BE_OPENED:
             msg = "Unable to open device";
             break;
         default:

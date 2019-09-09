@@ -14,11 +14,11 @@
 
 #define EX_DEVICE "exdev"
 
-extern int device_fd;
-
 ex_status ex_device_fd(int *fd);
-int ex_device_create(const char *name, size_t size);
-int ex_device_open(const char *device_name);
+ex_status ex_device_open(const char *device_name);
+ex_status ex_device_close(void);
+
+int ex_is_device_opened(void);
 
 void *ex_device_read(size_t off, size_t amount);
 ssize_t ex_device_read_to_buffer(char *buffer, size_t off, size_t amount);

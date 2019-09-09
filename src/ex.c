@@ -1,4 +1,5 @@
 #include "ex.h"
+#include "errors.h"
 
 size_t ex_device_size(size_t ninodes) {
     return ninodes * EX_DIRECT_BLOCKS *
@@ -13,9 +14,9 @@ void ex_init(const char *device) {
 
     info("opening device: %s", device);
 
-    int fd = ex_device_open(device);
+    ex_status status = ex_device_open(device);
 
-    if (fd == -1) {
+    if (status != OK) {
         fatal("unable to open device: %s", device);
     }
 
@@ -27,9 +28,8 @@ void ex_deinit(void) {
 
     info("deinitializing fs");
 
-    if (device_fd != -1) {
-        info("closing device: %i", device_fd);
-        close(device_fd);
+    if (ex_is_device_opened()) {
+        ex_device_close();
     }
 
     if (super_block) {

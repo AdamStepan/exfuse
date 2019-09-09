@@ -14,36 +14,35 @@ ex_status ex_device_fd(int *fd) {
     return OK;
 }
 
-int ex_device_create(const char *name, size_t size) {
-
-    if (access(name, F_OK) != -1) {
-        return 0;
-    }
-
-    int fd = open(name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-
-    if (fd == -1) {
-        fatal("unable to open device: %s, errno: %d", name, errno);
-    }
-
-    ftruncate(fd, size);
-
-    close(fd);
-
-    return 1;
-}
-
-int ex_device_open(const char *device_name) {
+ex_status ex_device_open(const char *device_name) {
 
     device_fd = open(device_name, O_RDWR);
 
     if (device_fd == -1) {
-        fatal("unable to open device: %s, errno: %d", device_name, errno);
+        error("unable to open device: %s, errno: %d", device_name, errno);
+        return DEVICE_CANNOT_BE_OPENED;
     }
 
     info("device is open: fd=%d", device_fd);
 
-    return device_fd;
+    return OK;
+}
+
+ex_status ex_device_close(void) {
+
+    if (device_fd == -1) {
+        error("unable to close device because it's not opened");
+        return DEVICE_IS_NOT_OPEN;
+    }
+
+    info("closing device: %i", device_fd);
+    (void)close(device_fd);
+
+    return OK;
+}
+
+int ex_is_device_opened(void) {
+    return device_fd != -1;
 }
 
 void *ex_device_read(size_t off, size_t amount) {

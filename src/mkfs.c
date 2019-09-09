@@ -1,5 +1,6 @@
 #include "mkfs.h"
 #include "ex.h"
+#include "errors.h"
 #include "logging.h"
 #include <getopt.h>
 #include <math.h>
@@ -188,7 +189,7 @@ int ex_mkfs_ibitmap_create(struct ex_mkfs_params *params,
 
 int ex_mkfs_put_layout(const char *device, struct ex_mkfs_context *ctx) {
 
-    if (!ex_device_open(device)) {
+    if (ex_device_open(device) != OK) {
         return 1;
     }
 
