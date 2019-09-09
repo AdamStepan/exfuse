@@ -44,9 +44,6 @@ struct ex_inode {
 
     // if an inode is file content is saved here directly in these blocks
     // if an inode is directory ex_dir_entries are saved in these blocks
-    // every block is EX_DIRECT_BLOCKS size
-    // TODO: we should treat at least one block as indirect or double
-    //       indirect
     block_address blocks[EX_DIRECT_BLOCKS];
 };
 
