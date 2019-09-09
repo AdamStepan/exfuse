@@ -1,4 +1,5 @@
 #include "inode.h"
+#include "errors.h"
 
 struct ex_inode *root = NULL;
 
@@ -229,15 +230,23 @@ struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name,
 }
 
 struct ex_inode *ex_inode_load_unsafe(inode_address address) {
-    return ex_device_read(address, sizeof(struct ex_inode));
+    struct ex_inode *inode = NULL;
+    // XXX: ignore status for now
+    (void)ex_device_read((void **)&inode, address, sizeof(struct ex_inode));
+    return inode;
 }
 
 struct ex_inode *ex_inode_load(inode_address address) {
 
-    struct ex_inode *inode = ex_device_read(address, sizeof(struct ex_inode));
+    struct ex_inode *inode = NULL;
+
+    if (ex_device_read((void **)&inode, address, sizeof(struct ex_inode)) != OK) {
+        warning("unable to read inode at (%lu)", address);
+        return NULL;
+    }
 
     if (inode->magic != EX_INODE_MAGIC1) {
-        warning("inode (%lu) has bad magic (%x)", address, inode->magic);
+        warning("inode at (%lu) has bad magic (%x)", address, inode->magic);
         ex_inode_free(inode);
         return NULL;
     }
@@ -404,7 +413,10 @@ void ex_dir_entry_flush(size_t address, struct ex_dir_entry *entry) {
 }
 
 struct ex_dir_entry *ex_dir_entry_load(size_t address) {
-    return ex_device_read(address, sizeof(struct ex_dir_entry));
+    struct ex_dir_entry *entry = NULL;
+    // XXX: ignore status for now
+    (void)ex_device_read((void **)&entry, address, sizeof(struct ex_dir_entry));
+    return entry;
 }
 
 void ex_dir_entry_free(struct ex_dir_entry *entry) { free(entry); }
@@ -606,7 +618,7 @@ struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode,
     block.address = inode->blocks[it->block_number];
     // XXX: add buffer into ex_block_iterator and use ex_device_read_to_buffer
     //      handle read error
-    block.data = ex_device_read(block.address, EX_BLOCK_SIZE);
+    (void)ex_device_read((void **)&block.data, block.address, EX_BLOCK_SIZE);
 
 done:
     it->last_block = block;

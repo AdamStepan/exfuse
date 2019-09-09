@@ -57,8 +57,13 @@ void print_bitmap_data(const char *device, size_t head) {
     ex_device_open(device);
     ex_super_load();
 
-    struct ex_bitmap *bitmap = ex_device_read(head, sizeof(struct ex_bitmap));
-    char *bitmap_data = ex_device_read(bitmap->address, bitmap->size);
+    // XXX: ignore status for now
+    struct ex_bitmap *bitmap = NULL;
+    (void)ex_device_read((void **)&bitmap, head, sizeof(struct ex_bitmap));
+
+    // XXX: ignore status for now
+    char *bitmap_data = NULL;
+    (void)ex_device_read((void **)&bitmap_data, bitmap->address, bitmap->size);
 
     write(fileno(stdout), bitmap_data, bitmap->size);
 }

@@ -20,7 +20,7 @@ ex_status ex_device_close(void);
 
 int ex_is_device_opened(void);
 
-void *ex_device_read(size_t off, size_t amount);
+ex_status ex_device_read(void **data, size_t off, size_t amount);
 ssize_t ex_device_read_to_buffer(char *buffer, size_t off, size_t amount);
 void ex_device_write(size_t off, const char *data, size_t amount);
 

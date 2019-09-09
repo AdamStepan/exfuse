@@ -45,22 +45,18 @@ int ex_is_device_opened(void) {
     return device_fd != -1;
 }
 
-void *ex_device_read(size_t off, size_t amount) {
+ex_status ex_device_read(void **buffer, size_t off, size_t amount) {
 
-    void *buffer = ex_malloc(amount);
-    size_t readed = ex_device_read_to_buffer(buffer, off, amount);
+    *buffer = ex_malloc(amount);
+    size_t readed = ex_device_read_to_buffer(*buffer, off, amount);
 
     if (readed != amount) {
         warning("read: readed=%lu, wanted=%lu", readed, amount);
-        goto failure;
+        free(*buffer);
+        return READ_FAILED;
     }
 
-    return buffer;
-
-failure:
-    free(buffer);
-
-    return NULL;
+    return OK;
 }
 
 ssize_t ex_device_read_to_buffer(char *buffer, size_t off, size_t amount) {
