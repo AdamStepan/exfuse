@@ -64,15 +64,21 @@ int ex_mkfs_check_device(struct ex_mkfs_params *params) {
 
 int ex_mkfs_device_clear(size_t off, size_t amount) {
 
-    char *buffer =
-        mmap(NULL, amount, PROT_WRITE, MAP_SHARED, ex_device_fd(), off);
+    ex_status status = OK;
+    int fd = 0;
+
+    if ((status = ex_device_fd(&fd)) != OK) {
+        return 1;
+    }
+
+    char *buffer = mmap(NULL, amount, PROT_WRITE, MAP_SHARED, fd, off);
 
     if (buffer == MAP_FAILED) {
         fatal("mmap failed: off=%zu, amount=%zu, error: %s", off, amount,
               strerror(errno));
     }
 
-    // XXX: we gat SIGBUS is len(file/device) < [off, off + amount]
+    // XXX: we get SIGBUS is len(file/device) < [off, off + amount]
     memset(buffer, '\0', amount);
 
     // XXX: you know what to do

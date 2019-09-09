@@ -6,7 +6,7 @@
 #define __FILENAME__                                                           \
     (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define __ex_log(level, fmt, ...)                                              \
+#define ex_log_format(level, fmt, ...)                                              \
     do {                                                                       \
         if (use_syslog) {                                                      \
             ex_log(level, "%s: %s: " fmt "\n", __FILENAME__, __func__,         \
@@ -17,11 +17,11 @@
         }                                                                      \
     } while (0)
 
-#define debug(fmt, ...) __ex_log(debug, fmt, ##__VA_ARGS__)
-#define info(fmt, ...) __ex_log(info, fmt, ##__VA_ARGS__)
-#define warning(fmt, ...) __ex_log(warning, fmt, ##__VA_ARGS__)
-#define error(fmt, ...) __ex_log(error, fmt, ##__VA_ARGS__)
-#define fatal(fmt, ...) __ex_log(fatal, fmt, ##__VA_ARGS__)
+#define debug(fmt, ...) ex_log_format(debug, fmt, ##__VA_ARGS__)
+#define info(fmt, ...) ex_log_format(info, fmt, ##__VA_ARGS__)
+#define warning(fmt, ...) ex_log_format(warning, fmt, ##__VA_ARGS__)
+#define error(fmt, ...) ex_log_format(error, fmt, ##__VA_ARGS__)
+#define fatal(fmt, ...) ex_log_format(fatal, fmt, ##__VA_ARGS__)
 
 enum loglevel { debug = 0, info, warning, error, fatal, notset };
 

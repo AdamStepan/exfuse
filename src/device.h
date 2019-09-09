@@ -3,6 +3,7 @@
 
 #include "logging.h"
 #include "util.h"
+#include "errors.h"
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -15,7 +16,7 @@
 
 extern int device_fd;
 
-int ex_device_fd(void);
+ex_status ex_device_fd(int *fd);
 int ex_device_create(const char *name, size_t size);
 int ex_device_open(const char *device_name);
 

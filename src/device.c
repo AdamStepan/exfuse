@@ -1,8 +1,18 @@
 #include "device.h"
 
+
 int device_fd = -1;
 
-int ex_device_fd(void) { return device_fd; }
+ex_status ex_device_fd(int *fd) {
+
+    if (device_fd == -1) {
+        return DEVICE_IS_NOT_OPEN;
+    }
+
+    *fd = device_fd;
+
+    return OK;
+}
 
 int ex_device_create(const char *name, size_t size) {
 
@@ -56,7 +66,13 @@ failure:
 
 ssize_t ex_device_read_to_buffer(char *buffer, size_t off, size_t amount) {
 
-    int fd = ex_device_fd();
+    int fd = -1;
+    ex_status status = OK;
+
+    if ((status = ex_device_fd(&fd)) != OK) {
+        warning("device is not opened");
+        goto failure;
+    }
 
     off_t offset = lseek(fd, off, SEEK_SET);
 
@@ -78,7 +94,13 @@ failure:
 
 void ex_device_write(size_t off, const char *data, size_t amount) {
 
-    int fd = ex_device_fd();
+    int fd = -1;
+    ex_status status = OK;
+
+    if ((status = ex_device_fd(&fd)) != OK) {
+        warning("device is not opened");
+        goto failure;
+    }
 
     off_t offset = lseek(fd, off, SEEK_SET);
 
