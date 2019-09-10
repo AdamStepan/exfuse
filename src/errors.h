@@ -20,13 +20,12 @@ inline void ex_status_report(ex_status status, enum loglevel level, ...) {
     va_start(args, level);
 
     switch (status) {
-        case DEVICE_CANNOT_BE_OPENED: {
-            const char *device = device = va_arg(args, const char *);
-            ex_log_format(level, "unable to open device: %s", device);
-        }
-        break;
+    case DEVICE_CANNOT_BE_OPENED: {
+        const char *device = device = va_arg(args, const char *);
+        ex_log_format(level, "unable to open device: %s", device);
+    } break;
 
-        default:
+    default:
         break;
     }
 

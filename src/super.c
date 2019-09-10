@@ -21,7 +21,8 @@ void ex_bitmap_free_bit(struct ex_bitmap *bitmap, size_t nth_bit) {
     char *bitdata = NULL;
 
     // XXX: ignore status for now
-    (void)ex_device_read((void **)&bitdata, bitmap->address + nth_byte, sizeof(char));
+    (void)ex_device_read((void **)&bitdata, bitmap->address + nth_byte,
+                         sizeof(char));
 
     *bitdata &= ~(1UL << nth_bit_in_byte);
 
@@ -182,7 +183,8 @@ void ex_super_load(void) {
     info("loading device");
 
     // XXX: ignore status for now
-    (void)ex_device_read((void **)&super_block, 0, sizeof(struct ex_super_block));
+    (void)ex_device_read((void **)&super_block, 0,
+                         sizeof(struct ex_super_block));
 
     if (!super_block) {
         fatal("unable to load super block");

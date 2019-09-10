@@ -6,7 +6,7 @@
 #define __FILENAME__                                                           \
     (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define ex_log_format(level, fmt, ...)                                              \
+#define ex_log_format(level, fmt, ...)                                         \
     do {                                                                       \
         if (use_syslog) {                                                      \
             ex_log(level, "%s: %s: " fmt "\n", __FILENAME__, __func__,         \

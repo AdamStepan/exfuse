@@ -240,7 +240,8 @@ struct ex_inode *ex_inode_load(inode_address address) {
 
     struct ex_inode *inode = NULL;
 
-    if (ex_device_read((void **)&inode, address, sizeof(struct ex_inode)) != OK) {
+    if (ex_device_read((void **)&inode, address, sizeof(struct ex_inode)) !=
+        OK) {
         warning("unable to read inode at (%lu)", address);
         return NULL;
     }

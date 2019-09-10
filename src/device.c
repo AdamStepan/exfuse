@@ -1,6 +1,6 @@
 #include "device.h"
 
-const char * EX_DEVICE = "exdev";
+const char *EX_DEVICE = "exdev";
 int device_fd = -1;
 
 ex_status ex_device_fd(int *fd) {
@@ -41,9 +41,7 @@ ex_status ex_device_close(void) {
     return OK;
 }
 
-int ex_is_device_opened(void) {
-    return device_fd != -1;
-}
+int ex_is_device_opened(void) { return device_fd != -1; }
 
 ex_status ex_device_read(void **buffer, size_t off, size_t amount) {
 
@@ -93,20 +91,20 @@ ex_status ex_device_read_to_buffer(ssize_t *readed, char *buffer, size_t off,
 failure:
 
     switch (status) {
-        case DEVICE_IS_NOT_OPEN:
-            warning("device is not opened");
-            break;
-        case INVALID_OFFSET:
-            warning("lseek: underthrow (off > max(int))");
-            break;
-        case OFFSET_SEEK_FAILED:
-            warning("lseek: offset=%lu, wanted=%lu", offset, off);
-            break;
-        case READ_FAILED:
-            warning("read: readed=%lu, wanted=%lu", *readed, amount);
-            break;
-        default:
-            warning("unhandled error: %i", status);
+    case DEVICE_IS_NOT_OPEN:
+        warning("device is not opened");
+        break;
+    case INVALID_OFFSET:
+        warning("lseek: underthrow (off > max(int))");
+        break;
+    case OFFSET_SEEK_FAILED:
+        warning("lseek: offset=%lu, wanted=%lu", offset, off);
+        break;
+    case READ_FAILED:
+        warning("read: readed=%lu, wanted=%lu", *readed, amount);
+        break;
+    default:
+        warning("unhandled error: %i", status);
     }
 
     return status;
@@ -146,20 +144,20 @@ ex_status ex_device_write(size_t off, const char *data, size_t amount) {
 failure:
 
     switch (status) {
-        case DEVICE_IS_NOT_OPEN:
-            warning("device is not opened");
-            break;
-        case INVALID_OFFSET:
-            warning("lseek: underthrow (off > max(int))");
-            break;
-        case OFFSET_SEEK_FAILED:
-            warning("lseek: offset=%lu, off=%lu", offset, off);
-            break;
-        case WRITE_FAILED:
-            warning("write: written=%lu, amount=%lu", written, amount);
-            break;
-        default:
-            warning("unhandled error: %i", status);
+    case DEVICE_IS_NOT_OPEN:
+        warning("device is not opened");
+        break;
+    case INVALID_OFFSET:
+        warning("lseek: underthrow (off > max(int))");
+        break;
+    case OFFSET_SEEK_FAILED:
+        warning("lseek: offset=%lu, off=%lu", offset, off);
+        break;
+    case WRITE_FAILED:
+        warning("write: written=%lu, amount=%lu", written, amount);
+        break;
+    default:
+        warning("unhandled error: %i", status);
     }
 
     return status;
