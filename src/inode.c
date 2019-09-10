@@ -551,8 +551,12 @@ ssize_t ex_inode_read(struct ex_inode *ino, size_t off, char *buffer,
     }
 
     size_t offset = ino->blocks[start_block_idx] + start_block_off;
+    ssize_t readed = 0;
 
-    return ex_device_read_to_buffer(buffer, offset, amount);
+    // XXX: ignore status for now
+    (void)ex_device_read_to_buffer(&readed, buffer, offset, amount);
+
+    return readed;
 }
 
 int ex_inode_rename(struct ex_inode *from_inode, struct ex_inode *to_inode,

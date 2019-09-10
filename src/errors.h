@@ -14,19 +14,23 @@ typedef enum {
     OK
 } ex_status;
 
-inline void ex_status_report(ex_status status, enum loglevel level) {
-    const char * msg = NULL;
+inline void ex_status_report(ex_status status, enum loglevel level, ...) {
+
+    va_list args;
+    va_start(args, level);
 
     switch (status) {
-        case DEVICE_CANNOT_BE_OPENED:
-            msg = "Unable to open device";
-            break;
+        case DEVICE_CANNOT_BE_OPENED: {
+            const char *device = device = va_arg(args, const char *);
+            ex_log_format(level, "unable to open device: %s", device);
+        }
+        break;
+
         default:
-            msg = "OK";
-            break;
+        break;
     }
 
-    ex_log_format(level, "%s", msg);
+    va_end(args);
 }
 
 #endif /* ERRORS_H */

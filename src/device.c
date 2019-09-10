@@ -1,6 +1,6 @@
 #include "device.h"
 
-
+const char * EX_DEVICE = "exdev";
 int device_fd = -1;
 
 ex_status ex_device_fd(int *fd) {
@@ -48,71 +48,119 @@ int ex_is_device_opened(void) {
 ex_status ex_device_read(void **buffer, size_t off, size_t amount) {
 
     *buffer = ex_malloc(amount);
-    size_t readed = ex_device_read_to_buffer(*buffer, off, amount);
+    ssize_t readed = 0;
+    ex_status status = ex_device_read_to_buffer(&readed, *buffer, off, amount);
 
-    if (readed != amount) {
-        warning("read: readed=%lu, wanted=%lu", readed, amount);
+    if (status != OK) {
         free(*buffer);
-        return READ_FAILED;
+        *buffer = NULL;
+    }
+
+    return status;
+}
+
+ex_status ex_device_read_to_buffer(ssize_t *readed, char *buffer, size_t off,
+                                   size_t amount) {
+
+    int fd = -1;
+    ex_status status = OK;
+
+    if ((status = ex_device_fd(&fd)) != OK) {
+        status = DEVICE_IS_NOT_OPEN;
+        goto failure;
+    }
+
+    off_t offset = lseek(fd, off, SEEK_SET);
+
+    if ((off_t)off < 0) {
+        status = INVALID_OFFSET;
+        goto failure;
+    }
+
+    if ((size_t)offset != off) {
+        status = OFFSET_SEEK_FAILED;
+        goto failure;
+    }
+
+    *readed = read(fd, buffer, amount);
+
+    if (*readed != (ssize_t)amount) {
+        status = READ_FAILED;
     }
 
     return OK;
-}
-
-ssize_t ex_device_read_to_buffer(char *buffer, size_t off, size_t amount) {
-
-    int fd = -1;
-    ex_status status = OK;
-
-    if ((status = ex_device_fd(&fd)) != OK) {
-        warning("device is not opened");
-        goto failure;
-    }
-
-    off_t offset = lseek(fd, off, SEEK_SET);
-
-    if ((off_t)off < 0) {
-        warning("lseek: underthrow (off > max(int))");
-        goto failure;
-    }
-
-    if ((size_t)offset != off) {
-        warning("lseek: offset=%lu, wanted=%lu", offset, off);
-        goto failure;
-    }
-
-    return read(fd, buffer, amount);
 
 failure:
-    return -1;
+
+    switch (status) {
+        case DEVICE_IS_NOT_OPEN:
+            warning("device is not opened");
+            break;
+        case INVALID_OFFSET:
+            warning("lseek: underthrow (off > max(int))");
+            break;
+        case OFFSET_SEEK_FAILED:
+            warning("lseek: offset=%lu, wanted=%lu", offset, off);
+            break;
+        case READ_FAILED:
+            warning("read: readed=%lu, wanted=%lu", *readed, amount);
+            break;
+        default:
+            warning("unhandled error: %i", status);
+    }
+
+    return status;
 }
 
-void ex_device_write(size_t off, const char *data, size_t amount) {
+ex_status ex_device_write(size_t off, const char *data, size_t amount) {
 
     int fd = -1;
     ex_status status = OK;
 
     if ((status = ex_device_fd(&fd)) != OK) {
-        warning("device is not opened");
+        status = DEVICE_IS_NOT_OPEN;
         goto failure;
     }
 
     off_t offset = lseek(fd, off, SEEK_SET);
 
     if ((off_t)off < 0) {
-        warning("lseek: underthrow (off > max(int))");
+        status = INVALID_OFFSET;
         goto failure;
     }
 
     if ((size_t)offset != off) {
-        warning("lseek: offset=%lu, off=%lu", offset, off);
+        status = OFFSET_SEEK_FAILED;
         goto failure;
     }
 
     size_t written = write(fd, data, amount);
 
     if (written != amount) {
-        warning("write: written=%lu, amount=%lu", written, amount);
+        status = WRITE_FAILED;
+        goto failure;
     }
-failure:;
+
+    return status;
+
+failure:
+
+    switch (status) {
+        case DEVICE_IS_NOT_OPEN:
+            warning("device is not opened");
+            break;
+        case INVALID_OFFSET:
+            warning("lseek: underthrow (off > max(int))");
+            break;
+        case OFFSET_SEEK_FAILED:
+            warning("lseek: offset=%lu, off=%lu", offset, off);
+            break;
+        case WRITE_FAILED:
+            warning("write: written=%lu, amount=%lu", written, amount);
+            break;
+        default:
+            warning("unhandled error: %i", status);
+    }
+
+    return status;
 }
