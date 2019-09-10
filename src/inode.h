@@ -2,6 +2,7 @@
 #define EX_INODE_H
 
 #include "device.h"
+#include "errors.h"
 #include "logging.h"
 #include "super.h"
 #include <assert.h>
@@ -56,7 +57,7 @@ struct ex_dir_entry {
 
 extern struct ex_inode *root;
 
-void ex_root_write(void);
+ex_status ex_root_write(void);
 void ex_root_load(void);
 
 #define ex_inode_update_time(rv, ino, attr)                                    \

@@ -2,8 +2,10 @@
 #define ERRORS_H
 
 #include "logging.h"
+#include <stdarg.h>
 
 typedef enum {
+    // device errors
     DEVICE_CANNOT_BE_OPENED,
     DEVICE_IS_NOT_OPEN,
     DEVICE_SIZE_CHANGE_FAILED,
@@ -11,6 +13,10 @@ typedef enum {
     WRITE_FAILED,
     INVALID_OFFSET,
     OFFSET_SEEK_FAILED,
+    // inode errors
+    SUPER_BLOCK_IS_NOT_LOADED,
+    SUPER_BLOCK_WRITING_FAILED,
+    ROOT_INODE_CANNOT_BE_CREATED,
     OK
 } ex_status;
 

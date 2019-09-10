@@ -3,14 +3,17 @@
 
 struct ex_inode *root = NULL;
 
-void ex_root_write(void) {
+ex_status ex_root_write(void) {
 
-    assert(super_block);
+    if (!super_block) {
+        return SUPER_BLOCK_IS_NOT_LOADED;
+    }
 
     root = ex_inode_create(S_IRWXU | S_IXOTH | S_IROTH | S_IFDIR);
 
     if (!root) {
-        fatal("unable to create root inode");
+        error("unable to create root inode");
+        return ROOT_INODE_CANNOT_BE_CREATED;
     }
 
     super_block->root = root->address;
@@ -18,7 +21,7 @@ void ex_root_write(void) {
     ex_inode_flush(root);
     ex_inode_fill_dir(root, root);
 
-    ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
+    return ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
 }
 
 void ex_root_load(void) {
