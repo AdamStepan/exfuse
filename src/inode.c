@@ -24,19 +24,28 @@ ex_status ex_root_write(void) {
     return ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
 }
 
-void ex_root_load(void) {
+ex_status ex_root_load(void) {
 
-    assert(super_block);
+    ex_status status = OK;
+
+    if (!super_block) {
+        status = SUPER_BLOCK_IS_NOT_LOADED;
+        goto done;
+    }
 
     info("loading root");
     root = ex_inode_load(super_block->root);
 
     if (!root) {
-        fatal("unable to load root from %lu", super_block->root);
+        error("unable to load root from %lu", super_block->root);
+        status = ROOT_CANNOT_BE_LOADED;
     }
+
+done:
+    return status;
 }
 
-int ex_inode_allocate_blocks(struct ex_inode *inode) {
+ex_status ex_inode_allocate_blocks(struct ex_inode *inode) {
 
     info("allocating blocks");
 
@@ -49,11 +58,11 @@ int ex_inode_allocate_blocks(struct ex_inode *inode) {
         if (inode->blocks[i] == EX_BLOCK_INVALID_ADDRESS) {
             warning("failing to allocate nth (%lu) block", i);
             ex_inode_deallocate_blocks(inode);
-            return 0;
+            return INODE_BLOCK_ALLOCATION_FAILED;
         }
     }
 
-    return 1;
+    return OK;
 }
 
 void ex_inode_deallocate_blocks(struct ex_inode *inode) {
@@ -86,8 +95,17 @@ void ex_inode_print(const struct ex_inode *inode) {
     info("ctime: %ld.%.9ld", inode->mtime.tv_sec, inode->mtime.tv_nsec);
 }
 
-void ex_inode_flush(const struct ex_inode *inode) {
-    ex_device_write(inode->address, (void *)inode, sizeof(struct ex_inode));
+ex_status ex_inode_flush(const struct ex_inode *inode) {
+
+    ex_status status = ex_device_write(inode->address, (void *)inode,
+                                       sizeof(struct ex_inode));
+
+    if (status != OK) {
+        error("inode (%lu) flush failed", inode->number);
+        status = INODE_FLUSH_FAILED;
+    }
+
+    return status;
 }
 
 struct ex_inode *ex_copy_inode(const struct ex_inode *inode) {
@@ -154,7 +172,7 @@ struct ex_inode *ex_inode_create(uint16_t mode) {
         inode->nlinks = 1;
     }
 
-    if (!ex_inode_allocate_blocks(inode)) {
+    if (ex_inode_allocate_blocks(inode) != OK) {
         goto free_inode_block;
     }
 

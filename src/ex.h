@@ -2,6 +2,7 @@
 #define EX_H
 
 #include "device.h"
+#include "errors.h"
 #include "inode.h"
 #include "super.h"
 #include <fcntl.h>
@@ -10,7 +11,7 @@
 #include <sys/statvfs.h>
 #include <time.h>
 
-void ex_init(const char *device);
+ex_status ex_init(const char *device);
 void ex_deinit(void);
 
 int ex_create(const char *pathname, mode_t mode);

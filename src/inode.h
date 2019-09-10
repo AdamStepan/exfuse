@@ -58,7 +58,7 @@ struct ex_dir_entry {
 extern struct ex_inode *root;
 
 ex_status ex_root_write(void);
-void ex_root_load(void);
+ex_status ex_root_load(void);
 
 #define ex_inode_update_time(rv, ino, attr)                                    \
     int rv;                                                                    \
@@ -69,15 +69,11 @@ void ex_root_load(void);
         inode->attr.tv_nsec = rv.tv_nsec;                                      \
     } while (0);
 
-/**
- * Try to allocate EX_DIRECT_BLOCKS for inode. i
- * @return 1 if EX_DIRECT_BLOCKS can be allocated, 0 otherwise.
- */
-int ex_inode_allocate_blocks(struct ex_inode *inode);
+ex_status ex_inode_allocate_blocks(struct ex_inode *inode);
 void ex_inode_deallocate_blocks(struct ex_inode *inode);
 void ex_inode_free(struct ex_inode *inode);
 void ex_inode_print(const struct ex_inode *inode);
-void ex_inode_flush(const struct ex_inode *inode);
+ex_status ex_inode_flush(const struct ex_inode *inode);
 size_t ex_inode_max_blocks(void);
 
 struct ex_dir_entry *ex_dir_entry_copy(const struct ex_dir_entry *entry);
