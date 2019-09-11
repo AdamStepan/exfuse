@@ -98,7 +98,7 @@ failure:
         warning("lseek: underthrow (off > max(int))");
         break;
     case OFFSET_SEEK_FAILED:
-        warning("lseek: offset=%lu, wanted=%lu", offset, off);
+        warning("lseek: offset=%li, wanted=%lu", offset, off);
         break;
     case READ_FAILED:
         warning("read: readed=%lu, wanted=%lu", *readed, amount);
@@ -151,7 +151,7 @@ failure:
         warning("lseek: underthrow (off > max(int))");
         break;
     case OFFSET_SEEK_FAILED:
-        warning("lseek: offset=%lu, off=%lu", offset, off);
+        warning("lseek: offset=%li, off=%lu", offset, off);
         break;
     case WRITE_FAILED:
         warning("write: written=%lu, amount=%lu", written, amount);

@@ -1,6 +1,10 @@
 #include "inode.h"
 #include "errors.h"
 
+const uint16_t EX_INODE_MAGIC1 = 0xabcc;
+const uint8_t EX_DIR_MAGIC1 = 0xde;
+const uint8_t EX_ENTRY_MAGIC1 = 0x61;
+
 struct ex_inode *root = NULL;
 
 ex_status ex_root_write(void) {
@@ -47,7 +51,7 @@ done:
 
 ex_status ex_inode_allocate_blocks(struct ex_inode *inode) {
 
-    info("allocating blocks");
+    debug("allocating blocks for inode (%lu)", inode->number);
 
     for (size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
 
@@ -194,10 +198,10 @@ size_t ex_inode_find_free_entry_address(struct ex_inode *dir) {
     foreach_inode_block(dir, block) {
         foreach_block_entry(block, entry) {
 
-            debug("free=%i, magic=%i, (%lu)", entry.free, entry.magic,
+            debug("free=%i, magic=%x, blockaddr=%lu", entry.free, entry.magic,
                   block.address);
 
-            if (!entry.free && entry.magic != 97) {
+            if (!entry.free && entry.magic != EX_ENTRY_MAGIC1) {
                 continue;
             }
 
@@ -291,10 +295,7 @@ struct ex_inode *ex_inode_find(struct ex_path *path) {
             goto not_found;
         }
 
-        // free inode from a previous iteration
-        if (searched) {
-            ex_inode_free(searched);
-        }
+        // XXX: free inode from a previous iteration
 
         searched = ex_inode_get(curdir, path->components[n]);
 
@@ -405,7 +406,7 @@ size_t ex_inode_find_entry_address(struct ex_inode *dir, const char *name) {
             debug("free=%i, magic=%i, name=%s", entry.free, entry.magic,
                   entry.name);
 
-            if (entry.magic == 97) {
+            if (entry.magic == EX_ENTRY_MAGIC1) {
                 goto not_found;
             }
 

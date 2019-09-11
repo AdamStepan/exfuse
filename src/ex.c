@@ -26,7 +26,7 @@ ex_status ex_init(const char *device) {
         goto root_load_error;
     }
 
-    ex_root_load();
+    return status;
 
 root_load_error:
     ex_device_close();

@@ -14,8 +14,10 @@
 #include <unistd.h>
 
 #define EX_DIRECT_BLOCKS 256
-#define EX_INODE_MAGIC1 0xabcc
-#define EX_DIR_MAGIC1 0xde
+
+extern const uint16_t EX_INODE_MAGIC1;
+extern const uint8_t EX_DIR_MAGIC1;
+extern const uint8_t EX_ENTRY_MAGIC1;
 
 struct ex_inode {
     // number of inode, it corresponds with allocated block number

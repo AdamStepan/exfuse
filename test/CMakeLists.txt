@@ -36,10 +36,19 @@ find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 pkg_search_module(GLIB REQUIRED glib-2.0)
 
-add_executable(testexfuse ${TEST_SOURCES} ${EXFUSE_LIB_SRC})
-target_link_libraries(testexfuse
+add_executable(test_exfuse ${TEST_SOURCES} ${EXFUSE_LIB_SRC})
+add_executable(test_stress test_stress.c ${EXFUSE_LIB_SRC})
+
+target_link_libraries(test_exfuse
     PRIVATE ${GLIB_LDFLAGS} m
     PRIVATE Threads::Threads)
 
-target_include_directories(testexfuse PUBLIC ${GLIB_INCLUDE_DIRS})
-add_test(testexfuse ${CMAKE_SOURCE_DIR}/test/testexfuse)
+target_link_libraries(test_stress
+    PRIVATE ${GLIB_LDFLAGS} m
+    PRIVATE Threads::Threads)
+
+target_include_directories(test_exfuse PUBLIC ${GLIB_INCLUDE_DIRS})
+target_include_directories(test_stress PUBLIC ${GLIB_INCLUDE_DIRS})
+
+add_test(test_exfuse ${CMAKE_SOURCE_DIR}/build/test/test_exfuse)
+add_test(test_stress ${CMAKE_SOURCE_DIR}/build/test/test_stress)

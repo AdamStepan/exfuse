@@ -121,7 +121,7 @@ static void *do_init(struct fuse_conn_info *conn) {
     ex_logging_init(args->loglevel, args->foreground);
     ex_init(args->device);
 
-    return NULL;
+    return args;
 }
 
 static void do_destroy(void *private_data) {
