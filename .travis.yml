@@ -9,6 +9,6 @@ branches:
   only:
     - master
 script:
-  - cmake . -DTESTS=ON
-  - make
-  - ./test/testexfuse
+  - mkdir build
+  - cd build && cmake .. -DTESTS=ON && make
+  - make test
