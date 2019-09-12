@@ -592,14 +592,14 @@ int ex_chmod(const char *pathname, mode_t mode) {
         goto free_inode;
     }
 
-    ex_print_mode(mode);
-    ex_print_mode(inode->mode);
+    ex_log_mode(mode);
+    ex_log_mode(inode->mode);
 
     // clean permissions mode
     inode->mode &= ~((2048 << 1) - 1);
     inode->mode |= mode;
 
-    ex_print_mode(inode->mode);
+    ex_log_mode(inode->mode);
 
     ex_inode_flush(inode);
 

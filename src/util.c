@@ -67,38 +67,58 @@ char **ex_str_split(const char *str, const char *delim) {
     return tokens;
 }
 
-void ex_print_permissions(const char *prefix, uint8_t mode) {
+size_t ex_format_permissions(char *buffer, const char *prefix, uint8_t mode) {
 
     char r = mode & 0x4 ? 'r' : '-';
     char w = mode & 0x2 ? 'w' : '-';
     char x = mode & 0x1 ? 'x' : '-';
 
-    info("%s=%c%c%c ", prefix, r, w, x);
+    return (size_t)sprintf(buffer, "%s=%c%c%c", prefix, r, w, x);
+}
+
+size_t ex_format_mode(char *buffer, mode_t m) {
+
+    char *oldbuf = buffer;
+
+    if ((m & S_IFDIR) == S_IFDIR)
+        buffer += sprintf(buffer, "dir ");
+
+    if ((m & S_IFREG) == S_IFREG)
+        buffer += sprintf(buffer, "regular ");
+
+    if ((m & S_IFLNK) == S_IFLNK)
+        buffer += sprintf(buffer, "symlink ");
+
+    if (m & S_ISUID)
+        buffer += sprintf(buffer, "suid ");
+
+    if (m & S_ISGID)
+        buffer += sprintf(buffer, "sgid ");
+
+    if (m & S_ISVTX)
+        buffer += sprintf(buffer, "sticky ");
+
+    buffer += ex_format_permissions(buffer, "other", m & 7);
+    buffer += ex_format_permissions(buffer, " group", (m >> 3) & 7);
+    buffer += ex_format_permissions(buffer, " user", (m >> 6) & 7);
+
+    return buffer - oldbuf;
 }
 
 void ex_print_mode(mode_t m) {
+    char buffer[256];
 
-    if ((m & S_IFDIR) == S_IFDIR)
-        info("dir ");
+    ex_format_mode(buffer, m);
 
-    if ((m & S_IFREG) == S_IFREG)
-        info("regular ");
+    printf("%s", buffer);
+}
 
-    if ((m & S_IFLNK) == S_IFLNK)
-        info("symlink ");
+void ex_log_mode(mode_t m) {
+    char buffer[256];
 
-    if (m & S_ISUID)
-        info("suid ");
+    ex_format_mode(buffer, m);
 
-    if (m & S_ISGID)
-        info("sgid ");
-
-    if (m & S_ISVTX)
-        info("sticky ");
-
-    ex_print_permissions("other", m & 7);
-    ex_print_permissions("group", (m >> 3) & 7);
-    ex_print_permissions("user", (m >> 6) & 7);
+    info("%s", buffer);
 }
 
 void ex_update_time_ns(struct timespec *dest) {
