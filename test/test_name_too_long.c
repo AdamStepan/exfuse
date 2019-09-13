@@ -22,7 +22,7 @@ void test_name_too_long(void) {
 
     memset(name, 'x', namemax + 1);
 
-    rv = ex_create(name, S_IRWXU);
+    rv = ex_create(name, S_IRWXU, getgid(), getuid());
     g_assert_cmpint(rv, ==, -ENAMETOOLONG);
 
     ex_deinit();

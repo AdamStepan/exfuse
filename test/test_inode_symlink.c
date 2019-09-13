@@ -13,7 +13,7 @@ void test_inode_symlink(void) {
     ex_mkfs_test_init();
 
     // create new file
-    int rv = ex_create("/target", S_IRWXU);
+    int rv = ex_create("/target", S_IRWXU, getgid(), getuid());
     g_assert(!rv);
 
     rv = ex_symlink("/target", "/link");

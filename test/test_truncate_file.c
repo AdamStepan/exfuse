@@ -12,7 +12,7 @@ void test_truncate_file(void) {
     ex_mkfs_test_init();
 
     // create new file
-    int rv = ex_create("/fname", S_IRWXU);
+    int rv = ex_create("/fname", S_IRWXU, getgid(), getuid());
     g_assert(!rv);
 
     // write something to file

@@ -29,7 +29,7 @@ void test_can_create_maximum_inodes(void) {
 
         snprintf(buffer, sizeof(buffer), "/file%zu", i);
 
-        rv = ex_create(buffer, S_IRWXU);
+        rv = ex_create(buffer, S_IRWXU, getgid(), getuid());
         g_assert(!rv);
     }
 

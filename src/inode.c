@@ -13,7 +13,8 @@ ex_status ex_root_write(void) {
         return SUPER_BLOCK_IS_NOT_LOADED;
     }
 
-    root = ex_inode_create(S_IRWXU | S_IXOTH | S_IROTH | S_IFDIR);
+    mode_t mode = S_IRWXU | S_IXOTH | S_IROTH | S_IFDIR;
+    root = ex_inode_create(mode, getgid(), getuid());
 
     if (!root) {
         error("unable to create root inode");
@@ -94,6 +95,9 @@ void ex_inode_print(const struct ex_inode *inode) {
     info("links: %u", inode->nlinks);
     info("size: %lu", inode->size);
 
+    info("uid: %u", inode->uid);
+    info("gid: %u", inode->gid);
+
     info("mtime: %ld.%.9ld", inode->mtime.tv_sec, inode->mtime.tv_nsec);
     info("atime: %ld.%.9ld", inode->mtime.tv_sec, inode->mtime.tv_nsec);
     info("ctime: %ld.%.9ld", inode->mtime.tv_sec, inode->mtime.tv_nsec);
@@ -128,6 +132,9 @@ struct ex_inode *ex_copy_inode(const struct ex_inode *inode) {
     copy->size = inode->size;
     copy->nlinks = inode->nlinks;
 
+    copy->gid = inode->gid;
+    copy->uid = inode->uid;
+
     for (size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
         copy->blocks[i] = inode->blocks[i];
     }
@@ -143,7 +150,7 @@ void ex_inode_fill_dir(struct ex_inode *inode, struct ex_inode *parent) {
     ex_inode_flush(inode);
 }
 
-struct ex_inode *ex_inode_create(uint16_t mode) {
+struct ex_inode *ex_inode_create(uint16_t mode, gid_t gid, uid_t uid) {
 
     struct ex_inode_block block = ex_super_allocate_inode_block();
 
@@ -167,6 +174,9 @@ struct ex_inode *ex_inode_create(uint16_t mode) {
     ex_update_time_ns(&(inode->mtime));
     inode->ctime = inode->mtime;
     inode->atime = inode->mtime;
+
+    inode->gid = gid;
+    inode->uid = uid;
 
     if (mode & S_IFDIR) {
         inode->size = sizeof(struct ex_inode);

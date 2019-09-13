@@ -20,6 +20,7 @@ void test_create_dir(void);
 void test_can_create_maximum_inodes(void);
 void test_inode_link(void);
 void test_chmod(void);
+void test_chown(void);
 
 int main(int argc, char **argv) {
     ex_set_log_level(fatal);
@@ -50,6 +51,7 @@ int main(int argc, char **argv) {
                     test_can_create_maximum_inodes);
     g_test_add_func("/exfuse/test_inode_link", test_inode_link);
     g_test_add_func("/exfuse/test_chmod", test_chmod);
+    g_test_add_func("/exfuse/test_chown", test_chown);
 
     return g_test_run();
 }

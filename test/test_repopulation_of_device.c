@@ -12,7 +12,7 @@ int populate_device(size_t ninodes) {
 
         snprintf(buffer, sizeof(buffer), "/file%zu", i);
 
-        rv = ex_create(buffer, S_IRWXU);
+        rv = ex_create(buffer, S_IRWXU, getgid(), getuid());
 
         if (rv) {
             warnx("ex_create(%s)", buffer);

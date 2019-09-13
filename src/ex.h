@@ -14,13 +14,13 @@
 ex_status ex_init(const char *device);
 void ex_deinit(void);
 
-int ex_create(const char *pathname, mode_t mode);
+int ex_create(const char *pathname, mode_t mode, gid_t gid, uid_t uid);
 int ex_getattr(const char *pathname, struct stat *st);
 int ex_unlink(const char *pathname);
 int ex_read(const char *pathname, char *buffer, size_t size, off_t offset);
 int ex_write(const char *path, const char *buf, size_t size, off_t offset);
 int ex_open(const char *path);
-int ex_mkdir(const char *pathname, mode_t mode);
+int ex_mkdir(const char *pathname, mode_t mode, gid_t gid, uid_t uid);
 int ex_readdir(const char *pathname, struct ex_dir_entry ***inodes);
 int ex_utimens(const char *pathname, const struct timespec tv[2]);
 int ex_truncate(const char *path);
@@ -32,5 +32,6 @@ int ex_access(const char *pathname, int mode);
 int ex_symlink(const char *target, const char *link);
 int ex_readlink(const char *link, char *buffer, size_t bufsize);
 int ex_rename(const char *from, const char *to);
+int ex_chown(const char *path, uid_t uid, gid_t gid);
 
 #endif /* EX_H */

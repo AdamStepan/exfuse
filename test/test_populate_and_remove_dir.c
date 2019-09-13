@@ -14,7 +14,7 @@ void test_populate_and_remove_dir(void) {
     ex_mkfs_test_init();
 
     // create new directory
-    int rv = ex_mkdir("/dir", S_IRWXU | S_IFDIR);
+    int rv = ex_mkdir("/dir", S_IRWXU | S_IFDIR, getgid(), getuid());
     g_assert(!rv);
 
     char buffer[16];
@@ -24,7 +24,7 @@ void test_populate_and_remove_dir(void) {
 
         snprintf(buffer, sizeof(buffer), "/dir/file%i", i);
 
-        rv = ex_create(buffer, S_IRWXU);
+        rv = ex_create(buffer, S_IRWXU, getgid(), getuid());
         g_assert(!rv);
     }
 

@@ -63,7 +63,7 @@ void ex_print_struct_sizes(void) {
     info("ex_dir_entry: %lu", sizeof(struct ex_dir_entry));
 }
 
-int ex_create(const char *pathname, mode_t mode) {
+int ex_create(const char *pathname, mode_t mode, gid_t gid, uid_t uid) {
 
     ex_super_lock();
 
@@ -78,12 +78,13 @@ int ex_create(const char *pathname, mode_t mode) {
     struct ex_path *path = ex_path_make(pathname);
 
     struct ex_inode *destdir = ex_inode_find(dirpath);
+
     if (!destdir) {
         rv = -ENOENT;
         goto free_destdir;
     }
 
-    struct ex_inode *inode = ex_inode_create(mode);
+    struct ex_inode *inode = ex_inode_create(mode, gid, uid);
     // we do not have enough space for a new inode
     if (!inode) {
         rv = -ENOSPC;
@@ -137,8 +138,8 @@ int ex_getattr(const char *pathname, struct stat *st) {
     st->st_atim = inode->atime;
     st->st_ctim = inode->ctime;
 
-    st->st_uid = getuid();
-    st->st_gid = getgid();
+    st->st_uid = inode->uid;
+    st->st_gid = inode->gid;
 
     // update access time
     ex_update_time_ns(&inode->atime);
@@ -342,7 +343,7 @@ int ex_open(const char *pathname) {
     return 0;
 }
 
-int ex_mkdir(const char *pathname, mode_t mode) {
+int ex_mkdir(const char *pathname, mode_t mode, gid_t gid, uid_t uid) {
 
     ex_super_lock();
 
@@ -362,7 +363,7 @@ int ex_mkdir(const char *pathname, mode_t mode) {
     }
 
     struct ex_path *dirpath = ex_path_make(pathname);
-    struct ex_inode *dir = ex_inode_create(mode | S_IFDIR);
+    struct ex_inode *dir = ex_inode_create(mode | S_IFDIR, gid, uid);
 
     // we do not have enough space for a new inode
     if (!dir) {
@@ -695,7 +696,8 @@ int ex_symlink(const char *target, const char *link) {
     }
 
     // create link inode
-    link_inode = ex_inode_create(S_IFLNK | S_IRWXU | S_IRWXG | S_IRWXO);
+    mode_t mode = S_IFLNK | S_IRWXU | S_IRWXG | S_IRWXO;
+    link_inode = ex_inode_create(mode, target_inode->gid, target_inode->uid);
 
     if (!link_inode) {
         rv = -ENOSPC;
@@ -812,4 +814,30 @@ name_too_long:
     ex_super_unlock();
 
     return rv;
+}
+
+int ex_chown(const char *pathname, uid_t uid, gid_t gid) {
+
+    int rv = 0;
+
+    struct ex_path *path = ex_path_make(pathname);
+    struct ex_inode *inode = ex_inode_find(path);
+
+    if (!inode) {
+        rv = -ENOENT;
+        goto invalid_path;
+    }
+
+    inode->uid = uid;
+    inode->gid = gid;
+
+    ex_inode_flush(inode);
+
+invalid_path:
+    ex_super_unlock();
+
+    free(path);
+    return rv;
+
+    return 0;
 }

@@ -13,7 +13,7 @@ void test_unlink_file(void) {
     ex_mkfs_test_init();
 
     // create file
-    int rv = ex_create("/file", S_IRWXU);
+    int rv = ex_create("/file", S_IRWXU, getgid(), getuid());
     g_assert(!rv);
 
     // check that we can getattribute for file

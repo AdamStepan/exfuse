@@ -12,11 +12,11 @@ void test_add_file_to_dir(void) {
     ex_mkfs_test_init();
 
     // create new directory
-    int rv = ex_mkdir("/dir", S_IRWXU | S_IFDIR);
+    int rv = ex_mkdir("/dir", S_IRWXU | S_IFDIR, getgid(), getuid());
     g_assert(!rv);
 
     // create file
-    rv = ex_create("/dir/file", S_IRWXU);
+    rv = ex_create("/dir/file", S_IRWXU, getgid(), getuid());
     g_assert(!rv);
 
     // check that we can getattribute for file

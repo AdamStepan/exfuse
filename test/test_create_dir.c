@@ -13,7 +13,7 @@ void test_create_dir(void) {
     ex_mkfs_test_init();
 
     // create new file
-    int rv = ex_create("/fname", S_IRWXU | S_IFDIR);
+    int rv = ex_create("/fname", S_IRWXU | S_IFDIR, getgid(), getuid());
     g_assert(!rv);
 
     // check file atributes

@@ -20,7 +20,7 @@ void test_file_block_deallocation(void) {
     size_t allocated = statbuf.f_bfree;
 
     // create new file
-    rv = ex_create("/file", S_IRWXU);
+    rv = ex_create("/file", S_IRWXU, getgid(), getuid());
     g_assert(!rv);
 
     // remove the file

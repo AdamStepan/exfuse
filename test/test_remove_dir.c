@@ -13,11 +13,11 @@ void test_remove_dir(void) {
     ex_mkfs_test_init();
 
     // create directory
-    int rv = ex_mkdir("/dir", S_IRWXU | S_IFDIR);
+    int rv = ex_mkdir("/dir", S_IRWXU | S_IFDIR, getgid(), getuid());
     g_assert(!rv);
 
     // add file to directory
-    rv = ex_create("/dir/file", S_IRWXU);
+    rv = ex_create("/dir/file", S_IRWXU, getgid(), getuid());
     g_assert(!rv);
 
     // check that we get -ENOTEMPTY

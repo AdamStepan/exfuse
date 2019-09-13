@@ -31,7 +31,7 @@ void test_statfs(void) {
     // NOTE: -1 is here becase of root
     g_assert_cmpint(statbuf.f_ffree, ==, ninodes - 1);
 
-    rv = ex_create("/file0", S_IRWXU);
+    rv = ex_create("/file0", S_IRWXU, getgid(), getuid());
     g_assert(!rv);
 
     rv = ex_statfs(&statbuf);

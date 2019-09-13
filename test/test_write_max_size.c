@@ -17,7 +17,7 @@ void test_write_max_size(void) {
     memset(data, 'a', sizeof(data));
 
     // create new file
-    int rv = ex_create("/file", S_IRWXU);
+    int rv = ex_create("/file", S_IRWXU, getgid(), getuid());
     g_assert(!rv);
 
     rv = ex_write("/file", data, max_size, 0);

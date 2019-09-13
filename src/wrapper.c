@@ -23,7 +23,8 @@ struct ex_args {
 static int do_create(const char *pathname, mode_t mode,
                      struct fuse_file_info *fi) {
     (void)fi;
-    return ex_create(pathname, mode);
+    struct fuse_context *ctx = fuse_get_context();
+    return ex_create(pathname, mode, ctx->gid, ctx->uid);
 }
 
 static int do_getattr(const char *pathname, struct stat *st) {
@@ -31,7 +32,8 @@ static int do_getattr(const char *pathname, struct stat *st) {
 }
 
 static int do_mkdir(const char *pathname, mode_t mode) {
-    return ex_mkdir(pathname, mode);
+    struct fuse_context *ctx = fuse_get_context();
+    return ex_mkdir(pathname, mode, ctx->gid, ctx->uid);
 }
 
 static int do_open(const char *pathname, struct fuse_file_info *fi) {
@@ -152,6 +154,10 @@ static int do_rename(const char *from, const char *to) {
     return ex_rename(from, to);
 }
 
+static int do_chown(const char *path, uid_t uid, gid_t gid) {
+    return ex_chown(path, uid, gid);
+}
+
 static struct fuse_operations operations = {.getattr = do_getattr,
                                             .readdir = do_readdir,
                                             .read = do_read,
@@ -171,7 +177,8 @@ static struct fuse_operations operations = {.getattr = do_getattr,
                                             .access = do_access,
                                             .symlink = do_symlink,
                                             .readlink = do_readlink,
-                                            .rename = do_rename};
+                                            .rename = do_rename,
+                                            .chown = do_chown};
 
 static void ex_args_init(struct ex_args *args) {
     args->loglevel = NULL;

@@ -5,11 +5,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-void test_chmod(void) {
+void test_chown(void) {
     unlink(EX_DEVICE);
     ex_mkfs_test_init();
 
-    int rv = ex_chmod("/fname", 0);
+    int rv = ex_chown("/fname", 1, 1);
     g_assert(rv == -ENOENT);
 
     rv = ex_create("/fname", 0, getgid(), getuid());
@@ -20,12 +20,13 @@ void test_chmod(void) {
     rv = ex_getattr("/fname", &st);
     g_assert(!st.st_mode);
 
-    rv = ex_chmod("/fname", S_ISVTX);
+    rv = ex_chown("/fname", 1, 1);
     g_assert(!rv);
 
     rv = ex_getattr("/fname", &st);
     g_assert(!rv);
-    g_assert(st.st_mode == S_ISVTX);
+    g_assert(st.st_uid == 1);
+    g_assert(st.st_gid == 1);
 
     ex_deinit();
 }
