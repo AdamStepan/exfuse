@@ -9,7 +9,8 @@ enum action {
     PRINT_INFO,
     PRINT_INODE,
     PRINT_INODE_DATA,
-    PRINT_BITMAP_DATA
+    PRINT_BITMAP_DATA,
+    PRINT_SIZES,
 };
 
 struct options {
@@ -40,6 +41,15 @@ char *readable_size(double size) {
 
     return buf;
 }
+
+void print_struct_sizes(void) {
+
+    info("ex_super_block: %lu", sizeof(struct ex_super_block));
+    info("ex_inode: %lu", sizeof(struct ex_inode));
+    info("ex_dir_entry: %lu", sizeof(struct ex_dir_entry));
+    info("ex_bitmap: %lu", sizeof(struct ex_bitmap));
+}
+
 void print_bitmap(const char *name, struct ex_bitmap *bitmap) {
 
     printf("%s:\n", name);
@@ -173,24 +183,27 @@ void print_inode(const char *device, size_t address) {
 
 void help(void) {
     printf("exdbg: \n"
+           "\t--bitmap-data\t\tdisplay bitmap data\n"
            "\t--device\t\tspecify ex device\n"
+           "\t--info\t\t\tdisplay info about ex filesystem\n"
            "\t--inode addr\t\tdisplay information about inode\n"
            "\t--inode-data\t\tdisplay inode data (binary)\n"
-           "\t--bitmap-data\t\tdisplay bitmap data\n"
+           "\t--struct-sizes\t\t\tdisplay sizes of filesystem structures\n"
            "\t--super\t\t\tdisplay info about super block\n"
-           "\t--info\t\t\tdisplay info about ex filesystem\n");
+    );
 }
 
 int main(int argc, char **argv) {
 
     const struct option longopts[] = {
+        {"bitmap-data", required_argument, 0, 'b'},
         {"device", required_argument, 0, 'd'},
+        {"help", no_argument, 0, 'h'},
+        {"info", no_argument, 0, 'I'},
         {"inode", required_argument, 0, 'i'},
         {"inode-data", required_argument, 0, 'D'},
-        {"bitmap-data", required_argument, 0, 'b'},
+        {"struct-sizes", no_argument, 0, 'S'},
         {"super", no_argument, 0, 's'},
-        {"info", no_argument, 0, 'I'},
-        {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}};
 
     int opt;
@@ -217,6 +230,9 @@ int main(int argc, char **argv) {
         case 's':
             options.print_super = 1;
             options.action = PRINT_SUPER;
+            break;
+        case 'S':
+            options.action = PRINT_SIZES;
             break;
         case 'I':
             options.print_info = 1;
@@ -252,6 +268,9 @@ int main(int argc, char **argv) {
         break;
     case PRINT_BITMAP_DATA:
         print_bitmap_data(options.device, options.bitmap_data);
+        break;
+    case PRINT_SIZES:
+        print_struct_sizes();
         break;
     default:
         print_super(options.device);

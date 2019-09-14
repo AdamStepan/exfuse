@@ -57,12 +57,6 @@ void ex_deinit(void) {
     }
 }
 
-void ex_print_struct_sizes(void) {
-    info("ex_super_block: %lu", sizeof(struct ex_super_block));
-    info("ex_inode: %lu", sizeof(struct ex_inode));
-    info("ex_dir_entry: %lu", sizeof(struct ex_dir_entry));
-}
-
 int ex_create(const char *pathname, mode_t mode, gid_t gid, uid_t uid) {
 
     ex_super_lock();
