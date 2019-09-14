@@ -11,7 +11,6 @@ option(COVERAGE "Enable clang coverage flags" OFF)
 option(TESTS "Enable tests" OFF)
 option(DEBUG "Enable debug build" OFF)
 
-add_definitions(-D_GNU_SOURCE)
 add_definitions(${FUSE_COMPILE_DEFINITIONS})
 
 add_compile_options(-Wall -Wextra)

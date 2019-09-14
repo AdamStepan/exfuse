@@ -8,7 +8,7 @@ void help(void) {
            "\t--inodes\t\tspecify maximum of inodes (default: 256)\n"
            "\t--size\t\t\tspecify size of a device\n"
            "\t--create\t\tcreate a device if it not exist\n"
-           "\t--log-level\t\t\tspecify log level\n");
+           "\t--log-level\t\tspecify log level\n");
 }
 
 int main(int argc, char **argv) {

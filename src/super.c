@@ -172,7 +172,12 @@ void ex_super_statfs(struct statvfs *statbuf) {
     statbuf->f_files = super_block->inode_bitmap.max_items;
     statbuf->f_ffree = statbuf->f_files - super_block->inode_bitmap.allocated;
 
+#ifdef _GNU_SOURCE
     statbuf->f_flag = ST_SYNCHRONOUS | ST_NOSUID | ST_NODEV;
+#else
+    statbuf->f_flag = ST_NOSUID;
+#endif
+
 }
 
 pthread_mutex_t super_lock;
