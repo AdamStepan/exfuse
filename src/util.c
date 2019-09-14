@@ -1,4 +1,5 @@
 #include "util.h"
+#include <limits.h>
 
 void *ex_malloc(size_t size) {
 
@@ -131,4 +132,16 @@ void ex_update_time_ns(struct timespec *dest) {
         dest->tv_sec = now.tv_sec;
         dest->tv_nsec = now.tv_nsec;
     }
+}
+
+uint64_t ex_cli_parse_number(const char *option, const char *arg) {
+
+    uint64_t value = strtoull(arg, NULL, 0);
+
+    if (value == ULLONG_MAX) {
+        fatal("argument `%s' supplied to option: `--%s' is not \
+unsigned integer", arg, option);
+    }
+
+    return value;
 }

@@ -22,5 +22,6 @@ char **ex_str_split(const char *str, const char *delim);
 void ex_print_mode(mode_t m);
 void ex_log_mode(mode_t m);
 void ex_update_time_ns(struct timespec *dest);
+uint64_t ex_cli_parse_number(const char *option, const char *arg);
 
 #endif /* EX_UTIL_H */

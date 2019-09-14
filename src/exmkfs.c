@@ -34,13 +34,13 @@ int main(int argc, char **argv) {
             params.device = strdup(optarg);
             break;
         case 'i':
-            params.number_of_inodes = strtoull(optarg, NULL, 0);
+            params.number_of_inodes = ex_cli_parse_number("inodes", optarg);
             break;
         case 'l':
             ex_logging_init(optarg, 1);
             break;
         case 's':
-            params.device_size = strtoull(optarg, NULL, 0);
+            params.device_size = ex_cli_parse_number("size", optarg);
             break;
         case 'h':
             help();
