@@ -92,19 +92,19 @@ failure:
 
     switch (status) {
     case DEVICE_IS_NOT_OPEN:
-        warning("device is not opened");
+        error("device is not opened");
         break;
     case INVALID_OFFSET:
-        warning("lseek: underthrow (off > max(int))");
+        error("lseek: underthrow (off > max(int))");
         break;
     case OFFSET_SEEK_FAILED:
-        warning("lseek: offset=%li, wanted=%lu", offset, off);
+        error("lseek: offset=%li, wanted=%lu", offset, off);
         break;
     case READ_FAILED:
-        warning("read: readed=%lu, wanted=%lu", *readed, amount);
+        error("read: readed=%lu, wanted=%lu", *readed, amount);
         break;
     default:
-        warning("unhandled error: %i", status);
+        error("unhandled error: %i", status);
     }
 
     return status;
@@ -145,19 +145,19 @@ failure:
 
     switch (status) {
     case DEVICE_IS_NOT_OPEN:
-        warning("device is not opened");
+        error("device is not opened");
         break;
     case INVALID_OFFSET:
-        warning("lseek: underthrow (off > max(int))");
+        error("lseek: underthrow (off > max(int))");
         break;
     case OFFSET_SEEK_FAILED:
-        warning("lseek: offset=%li, off=%lu", offset, off);
+        error("lseek: offset=%li, off=%lu", offset, off);
         break;
     case WRITE_FAILED:
-        warning("write: written=%lu, amount=%lu", written, amount);
+        error("write: written=%lu, amount=%lu", written, amount);
         break;
     default:
-        warning("unhandled error: %i", status);
+        error("unhandled error: %i", status);
     }
 
     return status;
