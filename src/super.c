@@ -18,12 +18,13 @@ void ex_bitmap_free_bit(struct ex_bitmap *bitmap, size_t nth_bit) {
     size_t nth_byte = nth_bit / 8;
     size_t nth_bit_in_byte = nth_bit % 8;
 
-    char *bitdata = NULL;
+    char bitdata[sizeof(char)];
+    ssize_t readed;
 
     // XXX: ignore status for now
-    (void)ex_device_read((void **)&bitdata, bitmap->address + nth_byte,
-                         sizeof(char));
-
+    (void)ex_device_read_to_buffer(&readed, bitdata,
+                                   bitmap->address + nth_byte,
+                                   sizeof(char));
     *bitdata &= ~(1UL << nth_bit_in_byte);
 
     if (bitmap->allocated)
@@ -31,8 +32,6 @@ void ex_bitmap_free_bit(struct ex_bitmap *bitmap, size_t nth_bit) {
 
     ex_device_write(bitmap->address + nth_byte, bitdata, sizeof(char));
     ex_device_write(bitmap->head, (void *)bitmap, sizeof(struct ex_bitmap));
-
-    free(bitdata);
 }
 
 size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap) {
@@ -42,9 +41,10 @@ size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap) {
         return -1;
     }
 
-    char *bitdata = NULL;
-    // XXX: ignore status for now
-    (void)ex_device_read((void **)&bitdata, bitmap->address, bitmap->size);
+    ssize_t readed = 0;
+    char bitdata[bitmap->size];
+
+    (void)ex_device_read_to_buffer(&readed, bitdata, bitmap->address, bitmap->size);
     size_t bitpos = -1, bytepos = bitmap->last, startpos = bitmap->last;
     char flipped = 0;
 
@@ -89,7 +89,6 @@ found:
     ex_device_write(bitmap->head, (void *)bitmap, sizeof(struct ex_bitmap));
 
 not_found:
-    free(bitdata);
     return bitpos;
 }
 
