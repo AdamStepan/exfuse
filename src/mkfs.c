@@ -63,27 +63,57 @@ int ex_mkfs_check_device(struct ex_mkfs_params *params) {
     return rv;
 }
 
-int ex_mkfs_device_clear(size_t off, size_t amount) {
+ex_status ex_mkfs_device_clear(size_t off, size_t amount) {
 
     ex_status status = OK;
     int fd = 0;
 
     if ((status = ex_device_fd(&fd)) != OK) {
-        return 1;
+        goto error;
+    }
+
+    struct stat statbuf;
+
+    if (fstat(fd, &statbuf) != 0) {
+        status = DEVICE_STAT_FAILED;
+        goto error;
+    }
+
+    if ((size_t)statbuf.st_size - off < amount) {
+        status = ZEROING_OUTSIDE_OF_DEVICE_SPACE;
+        goto error;
     }
 
     char *buffer = mmap(NULL, amount, PROT_WRITE, MAP_SHARED, fd, off);
 
     if (buffer == MAP_FAILED) {
-        fatal("mmap failed: off=%zu, amount=%zu, error: %s", off, amount,
-              strerror(errno));
+        status = DEVICE_MMAP_FAILED;
+        goto error;
     }
 
-    // XXX: we get SIGBUS is len(file/device) < [off, off + amount]
     memset(buffer, '\0', amount);
 
-    // XXX: you know what to do
-    return 0;
+    return status;
+
+error:
+
+    switch (status) {
+        case DEVICE_STAT_FAILED:
+            fatal("unable to stat device: fd=%d, errno=%d", fd, errno);
+            break;
+        case ZEROING_OUTSIDE_OF_DEVICE_SPACE:
+            fatal("specified range points outside of device file: size=%ld"
+                  ", off=%zu, amount=%zu", statbuf.st_size, off, amount);
+            break;
+        case DEVICE_MMAP_FAILED:
+            fatal("mmap failed: off=%zu, amount=%zu, fatal: %s", off, amount,
+              strerror(errno));
+            break;
+        default:
+            fatal("unhandled error: %d", status);
+    }
+
+    return status;
 }
 
 size_t round_block(size_t size) {

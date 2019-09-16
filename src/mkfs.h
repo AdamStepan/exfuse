@@ -1,4 +1,5 @@
 #include "ex.h"
+#include "errors.h"
 #include "logging.h"
 #include <stdint.h>
 
@@ -20,7 +21,7 @@ struct ex_mkfs_context {
 };
 
 int ex_mkfs_check_device(struct ex_mkfs_params *params);
-int ex_mkfs_device_clear(size_t off, size_t amount);
+ex_status ex_mkfs_device_clear(size_t off, size_t amount);
 size_t round_block(size_t size);
 int ex_mkfs_check_dbitmap_params(struct ex_mkfs_params *params,
                                  struct ex_mkfs_context *ctx);
