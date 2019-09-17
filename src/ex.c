@@ -78,20 +78,19 @@ int ex_create(const char *pathname, mode_t mode, gid_t gid, uid_t uid) {
         goto free_destdir;
     }
 
-    struct ex_inode *inode = ex_inode_create(mode, gid, uid);
+    struct ex_inode inode;
+
     // we do not have enough space for a new inode
-    if (!inode) {
+    if (ex_inode_create(&inode, mode, gid, uid) != OK) {
         rv = -ENOSPC;
         goto free_destdir;
     }
 
     // check if directory has enough space for a new inode
-    if (!ex_inode_set(destdir, path->basename, inode)) {
-        ex_inode_deallocate_blocks(inode);
+    if (!ex_inode_set(destdir, path->basename, &inode)) {
+        ex_inode_deallocate_blocks(&inode);
         rv = -ENOSPC;
     }
-
-    ex_inode_free(inode);
 
 free_destdir:
     ex_inode_free(destdir);
@@ -357,17 +356,16 @@ int ex_mkdir(const char *pathname, mode_t mode, gid_t gid, uid_t uid) {
     }
 
     struct ex_path *dirpath = ex_path_make(pathname);
-    struct ex_inode *dir = ex_inode_create(mode | S_IFDIR, gid, uid);
+    struct ex_inode dir;
 
     // we do not have enough space for a new inode
-    if (!dir) {
+    if (ex_inode_create(&dir, mode | S_IFDIR, gid, uid) != OK) {
         rv = -ENOSPC;
         goto free_all;
     }
 
-    ex_inode_fill_dir(dir, destdir);
-    ex_inode_set(destdir, dirpath->basename, dir);
-    ex_inode_free(dir);
+    ex_inode_fill_dir(&dir, destdir);
+    ex_inode_set(destdir, dirpath->basename, &dir);
 
 free_all:
     ex_path_free(dirpath);
@@ -691,9 +689,9 @@ int ex_symlink(const char *target, const char *link) {
 
     // create link inode
     mode_t mode = S_IFLNK | S_IRWXU | S_IRWXG | S_IRWXO;
-    link_inode = ex_inode_create(mode, target_inode->gid, target_inode->uid);
+    link_inode = ex_malloc(sizeof(struct ex_inode));
 
-    if (!link_inode) {
+    if (ex_inode_create(link_inode, mode, target_inode->gid, target_inode->uid) != OK) {
         rv = -ENOSPC;
         goto fail;
     }

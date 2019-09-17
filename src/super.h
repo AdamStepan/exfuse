@@ -67,7 +67,7 @@ size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap);
 block_address ex_super_allocate_block(void);
 void ex_super_deallocate_block(block_address address);
 
-struct ex_inode_block ex_super_allocate_inode_block(void);
+ex_status ex_super_allocate_inode_block(struct ex_inode_block *block);
 void ex_super_deallocate_inode_block(size_t inode_number);
 
 void ex_super_print(const struct ex_super_block *block);

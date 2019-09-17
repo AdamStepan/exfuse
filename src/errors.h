@@ -13,6 +13,8 @@ typedef enum {
     WRITE_FAILED,
     INVALID_OFFSET,
     OFFSET_SEEK_FAILED,
+    // super block/bitmap errors
+    INODE_BITMAP_IS_FULL,
     // mkfs errors
     ZEROING_OUTSIDE_OF_DEVICE_SPACE,
     DEVICE_STAT_FAILED,
@@ -24,6 +26,8 @@ typedef enum {
     ROOT_CANNOT_BE_LOADED,
     INODE_BLOCK_ALLOCATION_FAILED,
     INODE_FLUSH_FAILED,
+    INODE_DATA_BLOCKS_ALLOCATION_FAILED,
+    INODE_CREATION_FAILED,
     OK
 } ex_status;
 

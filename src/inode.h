@@ -85,7 +85,7 @@ struct ex_dir_entry *ex_dir_entry_copy(const struct ex_dir_entry *entry);
 void ex_dir_entry_free(struct ex_dir_entry *entry);
 
 struct ex_inode *ex_inode_copy(const struct ex_inode *inode);
-struct ex_inode *ex_inode_create(uint16_t mode, gid_t gid, uid_t uid);
+ex_status ex_inode_create(struct ex_inode *, uint16_t mode, gid_t gid, uid_t uid);
 struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name,
                               struct ex_inode *inode);
 struct ex_inode *ex_inode_load(inode_address ino_addr);

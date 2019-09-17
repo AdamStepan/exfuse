@@ -14,9 +14,9 @@ ex_status ex_root_write(void) {
     }
 
     mode_t mode = S_IRWXU | S_IXOTH | S_IROTH | S_IFDIR;
-    root = ex_inode_create(mode, getgid(), getuid());
+    root = ex_malloc(sizeof(struct ex_inode));
 
-    if (!root) {
+    if (ex_inode_create(root, mode, getgid(), getuid()) != OK) {
         error("unable to create root inode");
         return ROOT_INODE_CANNOT_BE_CREATED;
     }
@@ -150,20 +150,12 @@ void ex_inode_fill_dir(struct ex_inode *inode, struct ex_inode *parent) {
     ex_inode_flush(inode);
 }
 
-struct ex_inode *ex_inode_create(uint16_t mode, gid_t gid, uid_t uid) {
+ex_status ex_inode_create(struct ex_inode *inode, uint16_t mode, gid_t gid, uid_t uid) {
 
-    struct ex_inode_block block = ex_super_allocate_inode_block();
+    struct ex_inode_block block;
 
-    if (block.address == EX_BLOCK_INVALID_ADDRESS) {
-        warning("inode block allocation failed");
+    if (ex_super_allocate_inode_block(&block) != OK) {
         goto inode_creation_failed;
-    }
-
-    struct ex_inode *inode = ex_malloc(sizeof(struct ex_inode));
-
-    if (!inode) {
-        warning("unable to allocate memory for inode");
-        goto free_inode_block;
     }
 
     inode->number = block.id;
@@ -192,13 +184,16 @@ struct ex_inode *ex_inode_create(uint16_t mode, gid_t gid, uid_t uid) {
 
     ex_inode_flush(inode);
 
-    return inode;
+    return OK;
 
 free_inode_block:
     ex_super_deallocate_inode_block(block.address);
 
 inode_creation_failed:
-    return NULL;
+
+    error("unable to create an inode");
+
+    return INODE_CREATION_FAILED;
 }
 
 size_t ex_inode_find_free_entry_address(struct ex_inode *dir) {

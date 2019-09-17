@@ -111,23 +111,32 @@ void ex_super_init_block(size_t address, char with) {
     ex_device_write(address, FREE_BLOCK, sizeof(FREE_BLOCK));
 }
 
-struct ex_inode_block ex_super_allocate_inode_block(void) {
+ex_status ex_super_allocate_inode_block(struct ex_inode_block *block) {
 
-    struct ex_inode_block block = {.address = EX_BLOCK_INVALID_ADDRESS,
-                                   .id = EX_BLOCK_INVALID_ID};
+    ex_status status = OK;
+    size_t blockid = ex_bitmap_find_free_bit(&super_block->inode_bitmap);
 
-    block.id = ex_bitmap_find_free_bit(&super_block->inode_bitmap);
-
-    if (block.id == EX_BLOCK_INVALID_ID) {
-        warning("unable to find free inode block");
-        goto returnblock;
+    if (blockid == EX_BLOCK_INVALID_ID) {
+        status = INODE_BITMAP_IS_FULL;
+        goto error;
     }
 
-    block.address = first_inode_block + block.id * EX_BLOCK_SIZE;
+    block->id = blockid;
+    block->address = first_inode_block + block->id * EX_BLOCK_SIZE;
 
-    ex_super_init_block(block.address, 0);
-returnblock:
-    return block;
+    ex_super_init_block(block->address, 0);
+
+error:
+
+    switch (status) {
+        case INODE_BITMAP_IS_FULL:
+            warning("unable to find a free inode block");
+            break;
+        default:
+            error("unhandled error: %d", status);
+    }
+
+    return status;
 }
 
 void ex_super_deallocate_inode_block(size_t inode_number) {
