@@ -2,6 +2,7 @@
 #define EX_UTIL_H
 
 #include "logging.h"
+// XXX: move unnecessary headers to the .c file
 #include <err.h>
 #include <errno.h>
 #include <linux/stat.h>
@@ -13,6 +14,13 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+
+
+typedef enum {
+    EX_READ = 4,
+    EX_WRITE = 2,
+    EX_EXECUTE = 1,
+} ex_permission;
 
 void *ex_malloc(size_t size);
 void *ex_realloc(void *ptr, size_t size);

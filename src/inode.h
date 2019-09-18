@@ -103,6 +103,8 @@ ssize_t ex_inode_write(struct ex_inode *inode, size_t off, const char *data,
 ssize_t ex_inode_read(struct ex_inode *inode, size_t off, char *buffer,
                       size_t amount);
 
+int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid, uid_t uid);
+
 struct ex_block_iterator {
     struct ex_inode_block last_block;
     size_t block_number;

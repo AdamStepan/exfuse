@@ -683,3 +683,25 @@ end:
 }
 
 size_t ex_inode_max_blocks(void) { return EX_DIRECT_BLOCKS; }
+
+int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid, uid_t uid) {
+
+    char other = ino->mode & 7;
+    char group = (ino->mode >> 3) & 7;
+    char user = (ino->mode >> 6) & 7;
+
+    char user_is_owner = ino->uid == uid;
+    char group_is_owner = ino->gid == gid;
+
+    if (user_is_owner && group_is_owner) {
+        return (group & perm) || (user & perm);
+    } else if (user_is_owner) {
+        return user & perm;
+    } else if (group_is_owner) {
+        return group & perm;
+    } else {
+        return other & perm;
+    }
+
+    return 0;
+}
