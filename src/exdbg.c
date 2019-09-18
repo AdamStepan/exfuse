@@ -23,24 +23,6 @@ struct options {
     enum action action;
 };
 
-char *readable_size(double size) {
-
-    static const char *units[] = {"B",   "kiB", "MiB", "GiB", "TiB",
-                                  "PiB", "EiB", "ZiB", "YiB"};
-
-    static char buf[512];
-
-    int i = 0;
-
-    while (size >= 1024) {
-        size /= 1024;
-        i++;
-    }
-
-    sprintf(buf, "%.*f%s", i, size, units[i]);
-
-    return buf;
-}
 
 void print_struct_sizes(void) {
 
@@ -84,11 +66,13 @@ void print_super(const char *device) {
     ex_device_open(device);
     ex_super_load();
 
+    char buffer[128];
+    ex_readable_size(buffer, sizeof(buffer), super_block->device_size);
+
     printf("super:\n");
     printf("\troot = %lu\n", super_block->root);
     printf("\tmagic = %x\n", super_block->magic);
-    printf("\tdevice_size = %lu (%s)\n", super_block->device_size,
-           readable_size(super_block->device_size));
+    printf("\tdevice_size = %lu (%s)\n", super_block->device_size, buffer);
     print_bitmap("data_bitmap", &super_block->bitmap);
     print_bitmap("inode_bitmap", &super_block->inode_bitmap);
 }
@@ -108,7 +92,11 @@ void print_info(const char *device) {
     printf("\tdir_entry_size: %luB\n", sizeof(struct ex_dir_entry));
 
     size_t max_size = EX_DIRECT_BLOCKS * 4096;
-    printf("\tmax_file_size: %luB (%s)\n", max_size, readable_size(max_size));
+
+    char buffer[124];
+    ex_readable_size(buffer, sizeof(buffer), max_size);
+
+    printf("\tmax_file_size: %luB (%s)\n", max_size, buffer);
 
     printf("\tinode_size: %luB\n", sizeof(struct ex_inode));
     printf("\tsuper_block_size: %luB\n", sizeof(struct ex_super_block));

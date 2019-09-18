@@ -50,7 +50,11 @@ int ex_mkfs_check_device(struct ex_mkfs_params *params) {
 
     if (params->create) {
 
-        info("resizing device: %s to %zu", params->device, params->device_size);
+        char sizebuf[128];
+        ex_readable_size(sizebuf, sizeof(sizebuf), params->device_size);
+
+        info("resizing device: %s to %zu (%s)", params->device,
+                params->device_size, sizebuf);
 
         rv = truncate(params->device, params->device_size);
 
@@ -341,10 +345,15 @@ void ex_mkfs_check_params(struct ex_mkfs_params *params) {
     }
 
     if (!params->device_size) {
+
         params->device_size =
             ex_mkfs_get_size_for_inodes(params->number_of_inodes);
-        info("device size was not specified, setting size to %zu",
-             params->device_size);
+
+        char sizebuf[128];
+        ex_readable_size(sizebuf, sizeof(sizebuf), params->device_size);
+
+        info("device size was not specified, setting size to %zu (%s)",
+             params->device_size, sizebuf);
     }
 }
 

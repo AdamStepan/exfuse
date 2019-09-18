@@ -145,3 +145,19 @@ unsigned integer", arg, option);
 
     return value;
 }
+
+void ex_readable_size(char *buf, size_t bufsize, size_t size) {
+
+    static const char *units[] = {"B",   "kiB", "MiB", "GiB", "TiB",
+                                  "PiB", "EiB", "ZiB", "YiB"};
+
+    int i = 0;
+    double size0 = size;
+
+    while (size0 >= 1024) {
+        size0 /= 1024;
+        i++;
+    }
+
+    snprintf(buf, bufsize, "%.*f%s", i, size0, units[i]);
+}

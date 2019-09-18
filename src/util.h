@@ -23,5 +23,6 @@ void ex_print_mode(mode_t m);
 void ex_log_mode(mode_t m);
 void ex_update_time_ns(struct timespec *dest);
 uint64_t ex_cli_parse_number(const char *option, const char *arg);
+void ex_readable_size(char *buf, size_t bufsize, size_t size);
 
 #endif /* EX_UTIL_H */
