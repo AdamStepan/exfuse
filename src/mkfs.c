@@ -103,7 +103,7 @@ error:
 
     switch (status) {
         case DEVICE_STAT_FAILED:
-            fatal("unable to stat device: fd=%d, errno=%d", fd, errno);
+            fatal("unable to stat device: fd=%d, errno=%s", fd, strerror(errno));
             break;
         case ZEROING_OUTSIDE_OF_DEVICE_SPACE:
             fatal("specified range points outside of device file: size=%ld"

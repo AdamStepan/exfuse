@@ -1,6 +1,6 @@
 #include "device.h"
 
-const char *EX_DEVICE = "exdev";
+const char * const EX_DEVICE = "exdev";
 int device_fd = -1;
 
 ex_status ex_device_fd(int *fd) {
@@ -19,7 +19,7 @@ ex_status ex_device_open(const char *device_name) {
     device_fd = open(device_name, O_RDWR);
 
     if (device_fd == -1) {
-        error("unable to open device: %s, errno: %d", device_name, errno);
+        error("unable to open device: %s, errno: %d", device_name, strerror(errno));
         return DEVICE_CANNOT_BE_OPENED;
     }
 
