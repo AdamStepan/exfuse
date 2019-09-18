@@ -323,7 +323,7 @@ int ex_write(const char *pathname, const char *buf, size_t size, off_t offset) {
     ex_inode_flush(inode);
 
 free_inode:
-    free(path);
+    ex_path_free(path);
     ex_inode_free(inode);
 
     ex_super_unlock();
@@ -331,9 +331,48 @@ free_inode:
     return rv;
 }
 
-int ex_open(const char *pathname) {
-    (void)pathname;
-    return 0;
+int ex_open(const char *pathname, int flags, gid_t gid, uid_t uid) {
+
+    ex_super_lock();
+
+    info("path=%s, flags=%i", pathname, flags);
+
+    ssize_t rv = 0;
+
+    struct ex_path *path = ex_path_make(pathname);
+    struct ex_inode *inode = ex_inode_find(path);
+
+    if (!inode) {
+        rv = -ENOENT;
+        goto free_inode;
+    }
+
+    int perm = 0;
+
+    if (flags == O_RDONLY) {
+        perm = EX_READ;
+    } else if (flags == O_WRONLY) {
+        perm = EX_WRITE;
+    } else if (flags == O_RDWR) {
+        perm = EX_WRITE | EX_READ;
+#ifdef O_EXEC
+    } else if (flags == O_EXEC) {
+        perm = EX_EXECUTE;
+#endif
+    }
+    // NOTE: we igore the other flags
+
+    if (!ex_inode_has_perm(inode, perm, gid, uid)) {
+        rv = -EPERM;
+    }
+
+free_inode:
+    ex_path_free(path);
+    ex_inode_free(inode);
+
+    ex_super_unlock();
+
+    return rv;
 }
 
 int ex_mkdir(const char *pathname, mode_t mode, gid_t gid, uid_t uid) {

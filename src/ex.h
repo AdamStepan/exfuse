@@ -19,7 +19,7 @@ int ex_getattr(const char *pathname, struct stat *st);
 int ex_unlink(const char *pathname);
 int ex_read(const char *pathname, char *buffer, size_t size, off_t offset);
 int ex_write(const char *path, const char *buf, size_t size, off_t offset);
-int ex_open(const char *path);
+int ex_open(const char *path, int mode, gid_t gid, uid_t uid);
 int ex_mkdir(const char *pathname, mode_t mode, gid_t gid, uid_t uid);
 int ex_readdir(const char *pathname, struct ex_dir_entry ***inodes);
 int ex_utimens(const char *pathname, const struct timespec tv[2]);

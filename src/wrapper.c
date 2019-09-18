@@ -37,8 +37,8 @@ static int do_mkdir(const char *pathname, mode_t mode) {
 }
 
 static int do_open(const char *pathname, struct fuse_file_info *fi) {
-    (void)fi;
-    return ex_open(pathname);
+    struct fuse_context *ctx = fuse_get_context();
+    return ex_open(pathname, fi->flags, ctx->gid, ctx->uid);
 }
 
 static int do_readdir(const char *pathname, void *buffer,
