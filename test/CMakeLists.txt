@@ -1,14 +1,3 @@
-set(EXFUSE_LIB_SRC
-    ../src/device.c
-    ../src/ex.c
-    ../src/inode.c
-    ../src/logging.c
-    ../src/path.c
-    ../src/super.c
-    ../src/util.c
-    ../src/mkfs.c
-)
-
 set(TEST_SOURCES
     test_add_file_to_dir.c
     test_can_create_maximum_inodes.c
@@ -37,26 +26,23 @@ find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 pkg_search_module(GLIB REQUIRED glib-2.0)
 
-add_executable(test_exfuse ${TEST_SOURCES} ${EXFUSE_LIB_SRC})
-add_executable(test_stress test_stress.c ${EXFUSE_LIB_SRC})
-add_executable(test_util test_util.c ${EXFUSE_LIB_SRC})
+function (ex_fuse_add_test TESTNAME TESTSOURCES)
 
-target_link_libraries(test_exfuse
-    PRIVATE ${GLIB_LDFLAGS} m
-    PRIVATE Threads::Threads)
+    add_executable(${TESTNAME} ${TESTSOURCES})
 
-target_link_libraries(test_stress
-    PRIVATE ${GLIB_LDFLAGS} m
-    PRIVATE Threads::Threads)
 
-target_link_libraries(test_util
-    PRIVATE ${GLIB_LDFLAGS} m
-    PRIVATE Threads::Threads)
+    target_link_libraries(${TESTNAME}
+        PRIVATE libexfuse
+        PRIVATE ${GLIB_LDFLAGS} m
+        PRIVATE Threads::Threads)
 
-target_include_directories(test_exfuse PUBLIC ${GLIB_INCLUDE_DIRS})
-target_include_directories(test_stress PUBLIC ${GLIB_INCLUDE_DIRS})
-target_include_directories(test_util PUBLIC ${GLIB_INCLUDE_DIRS})
+    target_include_directories(${TESTNAME} PUBLIC ${GLIB_INCLUDE_DIRS})
 
-add_test(test_exfuse ${CMAKE_SOURCE_DIR}/build/test/test_exfuse)
-add_test(test_stress ${CMAKE_SOURCE_DIR}/build/test/test_stress)
-add_test(test_util ${CMAKE_SOURCE_DIR}/build/test/test_util)
+    add_test(${TESTNAME} ${CMAKE_SOURCE_DIR}/build/test/${TESTNAME})
+
+endfunction()
+
+
+ex_fuse_add_test(test_exfuse "${TEST_SOURCES}")
+ex_fuse_add_test(test_stress test_stress.c)
+ex_fuse_add_test(test_util test_util.c)
