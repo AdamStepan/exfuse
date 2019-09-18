@@ -132,6 +132,8 @@ error:
         case INODE_BITMAP_IS_FULL:
             warning("unable to find a free inode block");
             break;
+        case OK:
+            break;
         default:
             error("unhandled error: %d", status);
     }
