@@ -445,7 +445,9 @@ int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc, char **argv) 
             }
             break;
         case 'l':
-            ex_logging_init(optarg, 1);
+            if (!ex_logging_init(optarg, 1)) {
+                return EX_MKFS_OPTION_PARSE_ERROR;
+            }
             break;
         case 's':
             if (!ex_cli_parse_number("size", optarg, &params->device_size)) {
