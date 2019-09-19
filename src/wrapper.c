@@ -38,7 +38,9 @@ static int do_mkdir(const char *pathname, mode_t mode) {
 
 static int do_open(const char *pathname, struct fuse_file_info *fi) {
     struct fuse_context *ctx = fuse_get_context();
-    return ex_open(pathname, fi->flags, ctx->gid, ctx->uid);
+    // I have no idea why are flags shifted by 14 bits...
+    mode_t fuse_fucking_mode = fi->flags >> 14;
+    return ex_open(pathname, fuse_fucking_mode, ctx->gid, ctx->uid);
 }
 
 static int do_readdir(const char *pathname, void *buffer,

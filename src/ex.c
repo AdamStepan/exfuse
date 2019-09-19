@@ -332,7 +332,8 @@ free_inode:
 }
 
 int ex_open(const char *pathname, int flags, gid_t gid, uid_t uid) {
-
+    // XXX: this function should do nothing if -odefault_permissions is
+    //      specified on the command line
     ex_super_lock();
 
     info("path=%s, flags=%i (%s), gid=%i, uid=%i", pathname, flags,
