@@ -1,5 +1,6 @@
 #include "util.h"
 #include <limits.h>
+#include <fcntl.h>
 
 void *ex_malloc(size_t size) {
 
@@ -160,5 +161,83 @@ void ex_readable_size(char *buf, size_t bufsize, size_t size) {
     }
 
     snprintf(buf, bufsize, "%.*f%s", i, size0, units[i]);
+}
+
+char *ex_readable_open_options(int opts) {
+
+    static char buffer[512];
+    char *buf = buffer;
+
+    if (opts & O_RDONLY)
+        buf += sprintf(buf, "O_RDONLY ");
+
+    if (opts & O_WRONLY)
+        buf += sprintf(buf, "O_WRONLY ");
+
+    if (opts & O_RDWR)
+        buf += sprintf(buf, "O_RDWR ");
+
+    if (opts & O_CREAT)
+        buf += sprintf(buf, "O_CREAT ");
+
+    if (opts & O_EXCL)
+        buf += sprintf(buf, "O_EXCL ");
+
+    if (opts & O_NOCTTY)
+        buf += sprintf(buf, "O_NOCTTY ");
+
+    if (opts & O_TRUNC)
+        buf += sprintf(buf, "O_TRUNC ");
+
+    if (opts & O_APPEND)
+        buf += sprintf(buf, "O_APPEND ");
+
+    if (opts & O_NONBLOCK)
+        buf += sprintf(buf, "O_NONBLOCK ");
+
+    if (opts & O_DSYNC)
+        buf += sprintf(buf, "O_DSYNC ");
+
+    if (opts & FASYNC)
+        buf += sprintf(buf, "FASYNC ");
+
+#ifdef O_DIRECT
+    if (opts & O_DIRECT)
+        buf += sprintf(buf, "O_DIRECT ");
+#endif
+
+#ifdef O_LARGEFILE
+    if (opts & O_LARGEFILE)
+        buf += sprintf(buf, "O_LARGEFILE ");
+#endif
+
+    if (opts & O_DIRECTORY)
+        buf += sprintf(buf, "O_DIRECTORY ");
+
+    if (opts & O_NOFOLLOW)
+        buf += sprintf(buf, "O_NOFOLLOW ");
+
+#ifdef O_NOATIME
+    if (opts & O_NOATIME)
+        buf += sprintf(buf, "O_NOATIME ");
+#endif
+
+    if (opts & O_CLOEXEC)
+        buf += sprintf(buf, "O_CLOEXEC ");
+
+    if (opts & O_SYNC)
+        buf += sprintf(buf, "O_SYNC ");
+
+#ifdef O_PATH
+    if (opts & O_PATH)
+        buf += sprintf(buf, "O_PATH ");
+#endif
+
+#ifdef O_TMPFILE
+    if (opts & O_TMPFILE)
+        buf += sprintf(buf, "O_TMPFILE");
+#endif
+
+    return buffer;
 }
 
