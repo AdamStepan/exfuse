@@ -851,6 +851,8 @@ int ex_chown(const char *pathname, uid_t uid, gid_t gid) {
 
     int rv = 0;
 
+    ex_super_lock();
+
     struct ex_path *path = ex_path_make(pathname);
     struct ex_inode *inode = ex_inode_find(path);
 
@@ -869,6 +871,4 @@ invalid_path:
 
     free(path);
     return rv;
-
-    return 0;
 }
