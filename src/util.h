@@ -15,7 +15,6 @@
 #include <time.h>
 #include <unistd.h>
 
-
 typedef enum {
     EX_READ = 4,
     EX_WRITE = 2,
@@ -30,7 +29,7 @@ char **ex_str_split(const char *str, const char *delim);
 void ex_print_mode(mode_t m);
 void ex_log_mode(mode_t m);
 void ex_update_time_ns(struct timespec *dest);
-uint64_t ex_cli_parse_number(const char *option, const char *arg);
+int ex_cli_parse_number(const char *option, const char *arg, uint64_t *);
 void ex_readable_size(char *buf, size_t bufsize, size_t size);
 char *ex_readable_open_options(int opts);
 

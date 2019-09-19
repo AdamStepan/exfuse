@@ -40,3 +40,12 @@ int ex_mkfs_test_init(void);
 int ex_mkfs(struct ex_mkfs_params *params);
 size_t ex_mkfs_get_size_for_inodes(size_t ninodes);
 void ex_mkfs_check_params(struct ex_mkfs_params *params);
+
+typedef enum {
+    EX_MKFS_OPTION_OK,
+    EX_MKFS_OPTION_HELP,
+    EX_MKFS_OPTION_PARSE_ERROR
+} ex_mkfs_parse_status;
+
+int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc, char **argv);
+void ex_mkfs_show_help(void);

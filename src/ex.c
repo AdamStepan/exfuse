@@ -336,8 +336,8 @@ int ex_open(const char *pathname, int flags, gid_t gid, uid_t uid) {
     //      specified on the command line
     ex_super_lock();
 
-    info("path=%s, flags=%i (%s), gid=%i, uid=%i", pathname, flags,
-            ex_readable_open_options(flags), gid, uid);
+    info("path=%s, flags=%i, gid=%i, uid=%i", pathname, flags,
+            gid, uid);
 
     ssize_t rv = 0;
 

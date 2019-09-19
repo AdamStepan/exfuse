@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <getopt.h>
 
 // device layout:
 // super_block | inode_bitmap | data_bitmap | inode_blocks | data_blocks
@@ -408,3 +409,58 @@ size_t ex_mkfs_get_size_for_inodes(size_t ninodes) {
 
     return required;
 }
+
+void ex_mkfs_show_help(void) {
+    printf("mkfs.exfuse: \n"
+           "\t--device\t\tspecify a device name\n"
+           "\t--inodes\t\tspecify maximum of inodes (default: 256)\n"
+           "\t--size\t\t\tspecify size of a device\n"
+           "\t--create\t\tcreate a device if it not exist\n"
+           "\t--log-level\t\tspecify log level\n");
+}
+
+int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc, char **argv) {
+
+    const struct option longopts[] = {{"device", required_argument, 0, 'd'},
+                                      {"inodes", required_argument, 0, 'i'},
+                                      {"size", required_argument, 0, 's'},
+                                      {"create", no_argument, 0, 'c'},
+                                      {"help", no_argument, 0, 'h'},
+                                      {"log-level", required_argument, 0, 'l'},
+                                      {0, 0, 0, 0}};
+
+    int opt;
+
+    while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1) {
+        switch (opt) {
+        case 'c':
+            params->create = 1;
+            break;
+        case 'd':
+            params->device = strdup(optarg);
+            break;
+        case 'i':
+            if (!ex_cli_parse_number("inodes", optarg, &params->number_of_inodes)) {
+                return EX_MKFS_OPTION_PARSE_ERROR;
+            }
+            break;
+        case 'l':
+            ex_logging_init(optarg, 1);
+            break;
+        case 's':
+            if (!ex_cli_parse_number("size", optarg, &params->device_size)) {
+                return EX_MKFS_OPTION_PARSE_ERROR;
+            }
+            break;
+        case 'h':
+            ex_mkfs_show_help();
+            return OK;
+        default:
+            ex_mkfs_show_help();
+            return OK;
+        }
+    }
+
+    return OK;
+}
+

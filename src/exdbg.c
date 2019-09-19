@@ -201,18 +201,24 @@ int main(int argc, char **argv) {
     while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1) {
         switch (opt) {
         case 'b':
-            options.bitmap_data = ex_cli_parse_number("bitmap-data", optarg);
+            if(!ex_cli_parse_number("bitmap-data", optarg, &options.bitmap_data)) {
+                return 1;
+            }
             options.action = PRINT_BITMAP_DATA;
             break;
         case 'd':
             options.device = strdup(optarg);
             break;
         case 'D':
-            options.inode_data = ex_cli_parse_number("inode-data", optarg);
+            if(!ex_cli_parse_number("inode-data", optarg, &options.inode_data)) {
+                return 1;
+            }
             options.action = PRINT_INODE_DATA;
             break;
         case 'i':
-            options.inode = ex_cli_parse_number("inode", optarg);
+            if(!ex_cli_parse_number("inode", optarg, &options.inode)) {
+                return 1;
+            }
             options.action = PRINT_INODE;
             break;
         case 's':

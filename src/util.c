@@ -135,16 +135,17 @@ void ex_update_time_ns(struct timespec *dest) {
     }
 }
 
-uint64_t ex_cli_parse_number(const char *option, const char *arg) {
+int ex_cli_parse_number(const char *option, const char *arg, uint64_t *value) {
 
-    uint64_t value = strtoull(arg, NULL, 0);
+    *value = strtoull(arg, NULL, 0);
 
-    if (value == ULLONG_MAX) {
-        fatal("argument `%s' supplied to option: `--%s' is not \
+    if (*value == ULLONG_MAX) {
+        error("argument `%s' supplied to option: `--%s' is not \
 unsigned integer", arg, option);
+        return 0;
     }
 
-    return value;
+    return 1;
 }
 
 void ex_readable_size(char *buf, size_t bufsize, size_t size) {
