@@ -137,11 +137,27 @@ void ex_update_time_ns(struct timespec *dest) {
 
 int ex_cli_parse_number(const char *option, const char *arg, uint64_t *value) {
 
-    *value = strtoull(arg, NULL, 0);
+    // strtoull does accept strings with minus sign, we don't want that
+    // so we have to check it ourselves
+    if (arg && *arg == '-') {
+        error("argument `%s' supplied to option: `--%s' cannot start with - ",
+              arg, option);
+        return 0;
+    }
 
-    if (*value == ULLONG_MAX) {
-        error("argument `%s' supplied to option: `--%s' is not \
-unsigned integer", arg, option);
+    errno = 0;
+
+    char *endptr = NULL;
+
+    *value = strtoull(arg, &endptr, 0);
+
+    if (arg == endptr || *value == ULLONG_MAX) {
+        error("argument `%s' supplied to option: `--%s' is not "
+              "unsigned integer", arg, option);
+        return 0;
+    } else if (errno == ERANGE || errno == EINVAL) {
+        error("argument `%s' supplied to option: `--%s' is "
+              "not in range of unsigned integer", arg, option);
         return 0;
     }
 
