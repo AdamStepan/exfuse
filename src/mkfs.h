@@ -44,7 +44,8 @@ void ex_mkfs_check_params(struct ex_mkfs_params *params);
 typedef enum {
     EX_MKFS_OPTION_OK,
     EX_MKFS_OPTION_HELP,
-    EX_MKFS_OPTION_PARSE_ERROR
+    EX_MKFS_OPTION_PARSE_ERROR,
+    EX_MKFS_OPTION_UNKNOWN,
 } ex_mkfs_parse_status;
 
 int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc, char **argv);

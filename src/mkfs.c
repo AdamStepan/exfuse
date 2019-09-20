@@ -411,12 +411,11 @@ size_t ex_mkfs_get_size_for_inodes(size_t ninodes) {
 }
 
 void ex_mkfs_show_help(void) {
-    printf("mkfs.exfuse: \n"
-           "\t--device\t\tspecify a device name\n"
-           "\t--inodes\t\tspecify maximum of inodes (default: 256)\n"
-           "\t--size\t\t\tspecify size of a device\n"
-           "\t--create\t\tcreate a device if it not exist\n"
-           "\t--log-level\t\tspecify log level\n");
+    info("\n\t--device\t\tspecify a device name\n"
+         "\t--inodes\t\tspecify maximum of inodes (default: 256)\n"
+         "\t--size\t\t\tspecify size of a device\n"
+         "\t--create\t\tcreate a device if it not exist\n"
+         "\t--log-level\t\tspecify log level\n");
 }
 
 int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc, char **argv) {
@@ -430,6 +429,9 @@ int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc, char **argv) 
                                       {0, 0, 0, 0}};
 
     int opt;
+
+    // reset the state of getopt_long_only
+    optind = 0;
 
     while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1) {
         switch (opt) {
@@ -456,13 +458,13 @@ int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc, char **argv) 
             break;
         case 'h':
             ex_mkfs_show_help();
-            return OK;
+            return EX_MKFS_OPTION_HELP;
         default:
             ex_mkfs_show_help();
-            return OK;
+            return EX_MKFS_OPTION_UNKNOWN;
         }
     }
 
-    return OK;
+    return EX_MKFS_OPTION_OK;
 }
 
