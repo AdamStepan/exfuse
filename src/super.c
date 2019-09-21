@@ -225,6 +225,8 @@ int ex_super_check_path_len(const char *pathname) {
             return 0;
     }
 
+    ex_path_free(path);
+
     return 1;
 }
 
