@@ -20,7 +20,7 @@ void test_name_too_long(void) {
     size_t namemax = statbuf.f_namemax;
     char *name = ex_malloc(namemax + 1);
 
-    memset(name, 'x', namemax + 1);
+    memset(name, 'x', namemax);
 
     rv = ex_create(name, S_IRWXU, getgid(), getuid());
     g_assert_cmpint(rv, ==, -ENAMETOOLONG);
