@@ -25,12 +25,14 @@ struct ex_path *ex_path_make(const char *path) {
 
 struct ex_path *ex_path_make_dirpath(const char *pathname) {
 
-    char *copy_of_path = ex_strdup(pathname);
-    struct ex_path *path = ex_path_make(dirname(copy_of_path));
+    size_t pathlen = strlen(pathname);
 
-    free(copy_of_path);
+    // we need to make copy of pathname, because dirname
+    // writes '\0' to the source string
+    char copy_of_path[pathlen + 1];
+    memcpy(copy_of_path, pathname, pathlen);
 
-    return path;
+    return ex_path_make(dirname(copy_of_path));
 }
 
 void ex_path_free(struct ex_path *path) {
