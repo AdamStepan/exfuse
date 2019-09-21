@@ -10,5 +10,5 @@ branches:
     - master
 script:
   - mkdir build
-  - cd build && cmake .. -DTESTS=ON && make
+  - cd build && cmake .. -DTESTS=ON -DSANITIZER=ON && make -
   - make test
