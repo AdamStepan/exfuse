@@ -11,4 +11,4 @@ branches:
 script:
   - mkdir build
   - cd build && cmake .. -DTESTS=ON -DSANITIZER=ON && make -
-  - make test
+  - ctest --output-on-failure

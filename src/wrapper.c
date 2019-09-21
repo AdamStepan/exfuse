@@ -134,6 +134,7 @@ static void do_destroy(void *private_data) {
 
     ex_logging_deinit(args->foreground);
     ex_deinit();
+    free(args->device);
 }
 
 static int do_chmod(const char *pathname, mode_t mode) {
@@ -183,7 +184,7 @@ static struct fuse_operations operations = {.getattr = do_getattr,
                                             .chown = do_chown};
 
 static void ex_args_init(struct ex_args *args) {
-    args->loglevel = NULL;
+    args->loglevel = "info";
     args->device = NULL;
     args->foreground = 0;
 }
