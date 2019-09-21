@@ -6,6 +6,7 @@ Exfuse is a simple Unix filesystem that I created for educational purposes. Curr
 * Files are stored in a folder as a list
 * Uses a global lock
 * No duplication of key structures (e.g. superblock, root, bitmaps)
+* There is nothing like journal log
 
 ## Limitations
 
