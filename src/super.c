@@ -221,8 +221,10 @@ int ex_super_check_path_len(const char *pathname) {
     struct ex_path *path = ex_path_make(pathname);
 
     for (size_t i = 0; i < path->ncomponents; i++) {
-        if (strlen(path->components[i]) >= EX_NAME_LEN)
+        if (strlen(path->components[i]) >= EX_NAME_LEN) {
+            ex_path_free(path);
             return 0;
+        }
     }
 
     ex_path_free(path);

@@ -21,8 +21,6 @@ void test_can_create_maximum_inodes(void) {
     int rv = ex_mkfs(&params);
     g_assert(!rv);
 
-    ex_super_load();
-
     char buffer[16];
 
     for (size_t i = 0; i < ninodes - 1; i++) {
@@ -42,4 +40,6 @@ void test_can_create_maximum_inodes(void) {
         rv = ex_getattr(buffer, &buf);
         g_assert(!rv);
     }
+
+    ex_deinit();
 }

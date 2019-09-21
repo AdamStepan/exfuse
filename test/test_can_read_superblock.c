@@ -21,8 +21,9 @@ void test_can_read_superblock(void) {
     int rv = ex_mkfs(&params);
     g_assert(!rv);
 
-    ex_super_load();
     g_assert_cmpint(super_block->magic, ==, EX_SUPER_MAGIC);
     g_assert(super_block->root);
     g_assert_cmpint(super_block->inode_bitmap.max_items, ==, ninodes);
+
+    ex_deinit();
 }

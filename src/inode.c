@@ -300,8 +300,6 @@ struct ex_inode *ex_inode_find(struct ex_path *path) {
             goto not_found;
         }
 
-        // XXX: free inode from a previous iteration
-
         searched = ex_inode_get(curdir, path->components[n]);
 
         if (!searched) {
@@ -328,10 +326,13 @@ struct ex_inode *ex_inode_find(struct ex_path *path) {
     }
 
 found:
-    return searched;
+
+    if (curdir && curdir != root) {
+        ex_inode_free(curdir);
+    }
 
 not_found:
-    return NULL;
+    return searched;
 }
 
 struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name) {
@@ -458,12 +459,12 @@ struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name) {
 
     if (!inode) {
         error("unable to load inode from: %lu", entry->address);
-        goto fail;
+        goto inode_not_found;
     }
 
     if (!ex_inode_is_unlinkable(inode)) {
         debug("inode (%lu) is not unlinkable", inode->address);
-        goto fail;
+        goto inode_is_not_unlinkable;
     }
 
     if (inode->mode & S_IFDIR) {
@@ -483,9 +484,11 @@ struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name) {
 
     goto done;
 
-fail:
-    inode = NULL;
+inode_is_not_unlinkable:
     ex_inode_free(inode);
+
+inode_not_found:
+    inode = NULL;
 
 done:
     free(entry);
@@ -636,7 +639,6 @@ struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode,
 
     // not first iteration
     if (it->last_block.data) {
-        free(it->last_block.data);
         it->block_number++;
     }
 
@@ -649,9 +651,14 @@ struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode,
     }
 
     block.address = inode->blocks[it->block_number];
+    block.data = it->buffer;
+
     // XXX: add buffer into ex_block_iterator and use ex_device_read_to_buffer
     //      handle read error
-    (void)ex_device_read((void **)&block.data, block.address, EX_BLOCK_SIZE);
+    ssize_t readed = 0;
+    // XXX: handle read error
+    (void)ex_device_read_to_buffer(&readed, it->buffer,
+                                   block.address, EX_BLOCK_SIZE);
 
 done:
     it->last_block = block;

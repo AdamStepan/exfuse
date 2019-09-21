@@ -21,8 +21,6 @@ void test_mkfs_device_size(void) {
     int rv = ex_mkfs(&params);
     g_assert(!rv);
 
-    ex_super_load();
-
     // the size of the super block an inode bitmap and a data bitmap rounded
     // to block size
     size_t expected_device_size = 3 * EX_BLOCK_SIZE;
@@ -31,4 +29,6 @@ void test_mkfs_device_size(void) {
     // number of data blocks for `ninodes` inodes
     expected_device_size += ex_inode_max_blocks() * ninodes * EX_BLOCK_SIZE;
     g_assert_cmpint(super_block->device_size, ==, expected_device_size);
+
+    ex_deinit();
 }

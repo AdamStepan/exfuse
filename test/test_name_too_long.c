@@ -26,4 +26,5 @@ void test_name_too_long(void) {
     g_assert_cmpint(rv, ==, -ENAMETOOLONG);
 
     ex_deinit();
+    free(name);
 }

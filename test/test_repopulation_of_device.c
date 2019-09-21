@@ -75,8 +75,6 @@ void test_repopulation_of_device(void) {
     int rv = ex_mkfs(&params);
     g_assert(!rv);
 
-    ex_super_load();
-
     rv = populate_device(ninodes);
     g_assert(!rv);
 
@@ -85,4 +83,6 @@ void test_repopulation_of_device(void) {
 
     rv = populate_device(ninodes);
     g_assert(!rv);
+
+    ex_deinit();
 }

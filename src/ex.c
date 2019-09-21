@@ -575,9 +575,13 @@ int ex_rmdir(const char *pathname) {
         goto free_dir_inode;
     }
 
-    if (!ex_inode_unlink(dir, path->basename)) {
+    struct ex_inode *removed = ex_inode_unlink(dir, path->basename);
+
+    if (!removed) {
         rv = -ENOTEMPTY;
     }
+
+    ex_inode_free(removed);
 
 free_dir_inode:
     ex_path_free(dirpath);
@@ -795,7 +799,7 @@ int ex_readlink(const char *pathname, char *buffer, size_t bufsize) {
 invalid_path:
     ex_super_unlock();
 
-    free(path);
+    ex_path_free(path);
     return rv;
 }
 
@@ -867,10 +871,11 @@ int ex_chown(const char *pathname, uid_t uid, gid_t gid) {
     inode->gid = gid;
 
     ex_inode_flush(inode);
+    ex_inode_free(inode);
 
 invalid_path:
     ex_super_unlock();
 
-    free(path);
+    ex_path_free(path);
     return rv;
 }

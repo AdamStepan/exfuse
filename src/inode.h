@@ -108,6 +108,7 @@ int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid, uid_t
 struct ex_block_iterator {
     struct ex_inode_block last_block;
     size_t block_number;
+    char buffer[EX_BLOCK_SIZE];
 };
 
 struct ex_entry_iterator {

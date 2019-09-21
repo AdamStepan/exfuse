@@ -32,11 +32,19 @@ void test_add_file_to_dir(void) {
 
     for (size_t i = 0; entries[i]; i++) {
         if (!strcmp(entries[i]->name, "file")) {
+            rv = 1;
             goto end;
         }
     }
 
-    g_assert(0);
+    rv = 0;
 
-end:;
+end:
+    for (size_t i = 0; entries[i]; i++) {
+        ex_dir_entry_free(entries[i]);
+    }
+    free(entries);
+
+    assert(rv);
+    ex_deinit();
 }
