@@ -528,13 +528,14 @@ struct ex_dir_entry **ex_inode_get_all(struct ex_inode *dir) {
             }
 
             entries[dir_entry_no++] = ex_dir_entry_copy(&entry);
-            entries[dir_entry_no] = NULL;
 
             if (dir_entry_no >= max_direntries) {
                 max_direntries <<= 1;
                 entries = ex_realloc(entries, sizeof(struct ex_dir_entry *) *
                                                   max_direntries);
             }
+
+            entries[dir_entry_no] = NULL;
         }
     }
 
