@@ -3,4 +3,4 @@ if(NOT "${CMAKE_C_COMPILER_ID}" MATCHES "[Cc]lang")
 endif()
 
 add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
-add_link_options(-fsanitize=address)
+link_libraries(-fsanitize=address)
