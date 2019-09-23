@@ -161,6 +161,13 @@ static int do_chown(const char *path, uid_t uid, gid_t gid) {
     return ex_chown(path, uid, gid);
 }
 
+static int do_opendir(const char *path, struct fuse_file_info *info) {
+    struct fuse_context *ctx = fuse_get_context();
+    // I have no idea why are flags shifted by 14 bits...
+    mode_t mode = info->flags >> 14;
+    return ex_opendir(path, mode, ctx->gid, ctx->uid);
+}
+
 static struct fuse_operations operations = {.getattr = do_getattr,
                                             .readdir = do_readdir,
                                             .read = do_read,
@@ -181,7 +188,8 @@ static struct fuse_operations operations = {.getattr = do_getattr,
                                             .symlink = do_symlink,
                                             .readlink = do_readlink,
                                             .rename = do_rename,
-                                            .chown = do_chown};
+                                            .chown = do_chown,
+                                            .opendir = do_opendir};
 
 static void ex_args_init(struct ex_args *args) {
     args->loglevel = "info";

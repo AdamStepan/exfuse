@@ -879,3 +879,11 @@ invalid_path:
     ex_path_free(path);
     return rv;
 }
+
+int ex_opendir(const char *path, mode_t mode, gid_t gid, uid_t uid) {
+
+    debug("path=%s, mode=%i, gid=%i, uid=%i", path, mode, gid, uid);
+
+    return 0;
+}
+
