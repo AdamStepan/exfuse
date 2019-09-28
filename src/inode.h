@@ -13,11 +13,17 @@
 #include <time.h>
 #include <unistd.h>
 
-#define EX_DIRECT_BLOCKS 256
+#define EX_DIRECT_BLOCKS 64
+#define EX_INDIRECT_BLOCKS 8
 
 extern const uint16_t EX_INODE_MAGIC1;
 extern const uint8_t EX_DIR_MAGIC1;
 extern const uint8_t EX_ENTRY_MAGIC1;
+
+struct ex_data_block {
+    uint64_t address: 63;
+    uint64_t allocated: 1;
+};
 
 struct ex_inode {
     // number of inode, it corresponds with allocated block number
@@ -44,13 +50,16 @@ struct ex_inode {
     // number of links
     uint16_t nlinks;
 
+    // number of allocated blocks
+    size_t nblocks;
+
     // size of file when inode is file
     // size of file metadata (struct ex_inode) if inode is directory
     size_t size;
 
     // if an inode is file content is saved here directly in these blocks
     // if an inode is directory ex_dir_entries are saved in these blocks
-    block_address blocks[EX_DIRECT_BLOCKS];
+    struct ex_data_block blocks[EX_DIRECT_BLOCKS + EX_INDIRECT_BLOCKS];
 };
 
 struct ex_dir_entry {
@@ -105,8 +114,13 @@ int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid, uid_t
 
 struct ex_block_iterator {
     struct ex_inode_block last_block;
+    struct ex_inode_block indirect;
+
     size_t block_number;
+    size_t indirect_block_no;
+
     char buffer[EX_BLOCK_SIZE];
+    char indirect_buffer[EX_BLOCK_SIZE];
 };
 
 struct ex_entry_iterator {

@@ -23,6 +23,7 @@
 typedef size_t inode_address;
 typedef size_t block_address;
 
+// XXX: rename this, it's used only by block iterator
 struct ex_inode_block {
     // position in super block inodes block bitmap
     size_t id;

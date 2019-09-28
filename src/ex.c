@@ -121,6 +121,8 @@ int ex_getattr(const char *pathname, struct stat *st) {
 
     st->st_nlink = inode->nlinks;
     st->st_size = inode->size;
+    st->st_blocks = inode->nblocks;
+    st->st_blksize = EX_BLOCK_SIZE;
     st->st_mode = inode->mode;
     st->st_ino = inode->number;
 

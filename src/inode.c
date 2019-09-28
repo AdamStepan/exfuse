@@ -71,6 +71,89 @@ done:
     return status;
 }
 
+static const size_t blocks_per_block = EX_BLOCK_SIZE / sizeof(size_t);
+
+ex_status ex_inode_allocate_indirect_block(struct ex_inode *inode, size_t n) {
+
+    debug("alllocating nth block: %zu", n);
+
+    // TODO: add new kind of error
+    size_t indirect_block_no = n;
+
+    size_t parent_block_no = EX_DIRECT_BLOCKS + indirect_block_no / blocks_per_block;
+    size_t block_off = indirect_block_no % blocks_per_block;
+
+    // check if parent of the indirect block is allocated
+    // TODO: move it to the separeate function
+    if (!inode->blocks[parent_block_no].allocated) {
+
+        debug("allocating parent inode: %zu", parent_block_no);
+
+        size_t address = ex_super_allocate_block();
+        // we were unable to allocate parent block, there is nothing
+        // we can do
+        if (address == EX_BLOCK_INVALID_ADDRESS) {
+            warning("unable to allocate block: %zu for inode: %zu",
+                    n, inode->number);
+            return INODE_BLOCK_ALLOCATION_FAILED;
+        }
+
+        debug("parent inode is at: %zu", address);
+
+        inode->blocks[parent_block_no].address = address;
+        inode->blocks[parent_block_no].allocated = 1;
+        inode->nblocks++;
+
+        // clear the block space
+        char empty[EX_BLOCK_SIZE] = {0};
+        ex_device_write(address, (char *)empty, sizeof(empty));
+
+        ex_inode_flush(inode);
+    }
+
+    // read parent block
+    size_t parent_block_address = inode->blocks[parent_block_no].address;
+    ssize_t readed = 0;
+    struct ex_data_block parent_block[blocks_per_block];
+    memset(parent_block, 0, sizeof(parent_block));
+
+    if (ex_device_read_to_buffer(&readed, (char *)parent_block,
+                                 parent_block_address, sizeof(parent_block)) != OK) {
+        warning("unable to read parent block at: %zu", parent_block_address);
+        return PARENT_BLOCK_CANNOT_BE_READED;
+    }
+
+    // allocate the block and write changes to the disk
+    struct ex_data_block block = parent_block[block_off];
+
+    if (block.allocated) {
+        warning("indirect block: %zu is already allocated", n);
+    } else {
+
+        debug("allocating new indirect block");
+
+        size_t address = ex_super_allocate_block();
+
+        if (address == EX_BLOCK_INVALID_ADDRESS) {
+            return INODE_BLOCK_ALLOCATION_FAILED;
+        }
+
+        debug("block %zu in parent %zu is at (%zu)", block_off,
+                parent_block_no, address);
+
+        parent_block[block_off].allocated = 1;
+        parent_block[block_off].address = address;
+
+        ex_device_write(parent_block_address,
+                        (char *)parent_block,
+                        sizeof(parent_block));
+
+        inode->nblocks++;
+        ex_inode_flush(inode);
+    }
+    return OK;
+}
+
 ex_status ex_inode_allocate_blocks(struct ex_inode *inode) {
 
     ex_status status = OK;
@@ -86,7 +169,16 @@ ex_status ex_inode_allocate_blocks(struct ex_inode *inode) {
             goto done;
         }
 
-        inode->blocks[i] = block.address;
+        struct ex_data_block *block = &inode->blocks[i];
+
+        inode->nblocks += 1;
+        block->address = address;
+        block->allocated = 1;
+    }
+
+    for (size_t i = EX_DIRECT_BLOCKS; i < EX_DIRECT_BLOCKS + EX_INDIRECT_BLOCKS; i++) {
+        inode->blocks[i].allocated = 0;
+        inode->blocks[i].address = 0;
     }
 
 done:
@@ -105,11 +197,11 @@ void ex_inode_deallocate_blocks(struct ex_inode *inode) {
 
     for (size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
 
-        if (inode->blocks[i] == EX_BLOCK_INVALID_ADDRESS) {
+        if (inode->blocks[i].address == EX_BLOCK_INVALID_ADDRESS) {
             break;
         }
 
-        ex_super_deallocate_block(inode->blocks[i]);
+        ex_super_deallocate_block(inode->blocks[i].address);
     }
 
     ex_super_deallocate_inode_block(inode->number);
@@ -125,6 +217,7 @@ void ex_inode_print(const struct ex_inode *inode) {
     info("address: %lu", inode->address);
     info("links: %u", inode->nlinks);
     info("size: %lu", inode->size);
+    info("nblocks: %lu", inode->nblocks);
 
     info("uid: %u", inode->uid);
     info("gid: %u", inode->gid);
@@ -166,7 +259,9 @@ struct ex_inode *ex_copy_inode(const struct ex_inode *inode) {
     copy->gid = inode->gid;
     copy->uid = inode->uid;
 
-    for (size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
+    copy->nblocks = inode->nblocks;
+
+    for (size_t i = 0; i < EX_DIRECT_BLOCKS + EX_INDIRECT_BLOCKS; i++) {
         copy->blocks[i] = inode->blocks[i];
     }
 
@@ -209,6 +304,8 @@ ex_status ex_inode_create(struct ex_inode *inode, uint16_t mode, gid_t gid, uid_
         inode->nlinks = 1;
     }
 
+    inode->nblocks = 0;
+
     if (ex_inode_allocate_blocks(inode) != OK) {
         goto free_inode_block;
     }
@@ -229,19 +326,21 @@ inode_creation_failed:
 
 size_t ex_inode_find_free_entry_address(struct ex_inode *dir) {
 
+    debug("trying to find entry address in: %zu", dir->number);
+
     size_t address = 0;
 
     foreach_inode_block(dir, block) {
         foreach_block_entry(block, entry) {
 
-            debug("free=%i, magic=%x, blockaddr=%lu", entry.free, entry.magic,
-                  block.address);
+            //debug("free=%i, magic=%x, blockaddr=%lu", entry.free, entry.magic,
+            //      block.address);
 
             if (!entry.free && entry.magic != EX_ENTRY_MAGIC1) {
                 continue;
             }
 
-            debug("finded: block=%ld, i=%ld", block_iterator.block_number,
+            debug("free finded: block=%ld, i=%ld", block_iterator.block_number,
                   entry_iterator.entry_number);
 
             address = block.address + (entry_iterator.entry_number *
@@ -252,7 +351,7 @@ size_t ex_inode_find_free_entry_address(struct ex_inode *dir) {
     }
 
 found:
-    foreach_inode_block_cleanup(dir, block);
+//    foreach_inode_block_cleanup(dir, block);
 
     return address;
 }
@@ -273,6 +372,21 @@ void ex_inode_entry_update(size_t address, const char *name,
     ex_device_write(address, (void *)&entry, sizeof(entry));
 }
 
+size_t next_indirect(struct ex_inode *inode) {
+    if (inode->nblocks < EX_DIRECT_BLOCKS) {
+        return 0;
+    }
+
+    size_t next = inode->nblocks - EX_DIRECT_BLOCKS;
+
+    if (next == 0) { return next; }
+
+    // subtract the amount of parent indirect blocks
+    size_t parents = next / blocks_per_block + 1;
+
+    return next - parents;
+}
+
 struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name,
                               struct ex_inode *inode) {
 
@@ -280,8 +394,20 @@ struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name,
     size_t entry_address = ex_inode_find_free_entry_address(dir);
 
     if (!entry_address) {
-        info("unable to find space for inode in dirinode");
-        return NULL;
+
+        info("unable to find space for inode in dirinode: %zu", dir->number);
+
+        if (ex_inode_allocate_indirect_block(dir, next_indirect(dir)) != OK) {
+            return NULL;
+        }
+
+        entry_address = ex_inode_find_free_entry_address(dir);
+
+        if (!entry_address) {
+            warning("unable to find free space after relocation");
+            return NULL;
+        }
+
     }
 
     ex_inode_entry_update(entry_address, name, inode->address, 0);
@@ -468,6 +594,8 @@ size_t ex_inode_find_entry_address(struct ex_inode *dir, const char *name) {
     }
 
 not_found:
+
+
 found:
     foreach_inode_block_cleanup(dir, block);
 
@@ -599,7 +727,12 @@ ssize_t ex_inode_write(struct ex_inode *ino, size_t off, const char *data,
         ino->size += (off + amount) - ino->size;
     }
 
-    block_address addr = ino->blocks[start_block_idx];
+    block_address addr = ino->blocks[start_block_idx].address;
+    char allocated = ino->blocks[start_block_idx].allocated;
+
+    if (!allocated) {
+        // XXX: do allocation
+    }
 
     ex_device_write(ino->address, (void *)ino, sizeof(struct ex_inode));
     ex_device_write(addr + start_block_off, data, amount);
@@ -617,9 +750,9 @@ ssize_t ex_inode_read(struct ex_inode *ino, size_t off, char *buffer,
         return 0;
     }
 
-    size_t offset = ino->blocks[start_block_idx] + start_block_off;
+    size_t offset = ino->blocks[start_block_idx].address + start_block_off;
     ssize_t readed = 0;
-
+    // XXX: check if block is allocated
     // XXX: ignore status for now
     (void)ex_device_read_to_buffer(&readed, buffer, offset, amount);
 
@@ -650,11 +783,24 @@ int ex_inode_rename(struct ex_inode *from_inode, struct ex_inode *to_inode,
 
         to_entry_address = ex_inode_find_free_entry_address(to_inode);
 
+        // XXX: use function for this, change return values
         if (!to_entry_address) {
-            debug("unable to find a free entry address, inode: %ld",
-                  to_inode->number);
+
+            info("unable to find space for inode in: %zu", to_inode->number);
+
+            if (ex_inode_allocate_indirect_block(to_inode, to_inode->nblocks) != OK) {
+                return -ENOSPC;
+            }
+
+            to_entry_address = ex_inode_find_free_entry_address(to_inode);
+
+            if (!to_entry_address) {
+                warning("unable to find free space after relocation");
+            }
+
             return -ENOSPC;
         }
+
     }
 
     debug("from/to: %lu/%lu", from_entry_address, to_entry_address);
@@ -667,6 +813,78 @@ int ex_inode_rename(struct ex_inode *from_inode, struct ex_inode *to_inode,
     ex_dir_entry_flush(from_entry_address, from_entry);
 
     return 0;
+}
+
+static inline int ex_indirect_block_is_allocated(struct ex_inode *i, size_t n) {
+    return i->blocks[n + EX_DIRECT_BLOCKS].address;
+}
+
+static inline int ex_indirect_block_out_of_range(size_t n) {
+    return n > EX_INDIRECT_BLOCKS;
+}
+
+static inline int ex_indirect_block_should_be_loaded(struct ex_block_iterator *it,
+                                             size_t indirect_block_no) {
+    return it->indirect_block_no != indirect_block_no || !it->indirect.data;
+}
+
+struct ex_inode_block ex_inode_block_iterate_indirect(struct ex_inode *inode,
+                                                      struct ex_block_iterator *it) {
+    assert(it->block_number >= EX_DIRECT_BLOCKS);
+
+    size_t __ind = (it->block_number - EX_DIRECT_BLOCKS);
+
+    size_t indirect_block_no = __ind / blocks_per_block;
+    size_t block_idx = __ind % blocks_per_block;
+
+    debug("ibno: %zu, bi: %zu", indirect_block_no, block_idx);
+
+    if (ex_indirect_block_out_of_range(indirect_block_no) ||
+        !ex_indirect_block_is_allocated(inode, indirect_block_no)) {
+
+        debug("not allocated or out of range");
+
+        it->last_block.address = EX_BLOCK_INVALID_ADDRESS;
+        it->last_block.data = NULL;
+        it->last_block.id = EX_BLOCK_INVALID_ID;
+
+        goto done;
+    }
+
+    if (ex_indirect_block_should_be_loaded(it, indirect_block_no)) {
+        size_t indirect_block_address = inode->blocks[indirect_block_no + EX_DIRECT_BLOCKS].address;
+
+        debug("loading indirect block: %zu at %zu", indirect_block_no, indirect_block_address);
+        ssize_t readed = 0;
+        (void)ex_device_read_to_buffer(&readed, it->indirect_buffer,
+                                       indirect_block_address, EX_BLOCK_SIZE);
+        it->indirect.data = it->indirect_buffer;
+    }
+
+    // XXX: this is the end, my only friend, the end
+    struct ex_data_block block = ((struct ex_data_block *)it->indirect.data)[block_idx];
+
+    debug("ba: %zu, aloc: %zu", block.address, block.allocated);
+
+    // block in the indirect block is not allocated
+    if (!block.allocated) {
+        it->last_block.address = EX_BLOCK_INVALID_ADDRESS;
+        it->last_block.data = NULL;
+        it->last_block.id = EX_BLOCK_INVALID_ID;
+
+        goto done;
+    }
+
+    // read the blocks data
+    ssize_t readed = 0;
+    (void)ex_device_read_to_buffer(&readed, it->buffer, block.address, EX_BLOCK_SIZE);
+
+    it->last_block.address = block.address;
+    it->last_block.id = it->block_number;
+    it->last_block.data = it->buffer;
+
+done:
+    return it->last_block;
 }
 
 struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode,
@@ -682,20 +900,19 @@ struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode,
                                    .address = EX_BLOCK_INVALID_ADDRESS};
 
     if (it->block_number >= EX_DIRECT_BLOCKS) {
-        goto done;
+        debug("iterating block: %zu", it->block_number);
+        return ex_inode_block_iterate_indirect(inode, it);
     }
 
-    block.address = inode->blocks[it->block_number];
+    block.address = inode->blocks[it->block_number].address;
     block.data = it->buffer;
+    block.id = it->block_number;
 
-    // XXX: add buffer into ex_block_iterator and use ex_device_read_to_buffer
-    //      handle read error
-    ssize_t readed = 0;
     // XXX: handle read error
+    ssize_t readed = 0;
     (void)ex_device_read_to_buffer(&readed, it->buffer,
                                    block.address, EX_BLOCK_SIZE);
 
-done:
     it->last_block = block;
     return block;
 }
@@ -725,7 +942,7 @@ end:
     return it->last_entry;
 }
 
-size_t ex_inode_max_blocks(void) { return EX_DIRECT_BLOCKS; }
+size_t ex_inode_max_blocks(void) { return EX_DIRECT_BLOCKS + EX_INDIRECT_BLOCKS * blocks_per_block; }
 
 int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid, uid_t uid) {
 
@@ -748,3 +965,4 @@ int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid, uid_t
 
     return 0;
 }
+

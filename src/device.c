@@ -68,12 +68,12 @@ ex_status ex_device_read_to_buffer(ssize_t *readed, char *buffer, size_t off,
         goto failure;
     }
 
-    off_t offset = lseek(fd, off, SEEK_SET);
-
     if ((off_t)off < 0) {
         status = INVALID_OFFSET;
         goto failure;
     }
+
+    off_t offset = lseek(fd, off, SEEK_SET);
 
     if ((size_t)offset != off) {
         status = OFFSET_SEEK_FAILED;
@@ -97,7 +97,7 @@ failure:
         error("device is not opened");
         break;
     case INVALID_OFFSET:
-        error("lseek: underthrow (off > max(int))");
+        error("lseek: underthrow (off > max(int)) (%li, %zu)", off, off);
         break;
     case OFFSET_SEEK_FAILED:
         error("lseek: offset=%li, wanted=%lu", offset, off);
@@ -122,12 +122,12 @@ ex_status ex_device_write(size_t off, const char *data, size_t amount) {
         goto failure;
     }
 
-    off_t offset = lseek(fd, off, SEEK_SET);
-
     if ((off_t)off < 0) {
         status = INVALID_OFFSET;
         goto failure;
     }
+
+    off_t offset = lseek(fd, off, SEEK_SET);
 
     if ((size_t)offset != off) {
         status = OFFSET_SEEK_FAILED;

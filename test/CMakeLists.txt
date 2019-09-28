@@ -20,6 +20,8 @@ set(TEST_SOURCES
     test_write_max_size.c
     test_chmod.c
     test_chown.c
+    test_stat_block_number.c
+    test_dir_block_reallocation.c
 )
 
 find_package(PkgConfig REQUIRED)

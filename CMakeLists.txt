@@ -26,7 +26,8 @@ if (TESTS)
 endif()
 
 if (DEBUG)
-    add_compile_options($<$<C_COMPILER_ID:Clang>:-ggdb>)
+    add_compile_options(-ggdb)
+    set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 if (SANITIZER)

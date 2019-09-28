@@ -33,6 +33,7 @@ typedef enum {
     INODE_LOAD_FAILED,
     INODE_IS_NOT_UNLINKABLE,
     INODE_NOT_FOUND,
+    PARENT_BLOCK_CANNOT_BE_READED,
     OK
 } ex_status;
 
