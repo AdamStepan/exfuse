@@ -259,7 +259,7 @@ int ex_mkfs_create_root(struct ex_mkfs_context *ctx) {
     (void)ctx;
 
     ex_super_load();
-    ex_root_write();
+    ex_root_create();
 
     return 0;
 }

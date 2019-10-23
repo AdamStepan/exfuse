@@ -22,7 +22,9 @@ ex_status ex_init(const char *device) {
 
     ex_super_load();
 
-    if ((status = ex_root_load()) != OK) {
+    struct ex_inode root;
+
+    if ((status = ex_root_load(&root)) != OK) {
         goto root_load_error;
     }
 
@@ -49,11 +51,6 @@ void ex_deinit(void) {
     if (super_block) {
         info("freeing super_block");
         free(super_block);
-    }
-
-    if (root) {
-        info("freeing root");
-        free(root);
     }
 }
 

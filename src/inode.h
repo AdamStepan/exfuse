@@ -60,11 +60,6 @@ struct ex_dir_entry {
     char name[EX_NAME_LEN];
 };
 
-extern struct ex_inode *root;
-
-ex_status ex_root_write(void);
-ex_status ex_root_load(void);
-
 #define ex_inode_update_time(rv, ino, attr)                                    \
     int rv;                                                                    \
     do {                                                                       \
@@ -73,6 +68,9 @@ ex_status ex_root_load(void);
         ino->attr.v_sec = rv.tv_sec;                                           \
         inode->attr.tv_nsec = rv.tv_nsec;                                      \
     } while (0);
+
+ex_status ex_root_create(void);
+ex_status ex_root_load(struct ex_inode *root);
 
 ex_status ex_inode_allocate_blocks(struct ex_inode *inode);
 void ex_inode_deallocate_blocks(struct ex_inode *inode);

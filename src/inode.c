@@ -5,31 +5,51 @@ const uint16_t EX_INODE_MAGIC1 = 0xabcc;
 const uint8_t EX_DIR_MAGIC1 = 0xde;
 const uint8_t EX_ENTRY_MAGIC1 = 0x61;
 
-struct ex_inode *root = NULL;
-
-ex_status ex_root_write(void) {
+ex_status ex_root_create(void) {
 
     if (!super_block) {
         return SUPER_BLOCK_IS_NOT_LOADED;
     }
 
     mode_t mode = S_IRWXU | S_IXOTH | S_IROTH | S_IFDIR;
-    root = ex_malloc(sizeof(struct ex_inode));
+    struct ex_inode root;
 
-    if (ex_inode_create(root, mode, getgid(), getuid()) != OK) {
+    if (ex_inode_create(&root, mode, getgid(), getuid()) != OK) {
         error("unable to create root inode");
         return ROOT_INODE_CANNOT_BE_CREATED;
     }
 
-    super_block->root = root->address;
+    super_block->root = root.address;
 
-    ex_inode_flush(root);
-    ex_inode_fill_dir(root, root);
+    ex_inode_flush(&root);
+    ex_inode_fill_dir(&root, &root);
 
     return ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
 }
 
-ex_status ex_root_load(void) {
+void ex_inode_copy_noalloc(const struct ex_inode *src, struct ex_inode *dest) {
+
+    dest->number = src->number;
+    dest->mode = src->mode;
+    dest->magic = src->magic;
+
+    dest->mtime = src->mtime;
+    dest->ctime = src->ctime;
+    dest->atime = src->atime;
+
+    dest->address = src->address;
+    dest->size = src->size;
+    dest->nlinks = src->nlinks;
+
+    dest->gid = src->gid;
+    dest->uid = src->uid;
+
+    for (size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
+        dest->blocks[i] = src->blocks[i];
+    }
+}
+
+ex_status ex_root_load(struct ex_inode *root) {
 
     ex_status status = OK;
 
@@ -39,12 +59,14 @@ ex_status ex_root_load(void) {
     }
 
     info("loading root");
-    root = ex_inode_load(super_block->root);
+    struct ex_inode *inode = ex_inode_load(super_block->root);
 
-    if (!root) {
+    if (!inode) {
         error("unable to load root from %lu", super_block->root);
         status = ROOT_CANNOT_BE_LOADED;
     }
+
+    ex_inode_copy_noalloc(inode, root);
 
 done:
     return status;
@@ -287,11 +309,18 @@ struct ex_inode *ex_inode_load(inode_address address) {
 
 struct ex_inode *ex_inode_find(struct ex_path *path) {
 
-    if (!strcmp("/", path->basename) && path->ncomponents == 0) {
-        return ex_copy_inode(root);
+    struct ex_inode root;
+
+    if (ex_root_load(&root) != OK) {
+        error("Unable to search for inode, because root cannot be loaded");
+        return NULL;
     }
 
-    struct ex_inode *searched = NULL, *curdir = root;
+    if (!strcmp("/", path->basename) && path->ncomponents == 0) {
+        return ex_copy_inode(&root);
+    }
+
+    struct ex_inode *searched = NULL, *curdir = &root;
     size_t n = 0;
 
     while (curdir) {
@@ -327,7 +356,7 @@ struct ex_inode *ex_inode_find(struct ex_path *path) {
 
 found:
 
-    if (curdir && curdir != root) {
+    if (curdir && curdir != &root) {
         ex_inode_free(curdir);
     }
 
