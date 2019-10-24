@@ -64,7 +64,7 @@ extern struct ex_super_block *super_block;
 void ex_bitmap_free_bit(struct ex_bitmap *bitmap, size_t nth_bit);
 size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap);
 
-block_address ex_super_allocate_block(void);
+ex_status ex_super_allocate_data_block(struct ex_inode_block *block);
 void ex_super_deallocate_block(block_address address);
 
 ex_status ex_super_allocate_inode_block(struct ex_inode_block *block);

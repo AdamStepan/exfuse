@@ -160,5 +160,5 @@ failure:
         error("unhandled error: %i", status);
     }
 
-    return status;
+    return WRITE_FAILED;
 }

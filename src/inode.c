@@ -75,22 +75,32 @@ done:
 
 ex_status ex_inode_allocate_blocks(struct ex_inode *inode) {
 
+    ex_status status = OK;
+
     debug("allocating blocks for inode (%lu)", inode->number);
 
     for (size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
 
-        inode->blocks[i] = ex_super_allocate_block();
+        struct ex_inode_block block;
 
-        // we are unable to allocate next block, we should deallocate all
-        // already allocated blocks
-        if (inode->blocks[i] == EX_BLOCK_INVALID_ADDRESS) {
+        if ((status = ex_super_allocate_data_block(&block)) != OK) {
             warning("failing to allocate nth (%lu) block", i);
-            ex_inode_deallocate_blocks(inode);
-            return INODE_BLOCK_ALLOCATION_FAILED;
+            goto done;
         }
+
+        inode->blocks[i] = block.address;
     }
 
-    return OK;
+done:
+
+    // we are unable to allocate next block, we should deallocate all
+    // already allocated blocks
+    if (status != OK) {
+        ex_inode_deallocate_blocks(inode);
+        status = INODE_BLOCK_ALLOCATION_FAILED;
+    }
+
+    return status;
 }
 
 void ex_inode_deallocate_blocks(struct ex_inode *inode) {

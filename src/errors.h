@@ -15,6 +15,8 @@ typedef enum {
     OFFSET_SEEK_FAILED,
     // super block/bitmap errors
     INODE_BITMAP_IS_FULL,
+    DATA_BITMAP_IS_FULL,
+    BLOCK_ALLOCATION_FAILED,
     // mkfs errors
     ZEROING_OUTSIDE_OF_DEVICE_SPACE,
     DEVICE_STAT_FAILED,

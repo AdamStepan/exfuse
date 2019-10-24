@@ -103,34 +103,44 @@ void ex_super_deallocate_block(block_address address) {
     ex_bitmap_free_bit(&super_block->bitmap, nth_bit);
 }
 
-void ex_super_init_block(size_t address, char with) {
+ex_status ex_super_init_block(size_t address, char with) {
 
-    static char FREE_BLOCK[EX_BLOCK_SIZE];
-    memset(FREE_BLOCK, with, EX_BLOCK_SIZE);
+    char free_block[EX_BLOCK_SIZE];
+    memset(free_block, with, EX_BLOCK_SIZE);
 
-    ex_device_write(address, FREE_BLOCK, sizeof(FREE_BLOCK));
+    return ex_device_write(address, free_block, sizeof(free_block));
 }
 
-ex_status ex_super_allocate_inode_block(struct ex_inode_block *block) {
+void ex_super_deallocate_inode_block(size_t inode_number) {
+    ex_bitmap_free_bit(&super_block->inode_bitmap, inode_number);
+}
+
+ex_status ex_super_allocate_block(struct ex_bitmap *bitmap,
+                                  struct ex_inode_block *block,
+                                  size_t base_addr,
+                                  char with) {
 
     ex_status status = OK;
-    size_t blockid = ex_bitmap_find_free_bit(&super_block->inode_bitmap);
+    size_t blockid = ex_bitmap_find_free_bit(bitmap);
 
     if (blockid == EX_BLOCK_INVALID_ID) {
         status = INODE_BITMAP_IS_FULL;
-        goto error;
+        goto done;
     }
 
     block->id = blockid;
-    block->address = first_inode_block + block->id * EX_BLOCK_SIZE;
+    block->address = base_addr + block->id * EX_BLOCK_SIZE;
 
-    ex_super_init_block(block->address, 0);
+    status = ex_super_init_block(block->address, with);
 
-error:
+done:
 
     switch (status) {
         case INODE_BITMAP_IS_FULL:
             warning("unable to find a free inode block");
+            break;
+        case WRITE_FAILED:
+            warning("unable to initialize block: %zu", block->id);
             break;
         case OK:
             break;
@@ -141,25 +151,12 @@ error:
     return status;
 }
 
-void ex_super_deallocate_inode_block(size_t inode_number) {
-    ex_bitmap_free_bit(&super_block->inode_bitmap, inode_number);
+ex_status ex_super_allocate_data_block(struct ex_inode_block *block) {
+    return ex_super_allocate_block(&super_block->bitmap, block, first_data_block, 'a');
 }
 
-block_address ex_super_allocate_block(void) {
-
-    size_t free_block_pos = ex_bitmap_find_free_bit(&super_block->bitmap);
-    size_t address = -1;
-
-    if (free_block_pos == EX_BLOCK_INVALID_ID) {
-        warning("unable to find free block");
-    } else {
-        debug("found free block: position=%lu", free_block_pos);
-
-        address = first_data_block + (free_block_pos * EX_BLOCK_SIZE);
-        ex_super_init_block(address, 'a');
-    }
-
-    return address;
+ex_status ex_super_allocate_inode_block(struct ex_inode_block *block) {
+    return ex_super_allocate_block(&super_block->inode_bitmap, block, first_inode_block, 0);
 }
 
 void ex_super_print(const struct ex_super_block *block) {
