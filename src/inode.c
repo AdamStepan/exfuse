@@ -67,6 +67,7 @@ ex_status ex_root_load(struct ex_inode *root) {
     }
 
     ex_inode_copy_noalloc(inode, root);
+    ex_inode_free(inode);
 
 done:
     return status;
