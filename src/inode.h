@@ -86,12 +86,12 @@ struct ex_inode *ex_inode_copy(const struct ex_inode *inode);
 ex_status ex_inode_create(struct ex_inode *, uint16_t mode, gid_t gid, uid_t uid);
 struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name,
                               struct ex_inode *inode);
-struct ex_inode *ex_inode_load(inode_address ino_addr);
+ex_status ex_inode_load(inode_address ino_addr, struct ex_inode *inode);
 
 struct ex_inode *ex_inode_find(struct ex_path *path);
 struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name);
 void ex_inode_fill_dir(struct ex_inode *inode, struct ex_inode *parent);
-struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name);
+ex_status ex_inode_unlink(struct ex_inode *dir, const char *name);
 struct ex_dir_entry **ex_inode_get_all(struct ex_inode *inode);
 int ex_inode_rename(struct ex_inode *from_inode, struct ex_inode *to_inode,
                     const char *from_name, const char *to_name);

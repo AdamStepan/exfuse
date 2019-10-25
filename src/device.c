@@ -80,11 +80,13 @@ ex_status ex_device_read_to_buffer(ssize_t *readed, char *buffer, size_t off,
         goto failure;
     }
 
-    *readed = read(fd, buffer, amount);
+    ssize_t readed_ = read(fd, buffer, amount);
 
-    if (*readed != (ssize_t)amount) {
+    if (readed_ != (ssize_t)amount) {
         status = READ_FAILED;
     }
+
+    if (readed != NULL) { *readed = readed_; }
 
     return OK;
 

@@ -58,16 +58,14 @@ ex_status ex_root_load(struct ex_inode *root) {
         goto done;
     }
 
-    info("loading root");
-    struct ex_inode *inode = ex_inode_load(super_block->root);
+    info("loading root from %zu", super_block->root);
+    status = ex_inode_load(super_block->root, root);
 
-    if (!inode) {
+    if (status != OK) {
         error("unable to load root from %lu", super_block->root);
         status = ROOT_CANNOT_BE_LOADED;
+        goto done;
     }
-
-    ex_inode_copy_noalloc(inode, root);
-    ex_inode_free(inode);
 
 done:
     return status;
@@ -292,30 +290,24 @@ struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name,
     return inode;
 }
 
-struct ex_inode *ex_inode_load_unsafe(inode_address address) {
-    struct ex_inode *inode = NULL;
-    // XXX: ignore status for now
-    (void)ex_device_read((void **)&inode, address, sizeof(struct ex_inode));
-    return inode;
-}
+ex_status ex_inode_load(inode_address address, struct ex_inode *inode) {
 
-struct ex_inode *ex_inode_load(inode_address address) {
+    ex_status status = ex_device_read_to_buffer(NULL, (char *)inode, address,
+            sizeof(struct ex_inode));
 
-    struct ex_inode *inode = NULL;
-
-    if (ex_device_read((void **)&inode, address, sizeof(struct ex_inode)) !=
-        OK) {
-        warning("unable to read inode at (%lu)", address);
-        return NULL;
+    if (status != OK) {
+        warning("unable to read inode at (%zu)", address);
+        goto error;
     }
 
     if (inode->magic != EX_INODE_MAGIC1) {
-        warning("inode at (%lu) has bad magic (%x)", address, inode->magic);
-        ex_inode_free(inode);
-        return NULL;
+        warning("inode at (%zu) has bad magic (%x)", address, inode->magic);
+        goto error;
     }
 
-    return inode;
+    return OK;
+error:
+    return INODE_LOAD_FAILED;
 }
 
 struct ex_inode *ex_inode_find(struct ex_path *path) {
@@ -377,7 +369,8 @@ not_found:
 
 struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name) {
 
-    struct ex_inode *inode = NULL;
+    struct ex_inode inode;
+    ex_status status = OK;
 
     foreach_inode_block(dir, block) {
         foreach_block_entry(block, entry) {
@@ -390,9 +383,7 @@ struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name) {
                 continue;
             }
 
-            inode = ex_inode_load(entry.address);
-
-            if (!inode) {
+            if ((status = ex_inode_load(entry.address, &inode)) != OK) {
                 error("unable to load inode at: %lu", entry.address);
             }
 
@@ -400,11 +391,17 @@ struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name) {
         }
     }
 
+    status = INODE_NOT_FOUND;
     debug("inode=%ld does not contain=%s", dir->address, name);
 
 finded:
     foreach_inode_block_cleanup(dir, block);
-    return inode;
+
+    if (status == OK) {
+        return ex_copy_inode(&inode);
+    } else {
+        return NULL;
+    }
 }
 
 int ex_dir_is_empty(struct ex_inode *inode) {
@@ -490,49 +487,47 @@ struct ex_dir_entry *ex_dir_entry_load(size_t address) {
 
 void ex_dir_entry_free(struct ex_dir_entry *entry) { free(entry); }
 
-struct ex_inode *ex_inode_unlink(struct ex_inode *dir, const char *name) {
+ex_status ex_inode_unlink(struct ex_inode *dir, const char *name) {
 
+    debug("trying to unlink %s from %zu", name, dir->address);
+
+    // XXX: do some checks
     size_t entry_address = ex_inode_find_entry_address(dir, name);
     struct ex_dir_entry *entry = ex_dir_entry_load(entry_address);
 
-    struct ex_inode *inode = ex_inode_load(entry->address);
+    struct ex_inode inode;
+    ex_status status = OK;
 
-    if (!inode) {
+    if ((status = ex_inode_load(entry->address, &inode)) != OK) {
         error("unable to load inode from: %lu", entry->address);
-        goto inode_not_found;
+        goto done;
     }
 
-    if (!ex_inode_is_unlinkable(inode)) {
-        debug("inode (%lu) is not unlinkable", inode->address);
-        goto inode_is_not_unlinkable;
+    if (!ex_inode_is_unlinkable(&inode)) {
+        debug("inode (%lu) is not unlinkable", inode.address);
+        status = INODE_IS_NOT_UNLINKABLE;
+        goto done;
     }
 
-    if (inode->mode & S_IFDIR) {
-        inode->nlinks -= 2;
+    if (inode.mode & S_IFDIR) {
+        inode.nlinks -= 2;
     } else {
-        inode->nlinks -= 1;
+        inode.nlinks -= 1;
     }
 
-    if (!inode->nlinks) {
-        ex_inode_deallocate_blocks(inode);
+    if (!inode.nlinks) {
+        debug("# of inode links reached 0, deallocating blocks");
+        ex_inode_deallocate_blocks(&inode);
     }
 
     entry->free = 1;
 
-    ex_inode_flush(inode);
+    ex_inode_flush(&inode);
     ex_dir_entry_flush(entry_address, entry);
-
-    goto done;
-
-inode_is_not_unlinkable:
-    ex_inode_free(inode);
-
-inode_not_found:
-    inode = NULL;
 
 done:
     free(entry);
-    return inode;
+    return status;
 }
 
 struct ex_dir_entry *ex_dir_entry_copy(const struct ex_dir_entry *entry) {

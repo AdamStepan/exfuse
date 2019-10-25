@@ -166,16 +166,14 @@ int ex_unlink(const char *pathname) {
     }
 
     struct ex_path *path = ex_path_make(pathname);
-    struct ex_inode *inode = ex_inode_unlink(dir, path->basename);
 
-    if (!inode) {
+    if (ex_inode_unlink(dir, path->basename) != OK) {
         rv = -ENOENT;
         goto free_all;
     }
 
 free_all:
     ex_path_free(path);
-    ex_inode_free(inode);
 
 free_dir:
     ex_path_free(dirpath);
@@ -572,13 +570,9 @@ int ex_rmdir(const char *pathname) {
         goto free_dir_inode;
     }
 
-    struct ex_inode *removed = ex_inode_unlink(dir, path->basename);
-
-    if (!removed) {
+    if (ex_inode_unlink(dir, path->basename) != OK) {
         rv = -ENOTEMPTY;
     }
-
-    ex_inode_free(removed);
 
 free_dir_inode:
     ex_path_free(dirpath);

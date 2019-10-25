@@ -121,18 +121,18 @@ void print_inode_data(const char *device, size_t address) {
     ex_set_log_level(error);
     ex_device_open(device);
 
-    struct ex_inode *inode = ex_inode_load(address);
+    struct ex_inode inode;
 
-    if (!inode) {
+    if (ex_inode_load(address, &inode) != OK) {
         printf("\tno inode at %lu\n", address);
         return;
     }
 
-    foreach_inode_block(inode, block) {
+    foreach_inode_block(&inode, block) {
         write(fileno(stdout), block.data, EX_BLOCK_SIZE);
     }
 
-    foreach_inode_block_cleanup(inode, block);
+    foreach_inode_block_cleanup(&inode, block);
 }
 
 void print_inode(const char *device, size_t address) {
@@ -140,32 +140,32 @@ void print_inode(const char *device, size_t address) {
     ex_set_log_level(info);
     ex_device_open(device);
 
-    struct ex_inode *inode = ex_inode_load(address);
+    struct ex_inode inode;
 
-    if (!inode) {
+    if (ex_inode_load(address, &inode) != OK) {
         printf("\tno inode at %lu\n", address);
         return;
     }
 
     printf("inode:\n");
 
-    printf("\tnumber: %lu\n", inode->number);
-    printf("\tsize: %lu\n", inode->size);
-    printf("\tmagic: %x\n", inode->magic);
-    printf("\taddress: %lu\n", inode->address);
-    printf("\tnlinks: %u\n", inode->nlinks);
+    printf("\tnumber: %lu\n", inode.number);
+    printf("\tsize: %lu\n", inode.size);
+    printf("\tmagic: %x\n", inode.magic);
+    printf("\taddress: %lu\n", inode.address);
+    printf("\tnlinks: %u\n", inode.nlinks);
 
-    printf("\tmode: %o (", inode->mode);
-    ex_print_mode(inode->mode);
+    printf("\tmode: %o (", inode.mode);
+    ex_print_mode(inode.mode);
     printf(")\n");
 
-    printf("\tmtime: %ld.%.9ld\n", inode->mtime.tv_sec, inode->mtime.tv_nsec);
-    printf("\tatime: %ld.%.9ld\n", inode->mtime.tv_sec, inode->mtime.tv_nsec);
-    printf("\tctime: %ld.%.9ld\n", inode->mtime.tv_sec, inode->mtime.tv_nsec);
+    printf("\tmtime: %ld.%.9ld\n", inode.mtime.tv_sec, inode.mtime.tv_nsec);
+    printf("\tatime: %ld.%.9ld\n", inode.mtime.tv_sec, inode.mtime.tv_nsec);
+    printf("\tctime: %ld.%.9ld\n", inode.mtime.tv_sec, inode.mtime.tv_nsec);
 
-    if (inode->mode & S_IFDIR) {
+    if (inode.mode & S_IFDIR) {
         printf("\tentries:\n");
-        print_directory_entries(inode);
+        print_directory_entries(&inode);
     }
 }
 
