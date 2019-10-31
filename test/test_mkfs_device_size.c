@@ -23,7 +23,10 @@ void test_mkfs_device_size(void) {
 
     // the size of the super block an inode bitmap and a data bitmap rounded
     // to block size
-    size_t expected_device_size = 3 * EX_BLOCK_SIZE;
+    size_t expected_device_size = round_block(sizeof(struct ex_super_block));
+    expected_device_size += round_block(super_block->bitmap.size);
+    expected_device_size += round_block(super_block->inode_bitmap.size);
+
     // size for `ninodes` inodes
     expected_device_size += EX_BLOCK_SIZE * ninodes;
     // number of data blocks for `ninodes` inodes

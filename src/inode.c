@@ -89,24 +89,23 @@ ex_status ex_inode_allocate_indirect_block(struct ex_inode *inode, size_t n) {
 
         debug("allocating parent inode: %zu", parent_block_no);
 
-        size_t address = ex_super_allocate_block();
-        // we were unable to allocate parent block, there is nothing
-        // we can do
-        if (address == EX_BLOCK_INVALID_ADDRESS) {
-            warning("unable to allocate block: %zu for inode: %zu",
+        struct ex_inode_block block;
+
+        if (ex_super_allocate_data_block(&block) != OK) {
+            warning("unable to allocate parent block: %zu for inode: (%lu)",
                     n, inode->number);
             return INODE_BLOCK_ALLOCATION_FAILED;
         }
 
-        debug("parent inode is at: %zu", address);
+        debug("parent inode is at: %zu", block.address);
 
-        inode->blocks[parent_block_no].address = address;
+        inode->blocks[parent_block_no].address = block.address;
         inode->blocks[parent_block_no].allocated = 1;
         inode->nblocks++;
 
         // clear the block space
         char empty[EX_BLOCK_SIZE] = {0};
-        ex_device_write(address, (char *)empty, sizeof(empty));
+        ex_device_write(block.address, (char *)empty, sizeof(empty));
 
         ex_inode_flush(inode);
     }
@@ -132,17 +131,17 @@ ex_status ex_inode_allocate_indirect_block(struct ex_inode *inode, size_t n) {
 
         debug("allocating new indirect block");
 
-        size_t address = ex_super_allocate_block();
-
-        if (address == EX_BLOCK_INVALID_ADDRESS) {
+        struct ex_inode_block block;
+        if (ex_super_allocate_data_block(&block) != OK) {
+            warning("unable to allocate new indirect block: %zu", n);
             return INODE_BLOCK_ALLOCATION_FAILED;
         }
 
         debug("block %zu in parent %zu is at (%zu)", block_off,
-                parent_block_no, address);
+                parent_block_no, block.address);
 
         parent_block[block_off].allocated = 1;
-        parent_block[block_off].address = address;
+        parent_block[block_off].address = block.address;
 
         ex_device_write(parent_block_address,
                         (char *)parent_block,
@@ -162,9 +161,9 @@ ex_status ex_inode_allocate_blocks(struct ex_inode *inode) {
 
     for (size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
 
-        struct ex_inode_block block;
+        struct ex_inode_block block_;
 
-        if ((status = ex_super_allocate_data_block(&block)) != OK) {
+        if ((status = ex_super_allocate_data_block(&block_)) != OK) {
             warning("failing to allocate nth (%lu) block", i);
             goto done;
         }
@@ -172,7 +171,7 @@ ex_status ex_inode_allocate_blocks(struct ex_inode *inode) {
         struct ex_data_block *block = &inode->blocks[i];
 
         inode->nblocks += 1;
-        block->address = address;
+        block->address = block_.address;
         block->allocated = 1;
     }
 
@@ -649,6 +648,7 @@ ex_status ex_inode_unlink(struct ex_inode *dir, const char *name) {
     }
 
     entry->free = 1;
+    entry->name[0] = '-';
 
     ex_inode_flush(&inode);
     ex_dir_entry_flush(entry_address, entry);
@@ -718,6 +718,9 @@ ssize_t ex_inode_write(struct ex_inode *ino, size_t off, const char *data,
     size_t start_block_idx = off / EX_BLOCK_SIZE;
     size_t start_block_off = off % EX_BLOCK_SIZE;
 
+    info("start_block=%zu, start_block_off=%zu", start_block_idx, start_block_off);
+    info("max_blocks=%zu", ex_inode_max_blocks());
+
     if (start_block_idx >= ex_inode_max_blocks() ||
         (start_block_off + amount / EX_BLOCK_SIZE) >= ex_inode_max_blocks()) {
         return -1;
@@ -727,12 +730,15 @@ ssize_t ex_inode_write(struct ex_inode *ino, size_t off, const char *data,
         ino->size += (off + amount) - ino->size;
     }
 
+    // TODO
     block_address addr = ino->blocks[start_block_idx].address;
     char allocated = ino->blocks[start_block_idx].allocated;
 
     if (!allocated) {
-        // XXX: do allocation
+        warning("start block (%zu) is not allocated", start_block_idx);
     }
+
+    debug("writing to %zu", addr);
 
     ex_device_write(ino->address, (void *)ino, sizeof(struct ex_inode));
     ex_device_write(addr + start_block_off, data, amount);
@@ -864,7 +870,7 @@ struct ex_inode_block ex_inode_block_iterate_indirect(struct ex_inode *inode,
     // XXX: this is the end, my only friend, the end
     struct ex_data_block block = ((struct ex_data_block *)it->indirect.data)[block_idx];
 
-    debug("ba: %zu, aloc: %zu", block.address, block.allocated);
+    debug("ba: %zu, aloc: %i", block.address, (int)block.allocated);
 
     // block in the indirect block is not allocated
     if (!block.allocated) {

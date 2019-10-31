@@ -26,7 +26,6 @@ if (TESTS)
 endif()
 
 if (DEBUG)
-    add_compile_options(-ggdb)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
