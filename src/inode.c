@@ -319,7 +319,7 @@ struct ex_inode *ex_inode_find(struct ex_path *path) {
         return NULL;
     }
 
-    if (!strcmp("/", path->basename) && path->ncomponents == 0) {
+    if (ex_path_is_root(path)) {
         return ex_copy_inode(&root);
     }
 

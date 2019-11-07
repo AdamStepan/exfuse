@@ -61,3 +61,7 @@ void ex_path_print(const struct ex_path *path) {
 
     printf("\n");
 }
+
+int ex_path_is_root(const struct ex_path *const path) {
+    return strncmp("/", path->basename, 1) == 0;
+}

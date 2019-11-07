@@ -24,5 +24,6 @@ struct ex_path *ex_path_make(const char *path);
 struct ex_path *ex_path_make_dirpath(const char *path);
 void ex_path_free(struct ex_path *path);
 void ex_path_print(const struct ex_path *path);
+int ex_path_is_root(const struct ex_path *const path);
 
 #endif /* PATH_H */
