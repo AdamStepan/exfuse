@@ -23,7 +23,6 @@ struct options {
     enum action action;
 };
 
-
 void print_struct_sizes(void) {
 
     info("ex_super_block: %lu", sizeof(struct ex_super_block));
@@ -177,8 +176,7 @@ void help(void) {
            "\t--inode addr\t\tdisplay information about inode\n"
            "\t--inode-data\t\tdisplay inode data (binary)\n"
            "\t--struct-sizes\t\t\tdisplay sizes of filesystem structures\n"
-           "\t--super\t\t\tdisplay info about super block\n"
-    );
+           "\t--super\t\t\tdisplay info about super block\n");
 }
 
 int main(int argc, char **argv) {
@@ -201,7 +199,8 @@ int main(int argc, char **argv) {
     while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1) {
         switch (opt) {
         case 'b':
-            if(!ex_cli_parse_number("bitmap-data", optarg, &options.bitmap_data)) {
+            if (!ex_cli_parse_number("bitmap-data", optarg,
+                                     &options.bitmap_data)) {
                 return 1;
             }
             options.action = PRINT_BITMAP_DATA;
@@ -210,13 +209,14 @@ int main(int argc, char **argv) {
             options.device = strdup(optarg);
             break;
         case 'D':
-            if(!ex_cli_parse_number("inode-data", optarg, &options.inode_data)) {
+            if (!ex_cli_parse_number("inode-data", optarg,
+                                     &options.inode_data)) {
                 return 1;
             }
             options.action = PRINT_INODE_DATA;
             break;
         case 'i':
-            if(!ex_cli_parse_number("inode", optarg, &options.inode)) {
+            if (!ex_cli_parse_number("inode", optarg, &options.inode)) {
                 return 1;
             }
             options.action = PRINT_INODE;

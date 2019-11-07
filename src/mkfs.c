@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <getopt.h>
 
 // device layout:
 // super_block | inode_bitmap | data_bitmap | inode_blocks | data_blocks
@@ -55,7 +54,7 @@ int ex_mkfs_check_device(struct ex_mkfs_params *params) {
         ex_readable_size(sizebuf, sizeof(sizebuf), params->device_size);
 
         info("resizing device: %s to %zu (%s)", params->device,
-                params->device_size, sizebuf);
+             params->device_size, sizebuf);
 
         rv = truncate(params->device, params->device_size);
 
@@ -103,19 +102,20 @@ ex_status ex_mkfs_device_clear(size_t off, size_t amount) {
 error:
 
     switch (status) {
-        case DEVICE_STAT_FAILED:
-            fatal("unable to stat device: fd=%d, errno=%s", fd, strerror(errno));
-            break;
-        case ZEROING_OUTSIDE_OF_DEVICE_SPACE:
-            fatal("specified range points outside of device file: size=%ld"
-                  ", off=%zu, amount=%zu", statbuf.st_size, off, amount);
-            break;
-        case DEVICE_MMAP_FAILED:
-            fatal("mmap failed: off=%zu, amount=%zu, fatal: %s", off, amount,
+    case DEVICE_STAT_FAILED:
+        fatal("unable to stat device: fd=%d, errno=%s", fd, strerror(errno));
+        break;
+    case ZEROING_OUTSIDE_OF_DEVICE_SPACE:
+        fatal("specified range points outside of device file: size=%ld"
+              ", off=%zu, amount=%zu",
+              statbuf.st_size, off, amount);
+        break;
+    case DEVICE_MMAP_FAILED:
+        fatal("mmap failed: off=%zu, amount=%zu, fatal: %s", off, amount,
               strerror(errno));
-            break;
-        default:
-            fatal("unhandled error: %d", status);
+        break;
+    default:
+        fatal("unhandled error: %d", status);
     }
 
     return status;
@@ -418,7 +418,8 @@ void ex_mkfs_show_help(void) {
          "\t--log-level\t\tspecify log level\n");
 }
 
-int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc, char **argv) {
+int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc,
+                          char **argv) {
 
     const struct option longopts[] = {{"device", required_argument, 0, 'd'},
                                       {"inodes", required_argument, 0, 'i'},
@@ -442,7 +443,8 @@ int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc, char **argv) 
             params->device = strdup(optarg);
             break;
         case 'i':
-            if (!ex_cli_parse_number("inodes", optarg, &params->number_of_inodes)) {
+            if (!ex_cli_parse_number("inodes", optarg,
+                                     &params->number_of_inodes)) {
                 return EX_MKFS_OPTION_PARSE_ERROR;
             }
             break;
@@ -467,4 +469,3 @@ int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc, char **argv) 
 
     return EX_MKFS_OPTION_OK;
 }
-

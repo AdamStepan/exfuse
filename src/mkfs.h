@@ -1,5 +1,5 @@
-#include "ex.h"
 #include "errors.h"
+#include "ex.h"
 #include "logging.h"
 #include <stdint.h>
 

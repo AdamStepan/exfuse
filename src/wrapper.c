@@ -213,9 +213,7 @@ static void ex_args_finalize(struct ex_args *args) {
     args->device = absolute_path;
 }
 
-enum {
-    EXFUSE_KEY_HELP
-};
+enum { EXFUSE_KEY_HELP };
 
 static int ex_check_foreground_option(void *data, const char *arg, int key,
                                       struct fuse_args *args) {
@@ -230,8 +228,7 @@ static int ex_check_foreground_option(void *data, const char *arg, int key,
         fprintf(stderr,
                 "\nExfuse options:\n"
                 "    --log-level            {error, warning, info, debug}\n"
-                "    --device device        used device\n"
-                );
+                "    --device device        used device\n");
         exit(0);
     }
 
@@ -247,7 +244,6 @@ static int ex_check_foreground_option(void *data, const char *arg, int key,
 
     return 1;
 }
-
 
 static struct fuse_opt ex_opts[] = {
     {"--log-level %s", offsetof(struct ex_args, loglevel), FUSE_OPT_KEY_OPT},

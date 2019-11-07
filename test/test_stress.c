@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/exfuse/test_creation_and_deletion",
-            test_creation_and_deletion);
+                    test_creation_and_deletion);
 
     return g_test_run();
 }

@@ -1,6 +1,6 @@
 #include "util.h"
-#include <limits.h>
 #include <fcntl.h>
+#include <limits.h>
 
 void *ex_malloc(size_t size) {
 
@@ -153,11 +153,13 @@ int ex_cli_parse_number(const char *option, const char *arg, uint64_t *value) {
 
     if (arg == endptr || *value == ULLONG_MAX) {
         error("argument `%s' supplied to option: `--%s' is not "
-              "unsigned integer", arg, option);
+              "unsigned integer",
+              arg, option);
         return 0;
     } else if (errno == ERANGE || errno == EINVAL) {
         error("argument `%s' supplied to option: `--%s' is "
-              "not in range of unsigned integer", arg, option);
+              "not in range of unsigned integer",
+              arg, option);
         return 0;
     }
 
@@ -257,4 +259,3 @@ char *ex_readable_open_options(int opts) {
 
     return buffer;
 }
-

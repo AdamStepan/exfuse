@@ -22,8 +22,7 @@ void ex_bitmap_free_bit(struct ex_bitmap *bitmap, size_t nth_bit) {
     ssize_t readed;
 
     // XXX: ignore status for now
-    (void)ex_device_read_to_buffer(&readed, bitdata,
-                                   bitmap->address + nth_byte,
+    (void)ex_device_read_to_buffer(&readed, bitdata, bitmap->address + nth_byte,
                                    sizeof(char));
     *bitdata &= ~(1UL << nth_bit_in_byte);
 
@@ -44,7 +43,8 @@ size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap) {
     ssize_t readed = 0;
     char bitdata[bitmap->size];
 
-    (void)ex_device_read_to_buffer(&readed, bitdata, bitmap->address, bitmap->size);
+    (void)ex_device_read_to_buffer(&readed, bitdata, bitmap->address,
+                                   bitmap->size);
     size_t bitpos = -1, bytepos = bitmap->last, startpos = bitmap->last;
     char flipped = 0;
 
@@ -117,8 +117,7 @@ void ex_super_deallocate_inode_block(size_t inode_number) {
 
 ex_status ex_super_allocate_block(struct ex_bitmap *bitmap,
                                   struct ex_inode_block *block,
-                                  size_t base_addr,
-                                  char with) {
+                                  size_t base_addr, char with) {
 
     ex_status status = OK;
     size_t blockid = ex_bitmap_find_free_bit(bitmap);
@@ -136,27 +135,29 @@ ex_status ex_super_allocate_block(struct ex_bitmap *bitmap,
 done:
 
     switch (status) {
-        case INODE_BITMAP_IS_FULL:
-            warning("unable to find a free inode block");
-            break;
-        case WRITE_FAILED:
-            warning("unable to initialize block: %zu", block->id);
-            break;
-        case OK:
-            break;
-        default:
-            error("unhandled error: %d", status);
+    case INODE_BITMAP_IS_FULL:
+        warning("unable to find a free inode block");
+        break;
+    case WRITE_FAILED:
+        warning("unable to initialize block: %zu", block->id);
+        break;
+    case OK:
+        break;
+    default:
+        error("unhandled error: %d", status);
     }
 
     return status;
 }
 
 ex_status ex_super_allocate_data_block(struct ex_inode_block *block) {
-    return ex_super_allocate_block(&super_block->bitmap, block, first_data_block, 'a');
+    return ex_super_allocate_block(&super_block->bitmap, block,
+                                   first_data_block, 'a');
 }
 
 ex_status ex_super_allocate_inode_block(struct ex_inode_block *block) {
-    return ex_super_allocate_block(&super_block->inode_bitmap, block, first_inode_block, 0);
+    return ex_super_allocate_block(&super_block->inode_bitmap, block,
+                                   first_inode_block, 0);
 }
 
 void ex_super_print(const struct ex_super_block *block) {
@@ -184,7 +185,6 @@ void ex_super_statfs(struct statvfs *statbuf) {
 #else
     statbuf->f_flag = ST_NOSUID;
 #endif
-
 }
 
 pthread_mutex_t super_lock;

@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-extern const char * const EX_DEVICE;
+extern const char *const EX_DEVICE;
 
 ex_status ex_device_fd(int *fd);
 ex_status ex_device_open(const char *device_name);

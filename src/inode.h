@@ -83,7 +83,8 @@ struct ex_dir_entry *ex_dir_entry_copy(const struct ex_dir_entry *entry);
 void ex_dir_entry_free(struct ex_dir_entry *entry);
 
 struct ex_inode *ex_inode_copy(const struct ex_inode *inode);
-ex_status ex_inode_create(struct ex_inode *, uint16_t mode, gid_t gid, uid_t uid);
+ex_status ex_inode_create(struct ex_inode *, uint16_t mode, gid_t gid,
+                          uid_t uid);
 struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name,
                               struct ex_inode *inode);
 ex_status ex_inode_load(inode_address ino_addr, struct ex_inode *inode);
@@ -101,7 +102,8 @@ ssize_t ex_inode_write(struct ex_inode *inode, size_t off, const char *data,
 ssize_t ex_inode_read(struct ex_inode *inode, size_t off, char *buffer,
                       size_t amount);
 
-int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid, uid_t uid);
+int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid,
+                      uid_t uid);
 
 struct ex_block_iterator {
     struct ex_inode_block last_block;

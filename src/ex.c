@@ -331,8 +331,7 @@ int ex_open(const char *pathname, int flags, gid_t gid, uid_t uid) {
     //      specified on the command line
     ex_super_lock();
 
-    info("path=%s, flags=%i, gid=%i, uid=%i", pathname, flags,
-            gid, uid);
+    info("path=%s, flags=%i, gid=%i, uid=%i", pathname, flags, gid, uid);
 
     ssize_t rv = 0;
 
@@ -727,7 +726,8 @@ int ex_symlink(const char *target, const char *link) {
     mode_t mode = S_IFLNK | S_IRWXU | S_IRWXG | S_IRWXO;
     link_inode = ex_malloc(sizeof(struct ex_inode));
 
-    if (ex_inode_create(link_inode, mode, target_inode->gid, target_inode->uid) != OK) {
+    if (ex_inode_create(link_inode, mode, target_inode->gid,
+                        target_inode->uid) != OK) {
         rv = -ENOSPC;
         goto fail;
     }
@@ -877,4 +877,3 @@ int ex_opendir(const char *path, mode_t mode, gid_t gid, uid_t uid) {
 
     return 0;
 }
-

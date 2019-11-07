@@ -24,7 +24,8 @@ ex_status ex_root_create(void) {
     ex_inode_flush(&root);
     ex_inode_fill_dir(&root, &root);
 
-    return ex_device_write(0, (char *)super_block, sizeof(struct ex_super_block));
+    return ex_device_write(0, (char *)super_block,
+                           sizeof(struct ex_super_block));
 }
 
 void ex_inode_copy_noalloc(const struct ex_inode *src, struct ex_inode *dest) {
@@ -136,8 +137,8 @@ void ex_inode_print(const struct ex_inode *inode) {
 
 ex_status ex_inode_flush(const struct ex_inode *inode) {
 
-    ex_status status = ex_device_write(inode->address, (void *)inode,
-                                       sizeof(struct ex_inode));
+    ex_status status =
+        ex_device_write(inode->address, (void *)inode, sizeof(struct ex_inode));
 
     if (status != OK) {
         error("inode (%lu) flush failed", inode->number);
@@ -181,7 +182,8 @@ void ex_inode_fill_dir(struct ex_inode *inode, struct ex_inode *parent) {
     ex_inode_flush(inode);
 }
 
-ex_status ex_inode_create(struct ex_inode *inode, uint16_t mode, gid_t gid, uid_t uid) {
+ex_status ex_inode_create(struct ex_inode *inode, uint16_t mode, gid_t gid,
+                          uid_t uid) {
 
     struct ex_inode_block block;
 
@@ -293,7 +295,7 @@ struct ex_inode *ex_inode_set(struct ex_inode *dir, const char *name,
 ex_status ex_inode_load(inode_address address, struct ex_inode *inode) {
 
     ex_status status = ex_device_read_to_buffer(NULL, (char *)inode, address,
-            sizeof(struct ex_inode));
+                                                sizeof(struct ex_inode));
 
     if (status != OK) {
         warning("unable to read inode at (%zu)", address);
@@ -692,8 +694,8 @@ struct ex_inode_block ex_inode_block_iterate(struct ex_inode *inode,
     //      handle read error
     ssize_t readed = 0;
     // XXX: handle read error
-    (void)ex_device_read_to_buffer(&readed, it->buffer,
-                                   block.address, EX_BLOCK_SIZE);
+    (void)ex_device_read_to_buffer(&readed, it->buffer, block.address,
+                                   EX_BLOCK_SIZE);
 
 done:
     it->last_block = block;
@@ -727,7 +729,8 @@ end:
 
 size_t ex_inode_max_blocks(void) { return EX_DIRECT_BLOCKS; }
 
-int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid, uid_t uid) {
+int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid,
+                      uid_t uid) {
 
     char other = ino->mode & 7;
     char group = (ino->mode >> 3) & 7;

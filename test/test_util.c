@@ -2,7 +2,6 @@
 #include "../src/util.h"
 #include <glib.h>
 
-
 void test_has_perm_other() {
 
     struct ex_inode ino;
@@ -48,7 +47,8 @@ int main(int argc, char **argv) {
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/util/test_has_perm_other", test_has_perm_other);
-    g_test_add_func("/util/test_has_perm_user_and_group", test_has_perm_user_and_group);
+    g_test_add_func("/util/test_has_perm_user_and_group",
+                    test_has_perm_user_and_group);
 
     g_test_run();
 }
