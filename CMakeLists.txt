@@ -9,7 +9,6 @@ find_package(FUSE REQUIRED)
 
 option(COVERAGE "Enable clang coverage flags" OFF)
 option(TESTS "Enable tests" OFF)
-option(DEBUG "Enable debug build" OFF)
 option(SANITIZER "Enable compiler sanitizer" OFF)
 
 add_definitions(${FUSE_COMPILE_DEFINITIONS})
@@ -23,10 +22,6 @@ endif()
 
 if (TESTS)
     enable_testing()
-endif()
-
-if (DEBUG)
-    add_compile_options($<$<C_COMPILER_ID:Clang>:-ggdb>)
 endif()
 
 if (SANITIZER)
