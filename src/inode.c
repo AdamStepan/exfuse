@@ -325,51 +325,50 @@ struct ex_inode *ex_inode_find(struct ex_path *path) {
         return ex_copy_inode(&root);
     }
 
-    struct ex_inode *searched = NULL, *curdir = &root;
-    size_t n = 0;
+    struct ex_inode *current = NULL, *current_dir = &root;
 
-    while (curdir) {
+    for (size_t n = 0; n < path->ncomponents; n++) {
 
-        if (!path->components[n]) {
-            goto not_found;
+        int is_last_component = n + 1 == path->ncomponents;
+        int is_dir = current_dir->mode & S_IFDIR;
+
+        if (!is_last_component && !is_dir) {
+            debug("%zu is not a directory", current_dir->number);
         }
 
-        searched = ex_inode_get(curdir, path->components[n]);
+        debug("looking for %s in %zu", path->components[n], current_dir->number);
+        current = ex_inode_get(current_dir, path->components[n]);
 
-        if (!searched) {
-            goto not_found;
+        if (!current)
+            goto done;
+
+        if (current->mode & S_IFDIR) {
+
+            if (current_dir != &root) {
+                ex_inode_free(current_dir);
+            }
+
+            debug("set current dir to %zu", current->number);
+            current_dir = current;
         }
 
-        // we found our file
-        if (n + 1 == path->ncomponents) {
-            debug("found: %lu/%lu", n, path->ncomponents);
-            goto found;
-        }
-
-        if (!(searched->mode & S_IFDIR)) {
-            debug("component: %lu is not directory at: %s", curdir->address,
-                  path->components[n]);
-            goto not_found;
-        }
-
-        n++;
-
-        curdir = searched;
-
-        debug("looking for: %s in %lu", path->components[n], curdir->address);
     }
 
-found:
+done:
 
-    if (curdir && curdir != &root) {
-        ex_inode_free(curdir);
+    if (current_dir != &root && current_dir != current) {
+        ex_inode_free(current_dir);
     }
 
-not_found:
-    return searched;
+    return current;
 }
 
 struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name) {
+
+    if (!(dir->mode & S_IFDIR)) {
+        debug("dir is not a directory: %zu", dir->number);
+        return NULL;
+    }
 
     struct ex_inode inode;
     ex_status status = OK;
