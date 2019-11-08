@@ -20,6 +20,7 @@ set(TEST_SOURCES
     test_write_max_size.c
     test_chmod.c
     test_chown.c
+    test_find.c
 )
 
 find_package(PkgConfig REQUIRED)
