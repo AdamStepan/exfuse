@@ -314,53 +314,49 @@ error:
 
 struct ex_inode *ex_inode_find(struct ex_path *path) {
 
-    struct ex_inode root;
+    struct ex_inode *root = ex_malloc(sizeof(struct ex_inode));
 
-    if (ex_root_load(&root) != OK) {
+    if (ex_root_load(root) != OK) {
         error("Unable to search for inode, because root cannot be loaded");
         return NULL;
     }
 
     if (ex_path_is_root(path)) {
-        return ex_copy_inode(&root);
+        return root;
     }
 
-    struct ex_inode *current = NULL, *current_dir = &root;
+    struct ex_inode *current = root;
 
     for (size_t n = 0; n < path->ncomponents; n++) {
 
         int is_last_component = n + 1 == path->ncomponents;
-        int is_dir = current_dir->mode & S_IFDIR;
+        int is_dir = current->mode & S_IFDIR;
 
         if (!is_last_component && !is_dir) {
-            debug("%zu is not a directory", current_dir->number);
+            debug("%zu is not a directory", current->number);
+            goto not_found;
         }
 
-        debug("looking for %s in %zu", path->components[n], current_dir->number);
-        current = ex_inode_get(current_dir, path->components[n]);
+        debug("looking for %s in %zu", path->components[n], current->number);
+        struct ex_inode *next = ex_inode_get(current, path->components[n]);
 
-        if (!current)
-            goto done;
-
-        if (current->mode & S_IFDIR) {
-
-            if (current_dir != &root) {
-                ex_inode_free(current_dir);
-            }
-
-            debug("set current dir to %zu", current->number);
-            current_dir = current;
+        if (!next) {
+            debug("next is not found in %zu", current->number);
+            goto not_found;
         }
 
-    }
+        debug("set current to %zu", current->number);
+        ex_inode_free(current);
+        current = next;
 
-done:
-
-    if (current_dir != &root && current_dir != current) {
-        ex_inode_free(current_dir);
     }
 
     return current;
+
+not_found:
+    ex_inode_free(current);
+
+    return NULL;
 }
 
 struct ex_inode *ex_inode_get(struct ex_inode *dir, const char *name) {
