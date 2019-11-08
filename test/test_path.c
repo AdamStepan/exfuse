@@ -21,6 +21,8 @@ void test_path_make(void) {
     g_assert(path->ncomponents == 1);
     g_assert(strncmp(path->dirname, "/", 1) == 0);
     g_assert(strncmp(path->basename, "a", 1) == 0);
+
+    ex_path_free(path);
 }
 
 void test_path_is_root(void) {
