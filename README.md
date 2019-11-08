@@ -103,19 +103,23 @@ inode_bitmap:
 #### Display information about the inode
 ```
 $ ./exdbg --device foo --inode 40960
+info: device.c: ex_device_open: device is open: fd=3
 inode:
     number: 0
     size: 2144
     magic: abcc
+    uid: 1000
+    gid: 1000
     address: 40960
     nlinks: 2
     mode: 40705 (dir other=r-x group=--- user=rwx)
-    mtime: 1568462913.009054549
-    atime: 1568462913.009054549
-    ctime: 1568462913.009054549
+    mtime: 1573202060.477585196
+    atime: 1573202060.477585196
+    ctime: 1573202060.477585196
     entries:
         name: '.', address: 40960
         name: '..', address: 40960
+
 ```
 
 #### Display the inode data

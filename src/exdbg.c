@@ -151,9 +151,10 @@ void print_inode(const char *device, size_t address) {
     printf("\tnumber: %lu\n", inode.number);
     printf("\tsize: %lu\n", inode.size);
     printf("\tmagic: %x\n", inode.magic);
+    printf("\tuid: %u\n", inode.uid);
+    printf("\tgid: %u\n", inode.gid);
     printf("\taddress: %lu\n", inode.address);
     printf("\tnlinks: %u\n", inode.nlinks);
-
     printf("\tmode: %o (", inode.mode);
     ex_print_mode(inode.mode);
     printf(")\n");
