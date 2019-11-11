@@ -469,3 +469,7 @@ int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc,
 
     return EX_MKFS_OPTION_OK;
 }
+
+void ex_mkfs_free_params(struct ex_mkfs_params *params) {
+    free(params->device);
+}

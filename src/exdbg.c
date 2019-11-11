@@ -271,5 +271,7 @@ int main(int argc, char **argv) {
         print_super(options.device);
     }
 
+    free(options.device);
+
     return 0;
 }

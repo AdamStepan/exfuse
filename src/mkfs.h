@@ -50,3 +50,5 @@ typedef enum {
 
 int ex_mkfs_parse_options(struct ex_mkfs_params *params, int argc, char **argv);
 void ex_mkfs_show_help(void);
+void ex_mkfs_free_params(struct ex_mkfs_params *params);
+
