@@ -1,4 +1,4 @@
-# Exfuse [![Build Status](https://travis-ci.org/AdamStepan/exfuse.svg?branch=master)](https://travis-ci.org/AdamStepan/exfuse)
+# Exfuse [![Build Status](https://travis-ci.org/AdamStepan/exfuse.svg?branch=master)](https://travis-ci.org/AdamStepan/exfuse) [![codecov](https://codecov.io/gh/AdamStepan/exfuse/branch/master/graph/badge.svg)](https://codecov.io/gh/AdamStepan/exfuse)
 
 Exfuse is a simple Unix filesystem that I created for educational purposes. Currently, its use is limited to the fuse, but is written so that it can be used as a library without it. I describe it as simple because
 * An inode uses only the direct blocks
