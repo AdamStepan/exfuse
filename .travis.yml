@@ -1,15 +1,22 @@
 language: c
-dist: bionic
+services:
+    - docker
 compiler:
     - clang
 os: linux
+# NOTE: I am using docker because clang in the travis images is old as fuck
 install:
-    - sudo apt-get install pkg-config cmake llvm clang
-    - sudo apt-get install libfuse2 libfuse-dev libglib2.0-0 libglib2.0-dev
+    - docker pull debian:buster
+    - docker run --name debian-ci --detach --volume $(readlink -f .):/src debian:buster-backports sh -c 'while true; do sleep 1; done'
+    - docker exec debian-ci apt-get update
+    - docker exec debian-ci apt-get install --yes --quiet pkg-config cmake llvm-8 clang-8 libfuse2 libfuse-dev libglib2.0-0 libglib2.0-dev
 branches:
   only:
     - master
 script:
-  - mkdir build
-  - cd build && cmake .. -DTESTS=ON -DSANITIZER=ON -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug && make -
-  - ctest --output-on-failure
+    - docker exec debian-ci mkdir /src/build
+    - docker exec debian-ci sh -c 'cd /src/build && CC=clang-8 cmake .. -DTESTS=ON -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug && make -'
+    - docker exec debian-ci sh -c 'cd /src/build && ctest --output-on-failure'
+    - docker exec debian-ci sh -c 'cd /src/build && make coverage-export'
+after_success:
+    - bash <(curl -s https://codecov.io/bash)
