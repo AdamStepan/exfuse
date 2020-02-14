@@ -47,6 +47,7 @@ add_custom_target(coverage-show
     VERBATIM
     COMMAND ${LLVM_COV} show -ignore-filename-regex "\(.*test.*\|.*glib.*\)" test_exfuse -instr-profile exfuse.profdata
 )
+
 add_custom_target(coverage DEPENDS coverage-report)
 
 add_compile_options(-fprofile-instr-generate -fcoverage-mapping)

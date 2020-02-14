@@ -1,14 +1,15 @@
 language: c
+dist: bionic
 compiler:
     - clang
 os: linux
 install:
-    - sudo apt-get install pkg-config cmake
+    - sudo apt-get install pkg-config cmake llvm clang
     - sudo apt-get install libfuse2 libfuse-dev libglib2.0-0 libglib2.0-dev
 branches:
   only:
     - master
 script:
   - mkdir build
-  - cd build && cmake .. -DTESTS=ON -DSANITIZER=ON -DCMAKE_BUILD_TYPE=Debug && make -
+  - cd build && cmake .. -DTESTS=ON -DSANITIZER=ON -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug && make -
   - ctest --output-on-failure
