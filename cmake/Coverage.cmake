@@ -6,13 +6,13 @@ if(NOT TESTS)
     message(FATAL_ERROR "Cannot generate coverage report when tests are disabled")
 endif()
 
-find_program(LLVM_COV llvm-cov llvm-cov-7 llvm-cov-5.0 HINTS /usr/bin)
+find_program(LLVM_COV llvm-cov llvm-cov-7 llvm-cov-8 llvm-cov-5.0 HINTS /usr/bin)
 
 if(NOT LLVM_COV)
     message(FATAL_ERROR "Cannot find llvm-cov")
 endif()
 
-find_program(LLVM_PROFDATA llvm-profdata llvm-profdata-7 HINTS /usr/bin)
+find_program(LLVM_PROFDATA llvm-profdata llvm-profdata-7 llvm-profdata-8 HINTS /usr/bin)
 
 if(NOT LLVM_PROFDATA)
     message(FATAL_ERROR "Cannot find llvm-profdata")
@@ -21,10 +21,10 @@ endif()
 set(TEST_DIR ${CMAKE_BINARY_DIR}/test)
 
 add_custom_target(coverage-profraw
-    DEPENDS testexfuse
+    DEPENDS test_exfuse
     BYPRODUCTS exfuse.profraw
     WORKING_DIRECTORY ${TEST_DIR}
-    COMMAND LLVM_PROFILE_FILE=exfuse.profraw ./testexfuse
+    COMMAND LLVM_PROFILE_FILE=exfuse.profraw ./test_exfuse
 )
 
 add_custom_target(coverage-profdata
@@ -38,15 +38,23 @@ add_custom_target(coverage-report
     DEPENDS coverage-profdata
     WORKING_DIRECTORY ${TEST_DIR}
     VERBATIM
-    COMMAND ${LLVM_COV} report -ignore-filename-regex "\(.*test.*\|.*glib.*\)" testexfuse -instr-profile exfuse.profdata
+    COMMAND ${LLVM_COV} report -ignore-filename-regex "\(.*test.*\|.*glib.*\)" test_exfuse -instr-profile exfuse.profdata
 )
 
 add_custom_target(coverage-show
     DEPENDS coverage-profdata
     WORKING_DIRECTORY ${TEST_DIR}
     VERBATIM
-    COMMAND ${LLVM_COV} show -ignore-filename-regex "\(.*test.*\|.*glib.*\)" testexfuse -instr-profile exfuse.profdata
+    COMMAND ${LLVM_COV} show -ignore-filename-regex "\(.*test.*\|.*glib.*\)" test_exfuse -instr-profile exfuse.profdata
 )
+
+add_custom_target(coverage-pipeline
+    DEPENDS coverage-profdata
+    WORKING_DIRECTORY ${TEST_DIR}
+    VERBATIM
+    COMMAND ${LLVM_COV} show -ignore-filename-regex "\(.*test.*\|.*glib.*\)" test_exfuse -instr-profile exfuse.profdata > ../coverage.txt
+)
+
 add_custom_target(coverage DEPENDS coverage-report)
 
 add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
