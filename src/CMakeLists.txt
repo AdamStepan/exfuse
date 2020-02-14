@@ -1,7 +1,7 @@
 set(EXFUSE_LIB_SRC device.c ex.c inode.c logging.c path.c super.c util.c mkfs.c)
 set(EXFUSE_SRC wrapper.c)
 
-add_library(libexfuse SHARED ${EXFUSE_LIB_SRC})
+add_library(libexfuse STATIC ${EXFUSE_LIB_SRC})
 target_link_libraries(libexfuse PUBLIC m INTERFACE ${FUSE_LDFLAGS})
 
 add_executable(exfuse ${EXFUSE_SRC})
