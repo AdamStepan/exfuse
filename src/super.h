@@ -1,3 +1,8 @@
+/**
+ * @file super.h
+ *
+ * This file defines the super block, block bitmaps and their API.
+ */
 #ifndef EX_SUPER_H
 #define EX_SUPER_H
 
@@ -11,71 +16,111 @@
 #include <stdlib.h>
 #include <sys/statvfs.h>
 
-// how large block will be
+/** This defines block size. */
 #define EX_BLOCK_SIZE 4096
-// maximum filename basename length
+/** Maximum filename basename length. */
 #define EX_NAME_LEN 54
+/** Super block magic number */
 #define EX_SUPER_MAGIC 0xffaacc
 
+/** @deprecated functions should return ex_status instead of arbitraty return code. */
 #define EX_BLOCK_INVALID_ID ((size_t)-1)
+
+/** @deprecated functions should return ex_status instead of arbitraty return code. */
 #define EX_BLOCK_INVALID_ADDRESS ((size_t)-1)
 
 typedef size_t inode_address;
 typedef size_t block_address;
 
+/** Runtime representation of an inode block. */
 struct ex_inode_block {
-    // position in super block inodes block bitmap
+    /** Position in super block inodes block bitmap. */
     size_t id;
-    // address of inode block
+    /** Address of inode block. */
     size_t address;
-    // block data, not loaded by default
+    /** Blocks data.
+     *
+     * They're not loaded by default
+     */
     char *data;
 };
 
+/** The block allocation bitmap
+ *
+ * It's used for allocation of inode and data blocks.
+ */
 struct ex_bitmap {
-    // where on disk is *this* structure stored
+    /** Address of this structure on the persistent storage. */
     size_t head;
-    // size of the bitmap in bytes
+    /** Size of the bitmap in bytes. */
     size_t size;
-    // address of a bitmap
+    /** Address of the bitmaps data. */
     size_t address;
-    // maximum number of items in a bitmap
+    /** Maximum number of allocatable items. */
     size_t max_items;
-    // number of allocated blocks
+    /** Number of allocated blocks. */
     size_t allocated;
+    /** Index of the block that was allocated as last. */
     size_t last;
 };
 
+/** The super block.
+ *
+ * It's written to the offset 0 on the persistent device.
+ */
 struct ex_super_block {
-    // address of root inode
+    /** Address of the root inode. */
     inode_address root;
-    // size of a device
+    /** Size of a device (in bytes). */
     size_t device_size;
-    // data allocation bitmap
+    /** Data allocation bitmap. */
     struct ex_bitmap bitmap;
-    // inode allocation bitmap
+    /** Inode allocation bitmap. */
     struct ex_bitmap inode_bitmap;
-    // magic number for fs checking
+    /** Magic number for fs checking. */
     uint32_t magic;
 };
 
+/** Super block loaded to the memory.
+ *
+ * It must loaded for almost all operations.
+ */
 extern struct ex_super_block *super_block;
 
+/** Mark nth allocatable block as free. */
 void ex_bitmap_free_bit(struct ex_bitmap *bitmap, size_t nth_bit);
+
+/** Try to find free block. */
 size_t ex_bitmap_find_free_bit(struct ex_bitmap *bitmap);
 
+/** Try to allocate data block. */
 ex_status ex_super_allocate_data_block(struct ex_inode_block *block);
+
+/** Deallocate data block. */
 void ex_super_deallocate_block(block_address address);
 
+/** Try to allocate data block. */
 ex_status ex_super_allocate_inode_block(struct ex_inode_block *block);
+
+/** Deallocate data block. */
 void ex_super_deallocate_inode_block(size_t inode_number);
 
+/** Print the super block to the stdout. */
 void ex_super_print(const struct ex_super_block *block);
+
+/** Load the super block from the perstitent storage */
 void ex_super_load(void);
+
+/** Fill the statbuf */
 void ex_super_statfs(struct statvfs *statbuf);
+
+/** Check if pathname is suitable for filename */
 int ex_super_check_path_len(const char *pathname);
 
+/** Lock the inode. */
 void ex_super_lock(void);
+
+/** Unlock the inode. */
 void ex_super_unlock(void);
 
 #endif

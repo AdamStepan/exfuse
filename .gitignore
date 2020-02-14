@@ -11,3 +11,4 @@
 !cmake/
 !cmake/*.cmake
 !.clang-format
+!Doxyfile
