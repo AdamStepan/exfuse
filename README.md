@@ -11,9 +11,11 @@ Exfuse is a simple Unix filesystem that I created for educational purposes. Curr
 ## Limitations
 
 Because the filesystem uses only the direct addressing there is a limitation of file size and
-number of entries in a directory. File size is limited to `EX_DIRECT_BLOCKS * EX_BLOCK_SIZE`, which is currently ` 256 * 4096 = 1MiB` and the maximum number of elements in a directory is  limited to `EX_DIRECT_BLOCKS * EX_BLOCK_SIZE / sizeof (struct ex_dir_entry)` which is currently `256 * 4096 / 64 = 16384 ` entries.
+number of entries in a directory. File size is limited to `EX_DIRECT_BLOCKS * EX_BLOCK_SIZE`, which is currently ` 256 * 4096 = 1MiB ` and the maximum number of elements in a directory is limited to ` EX_DIRECT_BLOCKS * EX_BLOCK_SIZE / sizeof (struct ex_dir_entry) ` which is currently ` 256 * 4096 / 64 = 16384 ` entries.
 
 ## List of implemented functions
+
+```
     access
     chmod
     chown
@@ -33,6 +35,7 @@ number of entries in a directory. File size is limited to `EX_DIRECT_BLOCKS * EX
     unlink
     utimens
     write
+```
 
 ## Compilation
 
@@ -68,17 +71,21 @@ size_t ex_mkfs_get_size_for_inodes(size_t ninodes) {
 It is used for introspection of data structures. It can now display superblock, inode and structure size information, and can display bitmap and inode data. Bitmap and inode data are written in binary format on stdout, so it is useful to display them with something like  `xxd`.
 
 ### libexfuse
-A library that contains all the filesystem logic. It does not depend on `libfuse`, its interfaces can be found in` src/ex .h`. Its primary purpose is to be used in tests.
+A library that contains all the filesystem logic. It does not depend on `libfuse`, its interfaces can be found in `src/ex.h`. Its primary purpose is to be used in tests.
 
 ### exfuse
-Wrapper around `libfuse`. It contains `main` from where it calls` fuse_main`, to which it passes `struct fuse operations`. The implementation is in ` src/wrapper.c` .
+Wrapper around `libfuse`. It contains `main` from where it calls` fuse_main`, to which it passes `struct fuse operations`. The implementation is in `src/wrapper.c` .
 
 ## Usage
-#### Create a filesystem
+
+### Create a filesystem
+
 ```sh
 $ ./exmkfs --device foo --create --inodes 1024 --log-level info
 ```
-####  Display information about the superblock
+
+###  Display information about the superblock
+
 ```sh
 $ ./exdbg --device foo
 super:
@@ -100,8 +107,10 @@ inode_bitmap:
     allocated = 1
     maxitems = 1024
 ```
-#### Display information about the inode
-```
+
+### Display information about the inode
+
+```sh
 $ ./exdbg --device foo --inode 40960
 info: device.c: ex_device_open: device is open: fd=3
 inode:
@@ -122,7 +131,8 @@ inode:
 
 ```
 
-#### Display the inode data
+### Display the inode data
+
 ```sh
 $ ./exdbg --device foo --inode-data 40960 | xxd
 00000000: 00a0 0000 0000 0000 de00 2e00 0000 0000  ................
@@ -136,7 +146,9 @@ $ ./exdbg --device foo --inode-data 40960 | xxd
 00000080: 6161 6161 6161 6161 6161 6161 6161 6161  aaaaaaaaaaaaaaaa
 00000090: 6161 6161 6161 6161 6161 6161 6161 6161  aaaaaaaaaaaaaaaa
 ```
-#### Display the bitmap data
+
+### Display the bitmap data
+
 ```sh
 $ ./exdbg --device foo --bitmap-data 64 | xxd
 00000000: 0100 0000 0000 0000 0000 0000 0000 0000  ................
@@ -149,80 +161,9 @@ $ ./exdbg --device foo --bitmap-data 64 | xxd
 00000070: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 ```
 
-
-#### Mount the filesystem
+### Mount the filesystem
 
 ```sh
 mkdir mp
 ./exfuse -f --device foo mp
 ```
-
-## Main structures
-```c
-struct ex_super_block {
-    // address of root inode
-    inode_address root;
-    // size of a device
-    size_t device_size;
-    // data allocation bitmap
-    struct ex_bitmap bitmap;
-    // inode allocation bitmap
-    struct ex_bitmap inode_bitmap;
-    // magic number for fs checking
-    uint32_t magic;
-};
-```
-```c
-struct ex_inode {
-    size_t number;
-
-    uint32_t mode;
-
-    uint16_t magic;
-
-    uid_t uid;
-    gid_t gid;
-
-    struct timespec mtime;
-    struct timespec atime;
-    struct timespec ctime;
-
-    inode_address address;
-
-    uint16_t nlinks;
-
-    // it has two meanings:
-    // - it is the size of the struc_ex_inode if it is a directory
-    // - otherwise it is size of the data
-    size_t size;
-
-    block_address blocks[EX_DIRECT_BLOCKS];
-};
-```
-```c
-struct ex_dir_entry {
-    inode_address address;
-    uint8_t magic;
-    uint8_t free;
-    char name[EX_NAME_LEN];
-};
-```
-
-```c
-struct ex_bitmap {
-    // address of this structure on disk
-    size_t head;
-    // size of the bitmap in bytes
-    size_t size;
-    // address of the bitmap
-    size_t address;
-    // maximum number of items in a bitmap
-    size_t max_items;
-    // number of allocated blocks
-    size_t allocated;
-    // last allocated bit
-    size_t last;
-};
-```
-
-

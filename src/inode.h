@@ -35,7 +35,7 @@ extern const uint8_t EX_ENTRY_MAGIC1;
  * Most of the attributes has the same meaning as in the inode(7).
  */
 struct ex_inode {
-    /* Number of inode.
+    /** Number of inode.
      *
      * It it corresponds with allocated block number e.g. number == 0
      * means that inode has allocated first inode block.
