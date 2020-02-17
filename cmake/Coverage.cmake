@@ -7,12 +7,14 @@ if(NOT TESTS)
 endif()
 
 find_program(LLVM_COV llvm-cov llvm-cov-7 llvm-cov-8 llvm-cov-5.0 HINTS /usr/bin)
+mark_as_advanced(LLVM_COV)
 
 if(NOT LLVM_COV)
     message(FATAL_ERROR "Cannot find llvm-cov")
 endif()
 
 find_program(LLVM_PROFDATA llvm-profdata llvm-profdata-7 llvm-profdata-8 HINTS /usr/bin)
+mark_as_advanced(LLVM_PROFDATA)
 
 if(NOT LLVM_PROFDATA)
     message(FATAL_ERROR "Cannot find llvm-profdata")
@@ -56,7 +58,6 @@ add_custom_target(coverage-export
 )
 
 add_custom_target(coverage DEPENDS coverage-report)
-
 add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
 
 set(COVERAGE_OPTIONS "-fcoverage-mapping -fprofile-instr-generate")
