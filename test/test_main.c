@@ -22,6 +22,14 @@ void test_inode_link(void);
 void test_chmod(void);
 void test_chown(void);
 void test_inode_find(void);
+void test_path_make(void);
+void test_path_is_root(void);
+void test_ex_mkfs_parse_inodes_arg(void);
+void test_ex_mkfs_parse_log_level(void);
+void test_ex_mkfs_parse_size_arg(void);
+void test_unknown_option(void);
+void test_has_perm_other(void);
+void test_has_perm_user_and_group(void);
 
 int main(int argc, char **argv) {
     ex_set_log_level(fatal);
@@ -54,6 +62,22 @@ int main(int argc, char **argv) {
     g_test_add_func("/exfuse/test_chmod", test_chmod);
     g_test_add_func("/exfuse/test_chown", test_chown);
     g_test_add_func("/exfuse/test_inode_find", test_inode_find);
+
+    g_test_add_func("/path/test_path_make", test_path_make);
+    g_test_add_func("/path/test_path_is_root", test_path_is_root);
+
+    g_test_add_func("/exmkfs/test_ex_mkfs_parse_inodes_arg",
+                    test_ex_mkfs_parse_inodes_arg);
+    g_test_add_func("/exmkfs/test_ex_mkfs_parse_log_level",
+                    test_ex_mkfs_parse_log_level);
+    g_test_add_func("/exmkfs/test_ex_mkfs_parse_size_arg",
+                    test_ex_mkfs_parse_size_arg);
+    g_test_add_func("/exmkfs/test_ex_mkfs_parse_unknown_option",
+                    test_unknown_option);
+
+    g_test_add_func("/util/test_has_perm_other", test_has_perm_other);
+    g_test_add_func("/util/test_has_perm_user_and_group",
+                    test_has_perm_user_and_group);
 
     return g_test_run();
 }

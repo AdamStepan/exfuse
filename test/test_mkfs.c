@@ -69,21 +69,3 @@ void test_unknown_option() {
     int rv = ex_mkfs_parse_options(&params, 3, invalid_options);
     assert(rv == EX_MKFS_OPTION_UNKNOWN);
 }
-
-int main(int argc, char **argv) {
-
-    ex_set_log_level(fatal);
-
-    g_test_init(&argc, &argv, NULL);
-
-    g_test_add_func("/exmkfs/test_ex_mkfs_parse_inodes_arg",
-                    test_ex_mkfs_parse_inodes_arg);
-    g_test_add_func("/exmkfs/test_ex_mkfs_parse_log_level",
-                    test_ex_mkfs_parse_log_level);
-    g_test_add_func("/exmkfs/test_ex_mkfs_parse_size_arg",
-                    test_ex_mkfs_parse_size_arg);
-    g_test_add_func("/exmkfs/test_ex_mkfs_parse_unknown_option",
-                    test_unknown_option);
-
-    g_test_run();
-}

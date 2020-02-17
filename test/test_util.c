@@ -41,14 +41,3 @@ void test_has_perm_user_and_group() {
     assert(ex_inode_has_perm(&ino, EX_EXECUTE, 1000, 0));
 }
 
-int main(int argc, char **argv) {
-    ex_set_log_level(fatal);
-
-    g_test_init(&argc, &argv, NULL);
-
-    g_test_add_func("/util/test_has_perm_other", test_has_perm_other);
-    g_test_add_func("/util/test_has_perm_user_and_group",
-                    test_has_perm_user_and_group);
-
-    g_test_run();
-}

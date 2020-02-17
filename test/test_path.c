@@ -40,14 +40,3 @@ void test_path_is_root(void) {
     g_assert(ex_path_is_root(path) == 1);
     ex_path_free(path);
 }
-
-int main(int argc, char **argv) {
-    ex_set_log_level(fatal);
-
-    g_test_init(&argc, &argv, NULL);
-
-    g_test_add_func("/path/test_path_make", test_path_make);
-    g_test_add_func("/path/test_path_is_root", test_path_is_root);
-
-    return g_test_run();
-}
