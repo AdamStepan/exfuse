@@ -21,6 +21,9 @@ set(TEST_SOURCES
     test_chmod.c
     test_chown.c
     test_find.c
+    test_util.c
+    test_path.c
+    test_mkfs.c
 )
 
 find_package(PkgConfig REQUIRED)
@@ -46,6 +49,3 @@ endfunction()
 
 ex_fuse_add_test(test_exfuse "${TEST_SOURCES}")
 ex_fuse_add_test(test_stress test_stress.c)
-ex_fuse_add_test(test_util test_util.c)
-ex_fuse_add_test(test_exmkfs test_mkfs.c)
-ex_fuse_add_test(test_path test_path.c)
