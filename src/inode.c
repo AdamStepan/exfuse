@@ -59,7 +59,7 @@ ex_status ex_root_load(struct ex_inode *root) {
         goto done;
     }
 
-    info("loading root from %zu", super_block->root);
+    debug("loading root from %zu", super_block->root);
     status = ex_inode_load(super_block->root, root);
 
     if (status != OK) {
