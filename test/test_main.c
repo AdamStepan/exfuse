@@ -5,6 +5,7 @@ void test_write_max_size(void);
 void test_truncate_file(void);
 void test_unlink_file(void);
 void test_repopulation_of_device(void);
+void test_bitmap_flip();
 void test_statfs(void);
 void test_stat_time_update(void);
 void test_populate_and_remove_dir(void);
@@ -34,6 +35,7 @@ void test_root_api_without_super_block(void);
 void test_simple_read();
 void test_read_no_entry();
 void test_read_with_invalid_args();
+void test_not_enough_space_for_inode();
 
 int main(int argc, char **argv) {
     ex_set_log_level(fatal);
@@ -71,6 +73,10 @@ int main(int argc, char **argv) {
     g_test_add_func("/exfuse/test_read_no_entry", test_read_no_entry);
     g_test_add_func("/exfuse/test_simple_read", test_simple_read);
     g_test_add_func("/exfuse/test_read_with_invalid_args", test_read_with_invalid_args);
+    g_test_add_func("/exfuse/test_not_enough_space_for_inode",
+            test_not_enough_space_for_inode);
+    g_test_add_func("/exfuse/test_bitmap_flip",
+            test_bitmap_flip);
 
     g_test_add_func("/path/test_path_make", test_path_make);
     g_test_add_func("/path/test_path_is_root", test_path_is_root);

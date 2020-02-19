@@ -24,6 +24,7 @@ set(TEST_SOURCES
     test_util.c
     test_path.c
     test_mkfs.c
+    test_not_enough_space.c
     test_root.c
     test_read.c
 )

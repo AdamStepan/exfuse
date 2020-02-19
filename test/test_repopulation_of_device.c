@@ -3,7 +3,7 @@
 #include <err.h>
 #include <glib.h>
 
-int populate_device(size_t ninodes) {
+static int populate_device(size_t ninodes) {
 
     int rv = 0;
     char buffer[16];
@@ -37,7 +37,7 @@ end:
     return rv;
 }
 
-int clean_device(size_t ninodes) {
+static int clean_device(size_t ninodes) {
 
     int rv = 0;
     char buffer[16];
@@ -55,6 +55,46 @@ int clean_device(size_t ninodes) {
     }
 end:
     return rv;
+}
+
+void test_bitmap_flip(void) {
+
+    unlink("exdev");
+
+    const size_t ninodes = 16;
+
+    struct ex_mkfs_params params;
+    memset(&params, '\0', sizeof(params));
+
+    params.number_of_inodes = ninodes;
+    params.device = "exdev";
+    params.create = 1;
+
+    ex_mkfs_check_params(&params);
+
+    int rv = ex_mkfs(&params);
+    g_assert(!rv);
+
+    rv = populate_device(ninodes);
+    g_assert(!rv);
+
+    // we shouldn't be able to create the inode
+    rv = ex_create("/shouldtwork", S_IRWXU, getgid(), getuid());
+    g_assert_cmpint(rv, ==, -ENOSPC);
+
+    // remove the first file and try to create a new one
+    rv = ex_unlink("/file0");
+    g_assert(!rv);
+
+    struct stat buf;
+    rv = ex_getattr("/file0", &buf);
+    g_assert_cmpint(rv, ==, -ENOENT);
+
+    rv = ex_create("/shouldwork", S_IRWXU, getgid(), getuid());
+    g_assert(!rv);
+
+    rv = ex_getattr("/shouldwork", &buf);
+    g_assert(!rv);
 }
 
 void test_repopulation_of_device(void) {
