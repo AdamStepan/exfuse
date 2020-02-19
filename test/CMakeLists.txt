@@ -24,6 +24,8 @@ set(TEST_SOURCES
     test_util.c
     test_path.c
     test_mkfs.c
+    test_root.c
+    test_read.c
 )
 
 find_package(PkgConfig REQUIRED)

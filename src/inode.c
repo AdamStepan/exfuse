@@ -604,23 +604,23 @@ ssize_t ex_inode_write(struct ex_inode *ino, size_t off, const char *data,
     return (ssize_t)amount;
 }
 
-ssize_t ex_inode_read(struct ex_inode *ino, size_t off, char *buffer,
-                      size_t amount) {
+ex_status ex_inode_read(ssize_t *readed, struct ex_inode *ino, size_t off,
+                        char *buffer, size_t amount) {
 
     size_t start_block_idx = off / EX_BLOCK_SIZE;
     size_t start_block_off = off % EX_BLOCK_SIZE;
 
     if (start_block_idx >= ex_inode_max_blocks()) {
-        return 0;
+        return READ_OUTSIDE_OF_BLOCK_RANGE;
+    }
+
+    if ((off + amount) > ino->size) {
+        return READ_OUTSIDE_OF_BLOCK_RANGE;
     }
 
     size_t offset = ino->blocks[start_block_idx] + start_block_off;
-    ssize_t readed = 0;
 
-    // XXX: ignore status for now
-    (void)ex_device_read_to_buffer(&readed, buffer, offset, amount);
-
-    return readed;
+    return ex_device_read_to_buffer(readed, buffer, offset, amount);
 }
 
 int ex_inode_rename(struct ex_inode *from_inode, struct ex_inode *to_inode,

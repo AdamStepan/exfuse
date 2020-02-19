@@ -31,6 +31,9 @@ void test_unknown_option(void);
 void test_has_perm_other(void);
 void test_has_perm_user_and_group(void);
 void test_root_api_without_super_block(void);
+void test_simple_read();
+void test_read_no_entry();
+void test_read_with_invalid_args();
 
 int main(int argc, char **argv) {
     ex_set_log_level(fatal);
@@ -65,6 +68,9 @@ int main(int argc, char **argv) {
     g_test_add_func("/exfuse/test_inode_find", test_inode_find);
     g_test_add_func("/exfuse/test_root_api_without_super_block",
             test_root_api_without_super_block);
+    g_test_add_func("/exfuse/test_read_no_entry", test_read_no_entry);
+    g_test_add_func("/exfuse/test_simple_read", test_simple_read);
+    g_test_add_func("/exfuse/test_read_with_invalid_args", test_read_with_invalid_args);
 
     g_test_add_func("/path/test_path_make", test_path_make);
     g_test_add_func("/path/test_path_is_root", test_path_is_root);

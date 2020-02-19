@@ -180,8 +180,8 @@ ssize_t ex_inode_write(struct ex_inode *inode, size_t off, const char *data,
                        size_t amount);
 
 /** Read data from the inode. */
-ssize_t ex_inode_read(struct ex_inode *inode, size_t off, char *buffer,
-                      size_t amount);
+ex_status ex_inode_read(ssize_t *readed, struct ex_inode *ino, size_t off,
+                        char *buffer, size_t amount);
 
 /** Check that inode has required permissions. */
 int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid,

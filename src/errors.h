@@ -35,6 +35,7 @@ typedef enum {
     INODE_LOAD_FAILED,
     INODE_IS_NOT_UNLINKABLE,
     INODE_NOT_FOUND,
+    READ_OUTSIDE_OF_BLOCK_RANGE,
     OK
 } ex_status;
 

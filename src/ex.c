@@ -54,6 +54,8 @@ void ex_deinit(void) {
         info("freeing super_block");
         free(super_block);
     }
+
+    super_block = NULL;
 }
 
 int ex_create(const char *pathname, mode_t mode, gid_t gid, uid_t uid) {
@@ -255,11 +257,11 @@ name_too_long:
     return rv;
 }
 
-int ex_read(const char *pathname, char *buffer, size_t size, off_t offset) {
+int ex_read(const char *pathname, char *buffer, size_t amount, off_t offset) {
 
     ex_super_lock();
 
-    info("path=%s, offset=%lu, size=%lu", pathname, offset, size);
+    info("path=%s, offset=%lu, size=%lu", pathname, offset, amount);
 
     int rv = 0;
 
@@ -271,7 +273,13 @@ int ex_read(const char *pathname, char *buffer, size_t size, off_t offset) {
         goto free_inode;
     }
 
-    rv = ex_inode_read(inode, offset, buffer, size);
+    ssize_t readed = -1;
+
+    if (ex_inode_read(&readed, inode, offset, buffer, amount) != OK) {
+        rv = EOF;
+    } else {
+        rv = readed;
+    }
 
     // update inode access time
     ex_update_time_ns(&inode->atime);
@@ -785,8 +793,9 @@ int ex_readlink(const char *pathname, char *buffer, size_t bufsize) {
     }
 
     size_t maxread = inode->size < bufsize ? inode->size : bufsize;
+    ssize_t readed = -1;
 
-    ex_inode_read(inode, 0, buffer, maxread);
+    ex_inode_read(&readed, inode, 0, buffer, maxread);
     ex_inode_free(inode);
 
 invalid_path:

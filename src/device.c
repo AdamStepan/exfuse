@@ -83,10 +83,6 @@ ex_status ex_device_read_to_buffer(ssize_t *readed, char *buffer, size_t off,
 
     ssize_t readed_ = read(fd, buffer, amount);
 
-    if (readed_ != (ssize_t)amount) {
-        status = READ_FAILED;
-    }
-
     if (readed != NULL) {
         *readed = readed_;
     }
@@ -104,9 +100,6 @@ failure:
         break;
     case OFFSET_SEEK_FAILED:
         error("lseek: offset=%li, wanted=%lu", offset, off);
-        break;
-    case READ_FAILED:
-        error("read: readed=%lu, wanted=%lu", *readed, amount);
         break;
     default:
         error("unhandled error: %i", status);
