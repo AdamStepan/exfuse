@@ -30,6 +30,7 @@ void test_ex_mkfs_parse_size_arg(void);
 void test_unknown_option(void);
 void test_has_perm_other(void);
 void test_has_perm_user_and_group(void);
+void test_root_api_without_super_block(void);
 
 int main(int argc, char **argv) {
     ex_set_log_level(fatal);
@@ -62,6 +63,8 @@ int main(int argc, char **argv) {
     g_test_add_func("/exfuse/test_chmod", test_chmod);
     g_test_add_func("/exfuse/test_chown", test_chown);
     g_test_add_func("/exfuse/test_inode_find", test_inode_find);
+    g_test_add_func("/exfuse/test_root_api_without_super_block",
+            test_root_api_without_super_block);
 
     g_test_add_func("/path/test_path_make", test_path_make);
     g_test_add_func("/path/test_path_is_root", test_path_is_root);
