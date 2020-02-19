@@ -109,7 +109,7 @@ void ex_super_deallocate_inode_block(size_t inode_number);
 void ex_super_print(const struct ex_super_block *block);
 
 /** Load the super block from the perstitent storage */
-void ex_super_load(void);
+ex_status ex_super_load(void);
 
 /** Fill the statbuf */
 void ex_super_statfs(struct statvfs *statbuf);

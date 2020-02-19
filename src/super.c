@@ -190,27 +190,46 @@ void ex_super_statfs(struct statvfs *statbuf) {
 pthread_mutex_t super_lock;
 pthread_mutexattr_t super_lock_attr;
 
-void ex_super_load(void) {
+ex_status ex_super_load(void) {
 
     info("loading device");
 
-    // XXX: ignore status for now
-    (void)ex_device_read((void **)&super_block, 0,
-                         sizeof(struct ex_super_block));
+    ex_status status = ex_device_read((void **)&super_block, 0,
+                                      sizeof(struct ex_super_block));
 
-    if (!super_block) {
-        fatal("unable to load super block");
+    if (status != OK) {
+        goto error;
     }
 
     if (super_block->magic != EX_SUPER_MAGIC) {
-        fatal("invalid super block magic: %x, expected: %x", super_block->magic,
-              EX_SUPER_MAGIC);
+        status = SUPER_BAD_MAGIC;
+        goto error;
     }
 
     pthread_mutexattr_init(&super_lock_attr);
     pthread_mutexattr_settype(&super_lock_attr, PTHREAD_MUTEX_RECURSIVE);
 
-    pthread_mutex_init(&super_lock, &super_lock_attr);
+    if (pthread_mutex_init(&super_lock, &super_lock_attr)) {
+        status = SUPER_LOCK_INIT_FAILED;
+    }
+
+error:
+    switch (status) {
+        case SUPER_BAD_MAGIC:
+            fatal("invalid super block magic: %x, expected: %x", super_block->magic,
+                  EX_SUPER_MAGIC);
+            break;
+        case SUPER_LOCK_INIT_FAILED:
+            fatal("unable to initialize lock: errno=%d", errno);
+            break;
+        case OK:
+            ;
+        default:
+            // error is already reported
+            ;
+    }
+
+    return status;
 }
 
 int ex_super_check_path_len(const char *pathname) {

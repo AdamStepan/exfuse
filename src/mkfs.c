@@ -258,7 +258,10 @@ int ex_mkfs_create_root(struct ex_mkfs_context *ctx) {
     // super block into memory
     (void)ctx;
 
-    ex_super_load();
+    if (ex_super_load() != OK) {
+        return 1;
+    }
+
     ex_root_create();
 
     return 0;

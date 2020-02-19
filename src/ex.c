@@ -20,7 +20,9 @@ ex_status ex_init(const char *device) {
         goto open_error;
     }
 
-    ex_super_load();
+    if ((status = ex_super_load()) != OK) {
+        goto super_load_error;
+    }
 
     struct ex_inode root;
 
@@ -34,9 +36,9 @@ root_load_error:
     ex_device_close();
 
 open_error:
-
     error("unable to open device: %s", device);
 
+super_load_error:
     return status;
 }
 
