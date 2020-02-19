@@ -1,4 +1,4 @@
-set(EXFUSE_LIB_SRC device.c ex.c inode.c logging.c path.c super.c util.c mkfs.c)
+set(EXFUSE_LIB_SRC device.c ex.c inode.c logging.c path.c super.c util.c mkfs.c dbg.c)
 set(EXFUSE_SRC wrapper.c)
 
 find_package(Threads REQUIRED)
