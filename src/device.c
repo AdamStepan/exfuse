@@ -31,15 +31,39 @@ ex_status ex_device_open(const char *device_name) {
 
 ex_status ex_device_close(void) {
 
-    if (device_fd == -1) {
-        error("unable to close device because it's not opened");
-        return DEVICE_IS_NOT_OPEN;
-    }
+    ex_status status = OK;
+    char buffer[128];
 
     info("closing device: %i", device_fd);
-    (void)close(device_fd);
 
-    return OK;
+    if (device_fd == -1) {
+        status = DEVICE_IS_NOT_OPEN;
+        goto failure;
+    }
+
+    if (close(device_fd) == -1) {
+        status = CLOSE_FAILED;
+        goto failure;
+    }
+
+    return status;
+
+failure:
+
+    switch (status) {
+        case DEVICE_IS_NOT_OPEN:
+            error("unable to close device because it's not opened");
+            break;
+        case CLOSE_FAILED:
+            (void)strerror_r(errno, buffer, sizeof(buffer));
+            error("unable to close device: %s", buffer);
+            break;
+        default:
+            warn("unhandled error: %d", status);
+            break;
+    }
+
+    return status;
 }
 
 int ex_is_device_opened(void) { return device_fd != -1; }

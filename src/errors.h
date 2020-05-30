@@ -13,6 +13,7 @@ typedef enum {
     WRITE_FAILED,
     INVALID_OFFSET,
     OFFSET_SEEK_FAILED,
+    CLOSE_FAILED,
     // super block/bitmap errors
     INODE_BITMAP_IS_FULL,
     DATA_BITMAP_IS_FULL,
