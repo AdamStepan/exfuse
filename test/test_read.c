@@ -6,6 +6,30 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+void test_partial_read(void)  {
+   // create new device
+    unlink(EX_DEVICE);
+    ex_mkfs_test_init();
+
+    char data[8];
+    memset(data, 'a', sizeof(data));
+
+    int rv = ex_create("/file", S_IRWXU, getgid(), getuid());
+    g_assert(!rv);
+
+    char buffer[sizeof(data)];
+
+    rv = ex_write("/file", data, sizeof(data), 0);
+    g_assert_cmpint(rv, ==, sizeof(buffer));
+
+    rv = ex_read("/file", buffer, 2 * sizeof(buffer), 0);
+    g_assert_cmpint(rv, ==, sizeof(buffer));
+
+    int offset = 4;
+    rv = ex_read("/file", buffer, 2 * sizeof(buffer), offset);
+    g_assert_cmpint(rv, ==, sizeof(buffer) - offset);
+}
+
 void test_simple_read(void) {
     // create new device
     unlink(EX_DEVICE);
@@ -50,7 +74,8 @@ void test_read_with_invalid_args(void) {
     rv = ex_read("/file", buffer, sizeof(buffer), ex_inode_max_blocks() * 2);
     g_assert_cmpint(rv, ==, EOF);
 
-    rv = ex_read("/file", buffer, sizeof(buffer), 1);
+    off_t offset = 1;
+    rv = ex_read("/file", buffer, sizeof(buffer), offset);
     g_assert_cmpint(rv, ==, EOF);
 
     ex_deinit();

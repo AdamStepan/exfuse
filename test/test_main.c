@@ -36,6 +36,7 @@ void test_simple_read();
 void test_read_no_entry();
 void test_read_with_invalid_args();
 void test_not_enough_space_for_inode();
+void test_partial_read(void);
 
 int main(int argc, char **argv) {
     ex_set_log_level(fatal);
@@ -72,6 +73,7 @@ int main(int argc, char **argv) {
             test_root_api_without_super_block);
     g_test_add_func("/exfuse/test_read_no_entry", test_read_no_entry);
     g_test_add_func("/exfuse/test_simple_read", test_simple_read);
+    g_test_add_func("/exfuse/test_parial_read", test_partial_read);
     g_test_add_func("/exfuse/test_read_with_invalid_args", test_read_with_invalid_args);
     g_test_add_func("/exfuse/test_not_enough_space_for_inode",
             test_not_enough_space_for_inode);

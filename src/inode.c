@@ -615,7 +615,16 @@ ex_status ex_inode_read(ssize_t *readed, struct ex_inode *ino, size_t off,
     }
 
     if ((off + amount) > ino->size) {
-        return READ_OUTSIDE_OF_BLOCK_RANGE;
+
+        if (off >= ino->size) {
+            return READ_OUTSIDE_OF_BLOCK_RANGE;
+        }
+
+        size_t available = ino->size - off;
+
+        if (amount > available) {
+            amount = available;
+        }
     }
 
     size_t offset = ino->blocks[start_block_idx] + start_block_off;
