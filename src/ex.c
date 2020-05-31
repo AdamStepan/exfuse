@@ -1,5 +1,6 @@
 #include "ex.h"
 #include "errors.h"
+#include <math.h>
 
 size_t ex_device_size(size_t ninodes) {
     return ninodes * EX_DIRECT_BLOCKS *
@@ -134,6 +135,9 @@ int ex_getattr(const char *pathname, struct stat *st) {
 
     st->st_uid = inode->uid;
     st->st_gid = inode->gid;
+
+    st->st_blksize = EX_BLOCK_SIZE;
+    st->st_blocks = ceil(((float)inode->size)/EX_BLOCK_SIZE);
 
     // update access time
     ex_update_time_ns(&inode->atime);
