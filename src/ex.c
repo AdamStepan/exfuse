@@ -429,7 +429,7 @@ name_too_long:
     return rv;
 }
 
-int ex_truncate(const char *pathname) {
+int ex_truncate(const char *pathname, off_t size) {
 
     ex_super_lock();
 
@@ -453,8 +453,18 @@ int ex_truncate(const char *pathname) {
         goto free_inode;
     }
 
-    // set inode size to 0 and update access/modification time
-    inode->size = 0;
+    if (size < 0) {
+        rv = -EINVAL;
+        goto free_inode;
+    }
+
+    if ((size_t)size >= ex_inode_max_blocks() * EX_BLOCK_SIZE) {
+        rv = -EFBIG;
+        goto free_inode;
+    }
+
+
+    inode->size = size;
     ex_update_time_ns(&inode->mtime);
     inode->ctime = inode->mtime;
 

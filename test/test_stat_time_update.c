@@ -22,7 +22,7 @@ void test_stat_time_update(void) {
     g_assert(!rv);
 
     // truncate file (change mtime and ctime)
-    rv = ex_truncate("/fname");
+    rv = ex_truncate("/fname", 0);
     g_assert(!rv);
 
     // check file size

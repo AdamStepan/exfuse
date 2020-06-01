@@ -81,10 +81,7 @@ static int do_read(const char *pathname, char *buffer, size_t size,
 }
 
 static int do_truncate(const char *pathname, off_t off) {
-
-    (void)off;
-
-    return ex_truncate(pathname);
+    return ex_truncate(pathname, off);
 }
 
 static int do_write(const char *path, const char *buf, size_t size,

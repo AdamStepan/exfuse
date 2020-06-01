@@ -37,6 +37,7 @@ void test_read_no_entry();
 void test_read_with_invalid_args();
 void test_not_enough_space_for_inode();
 void test_partial_read(void);
+void test_truncate_invalid_arguments(void);
 
 int main(int argc, char **argv) {
     ex_set_log_level(fatal);
@@ -45,6 +46,8 @@ int main(int argc, char **argv) {
 
     g_test_add_func("/exfuse/test_write_max_size", test_write_max_size);
     g_test_add_func("/exfuse/test_truncate_file", test_truncate_file);
+    g_test_add_func("/exfuse/test_truncate_invalid_arguments",
+            test_truncate_invalid_arguments);
     g_test_add_func("/exfuse/test_unlink_file", test_unlink_file);
     g_test_add_func("/exfuse/test_repopulation_of_device",
                     test_repopulation_of_device);
