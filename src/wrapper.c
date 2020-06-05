@@ -108,8 +108,7 @@ static int do_statfs(const char *pathname, struct statvfs *statbuffer) {
     return ex_statfs(statbuffer);
 }
 
-static void *do_init(struct fuse_conn_info *conn) {
-    (void)conn;
+static void *do_init(struct fuse_conn_info *info_) {
 
     struct fuse_context *ctx = fuse_get_context();
 
@@ -121,6 +120,8 @@ static void *do_init(struct fuse_conn_info *conn) {
 
     ex_logging_init(args->loglevel, args->foreground);
     ex_init(args->device);
+
+    info("fuse protocol version: %u.%u", info_->proto_major, info_->proto_minor);
 
     return args;
 }
