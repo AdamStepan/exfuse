@@ -4,11 +4,9 @@
 
 void *ex_malloc(size_t size) {
 
-    void *buff = malloc(size);
+    void *buff = calloc(1, size);
 
-    if (buff) {
-        memset(buff, '\0', size);
-    } else {
+    if (!buff) {
         fatal("malloc failed: errno: %d", errno);
     }
 
