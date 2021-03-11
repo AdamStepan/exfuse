@@ -1,27 +1,13 @@
+#include "dbg.h"
 #include "ex.h"
 #include "logging.h"
+#include "super.h"
+#include "device.h"
+
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
-
-enum ex_dbg_action {
-    PRINT_SUPER,
-    PRINT_INFO,
-    PRINT_INODE,
-    PRINT_INODE_DATA,
-    PRINT_BITMAP_DATA,
-    PRINT_SIZES,
-};
-
-struct ex_dbg_options {
-    char *device;
-    size_t inode;
-    size_t inode_data;
-    size_t bitmap_data;
-    int print_super;
-    int print_info;
-    enum ex_dbg_action action;
-};
+#include <stdio.h>
 
 void ex_dbg_print_struct_sizes(void) {
 

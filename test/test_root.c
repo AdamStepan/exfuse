@@ -1,5 +1,7 @@
 #include "../src/ex.h"
 #include "../src/mkfs.h"
+#include "../src/inode.h"
+
 #include <err.h>
 #include <glib.h>
 #include <sys/stat.h>

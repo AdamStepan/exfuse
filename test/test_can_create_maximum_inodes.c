@@ -1,7 +1,10 @@
 #include "../src/ex.h"
 #include "../src/mkfs.h"
+
+#include <unistd.h>
 #include <err.h>
 #include <glib.h>
+#include <stdio.h>
 
 void test_can_create_maximum_inodes(void) {
 

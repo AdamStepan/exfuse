@@ -1,5 +1,7 @@
 #include "../src/ex.h"
 #include "../src/mkfs.h"
+#include "../src/path.h"
+
 #include <err.h>
 #include <glib.h>
 #include <linux/stat.h>
@@ -12,7 +14,7 @@ void test_path_make(void) {
 
     g_assert(path->ncomponents == 4);
     g_assert(strncmp(path->dirname, "/a/b/c", 6) == 0);
-    g_assert(strncmp(path->basename, "d", 1) == 0);
+    g_assert(strncmp(path->name, "d", 1) == 0);
 
     ex_path_free(path);
 
@@ -20,7 +22,7 @@ void test_path_make(void) {
 
     g_assert(path->ncomponents == 1);
     g_assert(strncmp(path->dirname, "/", 1) == 0);
-    g_assert(strncmp(path->basename, "a", 1) == 0);
+    g_assert(strncmp(path->name, "a", 1) == 0);
 
     ex_path_free(path);
 }

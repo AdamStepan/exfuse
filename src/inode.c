@@ -1,5 +1,10 @@
-#include "inode.h"
+#include "device.h"
 #include "errors.h"
+#include "logging.h"
+#include "util.h"
+#include "inode.h"
+#include <errno.h>
+#include <stdlib.h>
 
 const uint16_t EX_INODE_MAGIC1 = 0xabcc;
 const uint8_t EX_DIR_MAGIC1 = 0xde;

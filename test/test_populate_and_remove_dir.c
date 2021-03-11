@@ -1,11 +1,14 @@
 #include "../src/ex.h"
 #include "../src/mkfs.h"
+#include "../src/device.h"
+
 #include <err.h>
 #include <glib.h>
 #include <linux/stat.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
 
 void test_populate_and_remove_dir(void) {
 

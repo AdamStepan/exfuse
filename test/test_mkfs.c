@@ -1,4 +1,6 @@
 #include "../src/mkfs.h"
+
+#include <assert.h>
 #include <glib.h>
 
 void test_ex_mkfs_parse_inodes_arg() {

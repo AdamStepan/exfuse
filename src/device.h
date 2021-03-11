@@ -2,15 +2,8 @@
 #define EX_DEVICE_H
 
 #include "errors.h"
-#include "logging.h"
-#include "util.h"
-#include <err.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <sys/types.h>
-#include <unistd.h>
 
 extern const char *const EX_DEVICE;
 

@@ -1,4 +1,15 @@
 #include "device.h"
+#include "errors.h"
+#include "logging.h"
+#include "util.h"
+
+#include <err.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 const char *const EX_DEVICE = "exdev";
 int device_fd = -1;

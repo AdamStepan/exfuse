@@ -1,7 +1,9 @@
 #include "../src/ex.h"
 #include "../src/mkfs.h"
+
 #include <err.h>
 #include <glib.h>
+#include <unistd.h>
 
 void test_can_read_superblock(void) {
 

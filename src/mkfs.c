@@ -2,11 +2,18 @@
 #include "errors.h"
 #include "ex.h"
 #include "logging.h"
+#include "device.h"
+#include "util.h"
+#include "inode.h"
+
 #include <getopt.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <stddef.h>
+#include <errno.h>
+#include <unistd.h>
 
 // device layout:
 // super_block | inode_bitmap | data_bitmap | inode_blocks | data_blocks

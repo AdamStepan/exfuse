@@ -1,7 +1,12 @@
 #include "../src/ex.h"
 #include "../src/mkfs.h"
+#include "../src/device.h"
+
 #include <err.h>
+#include <errno.h>
 #include <glib.h>
+#include <stdio.h>
+#include <unistd.h>
 
 static int populate_device(size_t ninodes) {
 

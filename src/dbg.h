@@ -1,3 +1,6 @@
+#ifndef EX_DBG_H
+#define EX_DBG_H
+
 #include <stddef.h>
 #include "super.h"
 #include "inode.h"
@@ -33,3 +36,5 @@ void ex_dbg_print_inode(const char *device, size_t address);
 void ex_dbg_help(void);
 int ex_dbg_parse_options(struct ex_dbg_options *, int argc, char **argv);
 int ex_dbg_run(struct ex_dbg_options *);
+
+#endif

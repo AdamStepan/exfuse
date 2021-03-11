@@ -1,10 +1,15 @@
 #include "../src/ex.h"
 #include "../src/mkfs.h"
+#include "../src/device.h"
+#include "../src/inode.h"
+
+#include <errno.h>
 #include <err.h>
 #include <glib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
 
 void test_partial_read(void)  {
    // create new device

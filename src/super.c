@@ -1,4 +1,14 @@
 #include "super.h"
+#include "device.h"
+#include "logging.h"
+#include "path.h"
+#include "util.h"
+
+#include <pthread.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <errno.h>
 
 struct ex_super_block *super_block = NULL;
 

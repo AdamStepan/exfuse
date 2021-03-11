@@ -5,19 +5,9 @@
 #ifndef EX_UTIL_H
 #define EX_UTIL_H
 
-#include "logging.h"
-// XXX: move unnecessary headers to the .c file
-#include <err.h>
-#include <errno.h>
-#include <linux/stat.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <time.h>
-#include <unistd.h>
+#include <sys/stat.h>
+#include <stdint.h>
 
 /** This enum defines file permissions */
 typedef enum {

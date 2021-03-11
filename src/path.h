@@ -6,19 +6,14 @@
 #ifndef PATH_H
 #define PATH_H
 
-#include "util.h"
-#include <dirent.h>
-#include <err.h>
-#include <errno.h>
-#include <libgen.h>
-#include <stdio.h>
+#include <sys/types.h>
 
 /** This class defines internal implementation of the path. */
 struct ex_path {
     /** Path up to (not including) final. '/' */
     char *dirname;
     /** Path from final '/' to the end. */
-    char *basename;
+    char *name;
     /** Should we free dirname during deallocation? */
     char *dirname_to_free;
     /** Should we free basename during deallocation? */

@@ -1,6 +1,7 @@
 #include "errors.h"
 #include "ex.h"
-#include "logging.h"
+#include "super.h"
+
 #include <stdint.h>
 
 // device layout:

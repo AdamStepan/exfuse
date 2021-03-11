@@ -1,4 +1,13 @@
 #include "path.h"
+#include "util.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <err.h>
+#include <errno.h>
+#include <libgen.h>
+#include <stdio.h>
 
 struct ex_path *ex_path_make(const char *path) {
 
@@ -10,7 +19,7 @@ struct ex_path *ex_path_make(const char *path) {
     p->basename_to_free = ex_strdup(path);
     p->dirname_to_free = ex_strdup(path);
 
-    p->basename = basename(p->basename_to_free);
+    p->name = basename(p->basename_to_free);
     p->dirname = dirname(p->dirname_to_free);
 
     p->ncomponents = 0;
@@ -50,7 +59,7 @@ void ex_path_free(struct ex_path *path) {
 
 void ex_path_print(const struct ex_path *path) {
 
-    printf("basename: %s\n", path->basename);
+    printf("basename: %s\n", path->name);
     printf("dirname: %s\n", path->dirname);
     printf("ncomponents: %lu\n", path->ncomponents);
     printf("components:");
@@ -63,5 +72,5 @@ void ex_path_print(const struct ex_path *path) {
 }
 
 int ex_path_is_root(const struct ex_path *const path) {
-    return strncmp("/", path->basename, 1) == 0;
+    return strncmp("/", path->name, 1) == 0;
 }

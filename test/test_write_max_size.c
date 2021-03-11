@@ -1,5 +1,10 @@
 #include "../src/ex.h"
 #include "../src/mkfs.h"
+#include "../src/device.h"
+#include "../src/super.h"
+#include "../src/inode.h"
+
+#include <errno.h>
 #include <err.h>
 #include <glib.h>
 #include <sys/stat.h>

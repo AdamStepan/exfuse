@@ -6,10 +6,11 @@
 #ifndef EX_INODE_H
 #define EX_INODE_H
 
-#include "device.h"
 #include "errors.h"
-#include "logging.h"
+#include "util.h"
 #include "super.h"
+#include "path.h"
+
 #include <assert.h>
 #include <fcntl.h>
 #include <stdint.h>

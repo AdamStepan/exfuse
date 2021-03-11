@@ -1,10 +1,18 @@
 #define FUSE_USE_VERSION 30
 
 #include "ex.h"
+#include "util.h"
+#include "path.h"
+#include "inode.h"
+
+#include <assert.h>
+#include <err.h>
 #include <errno.h>
 #include <fuse.h>
 #include <libgen.h>
 #include <linux/stat.h>
+#include <linux/limits.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

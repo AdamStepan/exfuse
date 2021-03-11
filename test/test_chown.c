@@ -1,5 +1,8 @@
 #include "../src/ex.h"
 #include "../src/mkfs.h"
+#include "../src/device.h"
+
+#include <errno.h>
 #include <glib.h>
 #include <sys/stat.h>
 #include <sys/types.h>

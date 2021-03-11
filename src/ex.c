@@ -1,7 +1,16 @@
 #include "ex.h"
-#include "errors.h"
+#include "util.h"
+#include "device.h"
+#include "super.h"
+#include "path.h"
+#include "inode.h"
+
 #include <math.h>
 #include <sys/xattr.h>
+#include <errno.h>
+#include <stdio.h>
+#include <limits.h>
+#include <stdlib.h>
 
 size_t ex_device_size(size_t ninodes) {
     return ninodes * EX_DIRECT_BLOCKS *
@@ -90,7 +99,7 @@ int ex_create(const char *pathname, mode_t mode, gid_t gid, uid_t uid) {
     }
 
     // check if directory has enough space for a new inode
-    if (!ex_inode_set(destdir, path->basename, &inode)) {
+    if (!ex_inode_set(destdir, path->name, &inode)) {
         ex_inode_deallocate_blocks(&inode);
         rv = -ENOSPC;
     }
@@ -176,7 +185,7 @@ int ex_unlink(const char *pathname) {
 
     struct ex_path *path = ex_path_make(pathname);
 
-    if (ex_inode_unlink(dir, path->basename) != OK) {
+    if (ex_inode_unlink(dir, path->name) != OK) {
         rv = -ENOENT;
         goto free_all;
     }
@@ -239,7 +248,7 @@ int ex_link(const char *src_pathname, const char *dest_pathname) {
 
     struct ex_path *dest_path = ex_path_make(dest_pathname);
 
-    if (!ex_inode_set(dest_dir_inode, dest_path->basename, src_inode)) {
+    if (!ex_inode_set(dest_dir_inode, dest_path->name, src_inode)) {
         rv = -ENOSPC;
     }
 
@@ -415,7 +424,7 @@ int ex_mkdir(const char *pathname, mode_t mode, gid_t gid, uid_t uid) {
     }
 
     ex_inode_fill_dir(&dir, destdir);
-    ex_inode_set(destdir, dirpath->basename, &dir);
+    ex_inode_set(destdir, dirpath->name, &dir);
 
 free_all:
     ex_path_free(dirpath);
@@ -594,7 +603,7 @@ int ex_rmdir(const char *pathname) {
         goto free_dir_inode;
     }
 
-    if (ex_inode_unlink(dir, path->basename) != OK) {
+    if (ex_inode_unlink(dir, path->name) != OK) {
         rv = -ENOTEMPTY;
     }
 
@@ -768,7 +777,7 @@ int ex_symlink(const char *target, const char *link) {
     }
 
     // add link inode into link directory
-    if (!ex_inode_set(link_dir_inode, link_path->basename, link_inode)) {
+    if (!ex_inode_set(link_dir_inode, link_path->name, link_inode)) {
         rv = -ENOSPC;
         ex_inode_deallocate_blocks(link_inode);
     }
@@ -853,8 +862,8 @@ int ex_rename(const char *from, const char *to) {
         goto to_dir_is_invalid;
     }
 
-    rv = ex_inode_rename(from_inode_dir, to_inode_dir, from_path->basename,
-                         to_path->basename);
+    rv = ex_inode_rename(from_inode_dir, to_inode_dir, from_path->name,
+                         to_path->name);
 
 to_dir_is_invalid:
     ex_path_free(to_path_dir);

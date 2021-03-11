@@ -1,15 +1,14 @@
 #ifndef EX_H
 #define EX_H
 
-#include "device.h"
 #include "errors.h"
-#include "inode.h"
-#include "super.h"
 #include <fcntl.h>
-#include <limits.h>
 #include <stdint.h>
 #include <sys/statvfs.h>
+#include <sys/types.h>
 #include <time.h>
+
+struct ex_dir_entry;
 
 ex_status ex_init(const char *device);
 void ex_deinit(void);

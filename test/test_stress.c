@@ -1,11 +1,13 @@
 #include "../src/ex.h"
 #include "../src/mkfs.h"
+
 #include <err.h>
 #include <glib.h>
 #include <linux/stat.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
 
 void test_creation_and_deletion(void) {
 
