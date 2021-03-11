@@ -34,5 +34,6 @@ int ex_readlink(const char *link, char *buffer, size_t bufsize);
 int ex_rename(const char *from, const char *to);
 int ex_chown(const char *path, uid_t uid, gid_t gid);
 int ex_opendir(const char *path, mode_t mode, gid_t gid, uid_t uid);
+int ex_setxattr(const char* path, const char* name, const char* value, size_t valuesize, int flags);
 
 #endif /* EX_H */

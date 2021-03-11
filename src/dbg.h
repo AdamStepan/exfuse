@@ -28,6 +28,7 @@ void ex_dbg_print_super(const char *device);
 void ex_dbg_print_info(const char *device);
 void ex_dbg_print_directory_entries(struct ex_inode *inode);
 void ex_dbg_print_inode_data(const char *device, size_t address);
+void ex_dbg_print_inode_attrs(const struct ex_inode *inode);
 void ex_dbg_print_inode(const char *device, size_t address);
 void ex_dbg_help(void);
 int ex_dbg_parse_options(struct ex_dbg_options *, int argc, char **argv);

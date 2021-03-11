@@ -1,6 +1,7 @@
 #include "ex.h"
 #include "errors.h"
 #include <math.h>
+#include <sys/xattr.h>
 
 size_t ex_device_size(size_t ninodes) {
     return ninodes * EX_DIRECT_BLOCKS *
@@ -901,4 +902,40 @@ int ex_opendir(const char *path, mode_t mode, gid_t gid, uid_t uid) {
     debug("path=%s, mode=%i, gid=%i, uid=%i", path, mode, gid, uid);
 
     return 0;
+}
+
+int ex_setxattr(const char* pathname, const char* name, const char* value, size_t valuesize, int flags) {
+
+    int rv = 0;
+
+    struct ex_path *path = ex_path_make(pathname);
+    struct ex_inode *inode = ex_inode_find(path);
+
+    if (!inode) {
+        rv = -ENOENT;
+        goto invalid_path;
+    }
+
+    if (flags == XATTR_REPLACE) {
+        rv = -ENOTSUP;
+        goto not_supported;
+    }
+
+    struct ex_span valuespan = { .data = value, .datalen = valuesize };
+    struct ex_span namespan = { .data = name, .datalen = strlen(name) };
+
+    rv = ex_inode_setxattr(inode, &namespan, &valuespan);
+
+    if (!rv) {
+        ex_inode_flush(inode);
+    }
+
+    ex_inode_free(inode);
+
+not_supported:
+invalid_path:
+    ex_super_unlock();
+    ex_path_free(path);
+
+    return rv;
 }

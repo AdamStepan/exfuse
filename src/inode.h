@@ -30,6 +30,15 @@ extern const uint8_t EX_DIR_MAGIC1;
 /** Directory entry magic constant used for sanity check. */
 extern const uint8_t EX_ENTRY_MAGIC1;
 
+/** Maximum size of extended attribute and its value (including : and null byte). */
+#define EX_INODE_ATTRIBUTE_SIZE 64
+
+/** Size reserved for all extended attributes, */
+#define EX_INODE_ATTRIBUTES_SIZE 512
+
+/** Maximum number of extended attributes. */
+#define EX_INODE_MAX_ATTRIBUTES EX_INODE_ATTRIBUTES_SIZE / EX_INODE_ATTRIBUTE_SIZE
+
 /** This class represents the inode store on the persistent storage.
  *
  * Most of the attributes has the same meaning as in the inode(7).
@@ -82,7 +91,57 @@ struct ex_inode {
      * If an inode is directory ex_dir_entries are saved in these blocks
      */
     block_address blocks[EX_DIRECT_BLOCKS];
+
+    /** Address of block that contains extended attributes. */
+    char attributes[EX_INODE_ATTRIBUTES_SIZE];
+
+    /** Number of attributes. */
+    uint8_t number_of_attributes;
 };
+
+static_assert(
+    sizeof(struct ex_inode) <= EX_BLOCK_SIZE,
+    "Size of the struct ex_inode must be less than EX_BLOCK_SIZE"
+);
+
+/** Maximum size of attributes name. */
+#define EX_INODE_ATTR_NAME_MAX_SIZE 20
+
+/** Maximum size of attributes' value. */
+#define EX_INODE_ATTR_VALUE_MAX_SIZE 32
+
+/** This struct represents extended attribute.
+ *
+ * We are doing padding by ourselves and that is the reason why we are using
+ * __packed__ attribute.
+ */
+struct __attribute__((__packed__)) ex_inode_attribute {
+    // TODO: use bit struct for namelen, valuelen and is_ocupied
+
+    /** Length of attributes' name. */
+    uint8_t namelen;
+    char __padding0[3];
+
+    /** Length of attributes' value. */
+    uint8_t valuelen;
+    char __pading1[3];
+
+    /** This tells us if attribute is in use. */
+    uint8_t in_use;
+    char __padding2[3];
+
+    /** Name of the attribute. */
+    char name[EX_INODE_ATTR_NAME_MAX_SIZE];
+
+    /** Value of the attribute. */
+    char value[EX_INODE_ATTR_VALUE_MAX_SIZE];
+};
+
+static_assert(
+    sizeof(struct ex_inode_attribute) == EX_INODE_ATTRIBUTE_SIZE,
+    "Size of struct ex_inode_attribute must be same as EX_INODE_ATTRIBUTE_SIZE"
+);
+
 
 /** Directory entry. */
 struct ex_dir_entry {
@@ -186,6 +245,9 @@ ex_status ex_inode_read(ssize_t *readed, struct ex_inode *ino, size_t off,
 /** Check that inode has required permissions. */
 int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid,
                       uid_t uid);
+
+/** Set extended attribute. */
+int ex_inode_setxattr(struct ex_inode *, const struct ex_span *name, const struct ex_span *value);
 
 struct ex_block_iterator {
     struct ex_inode_block last_block;

@@ -166,28 +166,38 @@ static int do_opendir(const char *path, struct fuse_file_info *info) {
     return ex_opendir(path, mode, ctx->gid, ctx->uid);
 }
 
-static struct fuse_operations operations = {.getattr = do_getattr,
-                                            .readdir = do_readdir,
-                                            .read = do_read,
-                                            .create = do_create,
-                                            .open = do_open,
-                                            .write = do_write,
-                                            .unlink = do_unlink,
-                                            .mkdir = do_mkdir,
-                                            .utimens = do_utimens,
-                                            .init = do_init,
-                                            .destroy = do_destroy,
-                                            .truncate = do_truncate,
-                                            .link = do_link,
-                                            .rmdir = do_rmdir,
-                                            .statfs = do_statfs,
-                                            .chmod = do_chmod,
-                                            .access = do_access,
-                                            .symlink = do_symlink,
-                                            .readlink = do_readlink,
-                                            .rename = do_rename,
-                                            .chown = do_chown,
-                                            .opendir = do_opendir};
+
+static int do_setxattr(const char* path, const char* name, const char* value,
+                      size_t valuesize, int flags) {
+    return ex_setxattr(path, name, value, valuesize, flags);
+}
+
+
+static struct fuse_operations operations = {
+    .getattr = do_getattr,
+    .readdir = do_readdir,
+    .read = do_read,
+    .create = do_create,
+    .open = do_open,
+    .write = do_write,
+    .unlink = do_unlink,
+    .mkdir = do_mkdir,
+    .utimens = do_utimens,
+    .init = do_init,
+    .destroy = do_destroy,
+    .truncate = do_truncate,
+    .link = do_link,
+    .rmdir = do_rmdir,
+    .statfs = do_statfs,
+    .chmod = do_chmod,
+    .access = do_access,
+    .symlink = do_symlink,
+    .readlink = do_readlink,
+    .rename = do_rename,
+    .chown = do_chown,
+    .opendir = do_opendir,
+    .setxattr = do_setxattr,
+};
 
 static void ex_args_init(struct ex_args *args) {
     args->loglevel = "info";

@@ -81,6 +81,14 @@ struct ex_super_block {
     uint32_t magic;
 };
 
+/** Representation of continuous memory of fixed size. */
+struct ex_span {
+    /** Data of the span. */
+    const char *data;
+    /** Length of data. */
+    const size_t datalen;
+};
+
 /** Super block loaded to the memory.
  *
  * It must loaded for almost all operations.

@@ -48,6 +48,12 @@ void ex_inode_copy_noalloc(const struct ex_inode *src, struct ex_inode *dest) {
     for (size_t i = 0; i < EX_DIRECT_BLOCKS; i++) {
         dest->blocks[i] = src->blocks[i];
     }
+
+    memcpy(dest->attributes,
+           src->attributes,
+           src->number_of_attributes * EX_INODE_ATTRIBUTE_SIZE);
+
+    dest->number_of_attributes = src->number_of_attributes;
 }
 
 ex_status ex_root_load(struct ex_inode *root) {
@@ -171,6 +177,12 @@ struct ex_inode *ex_copy_inode(const struct ex_inode *inode) {
         copy->blocks[i] = inode->blocks[i];
     }
 
+    memcpy(copy->attributes,
+           inode->attributes,
+           inode->number_of_attributes * EX_INODE_ATTRIBUTE_SIZE);
+
+    copy->number_of_attributes = inode->number_of_attributes;
+
     return copy;
 }
 
@@ -210,6 +222,9 @@ ex_status ex_inode_create(struct ex_inode *inode, uint16_t mode, gid_t gid,
         inode->size = 0;
         inode->nlinks = 1;
     }
+
+    memset(inode->attributes, '\0', EX_INODE_ATTRIBUTES_SIZE);
+    inode->number_of_attributes = 0;
 
     if (ex_inode_allocate_blocks(inode) != OK) {
         goto free_inode_block;
@@ -307,7 +322,14 @@ ex_status ex_inode_load(inode_address address, struct ex_inode *inode) {
         goto error;
     }
 
+    if (inode->number_of_attributes > EX_INODE_MAX_ATTRIBUTES) {
+        warning("inode at (%zu) has number of attributes higher than maximum (%u)",
+                address, EX_INODE_MAX_ATTRIBUTES);
+        goto error;
+    }
+
     return OK;
+
 error:
     return INODE_LOAD_FAILED;
 }
@@ -751,6 +773,67 @@ int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid,
         return group & perm;
     } else {
         return other & perm;
+    }
+
+    return 0;
+}
+
+int ex_inode_setxattr(struct ex_inode *inode, const struct ex_span *name, const struct ex_span *value) {
+
+    if (inode->number_of_attributes >= EX_INODE_MAX_ATTRIBUTES) {
+        return -ENOSPC;
+    }
+
+    if (name->datalen >= EX_INODE_ATTR_NAME_MAX_SIZE) {
+        return -ENOSPC;
+    }
+
+    if (value->datalen >= EX_INODE_ATTR_VALUE_MAX_SIZE) {
+        return -ENOSPC;
+    }
+
+    debug("trying to set attribute: %.*s", name->datalen, name->data);
+
+    char *attrs = inode->attributes;
+    struct ex_inode_attribute *freeattr = NULL;
+
+    // find the first unused space and also check if attribute doesnt exist
+    for (uint8_t i = 0; i < EX_INODE_MAX_ATTRIBUTES; i++) {
+
+        struct ex_inode_attribute *attr =
+            (struct ex_inode_attribute *)(attrs + (i * EX_INODE_ATTRIBUTE_SIZE));
+
+        // if we didnt find a free space yet, save the position
+        if (!attr->in_use && !freeattr) {
+            freeattr = attr;
+        // check if name doesn't match a new attributes' name
+        } else {
+            const uint8_t len = attr->namelen > name->datalen ? attr->namelen : name->datalen;
+
+            if (!strncmp(name->data, attr->name, len)) {
+                return -EEXIST;
+            }
+        }
+    }
+
+    // now we know that name is not duplicit and we should have found a space
+    // for a new attribute
+    if (freeattr) {
+        debug("new attr `%.*s:%.*s` for %u",
+             name->datalen, name->data, value->datalen, value->data, inode->address);
+
+        freeattr->in_use = 1;
+        freeattr->namelen = name->datalen;
+        freeattr->valuelen = value->datalen;
+
+        memcpy(freeattr->name, name->data, name->datalen);
+        memcpy(freeattr->value, value->data, value->datalen);
+
+        inode->number_of_attributes += 1;
+    } else {
+        // this is obviously bug, probablby because data stored on disk are corrupted
+        error("we were unable to find free attribute even when we should have space for it");
+        return -ENOSPC;
     }
 
     return 0;

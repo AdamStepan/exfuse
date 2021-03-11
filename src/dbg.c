@@ -134,6 +134,25 @@ void ex_dbg_print_inode_data(const char *device, size_t address) {
     foreach_inode_block_cleanup(&inode, block);
 }
 
+void ex_dbg_print_inode_attrs(const struct ex_inode *inode) {
+    printf("\tnumber-of-attributes: %u\n", inode->number_of_attributes);
+
+    if (inode->number_of_attributes > EX_INODE_MAX_ATTRIBUTES) {
+        printf("\terror: number of attributes is higher than the maximum");
+        return;
+    }
+
+    const char *attrs = inode->attributes;
+
+    for (uint8_t i = 0; i < inode->number_of_attributes; i++) {
+        struct ex_inode_attribute *attr =
+            (struct ex_inode_attribute *)(attrs + (i * EX_INODE_ATTRIBUTE_SIZE));
+
+        printf("\t\t%.*s (%u): %.*s (%u)\n", attr->namelen, attr->name, attr->namelen,
+                attr->valuelen, attr->value, attr->valuelen);
+    }
+}
+
 void ex_dbg_print_inode(const char *device, size_t address) {
 
     ex_set_log_level(info);
@@ -167,6 +186,8 @@ void ex_dbg_print_inode(const char *device, size_t address) {
         printf("\tentries:\n");
         ex_dbg_print_directory_entries(&inode);
     }
+
+    ex_dbg_print_inode_attrs(&inode);
 }
 
 void ex_dbg_help(void) {
