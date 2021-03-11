@@ -939,9 +939,47 @@ int ex_setxattr(const char* pathname, const char* name, const char* value, size_
         ex_inode_flush(inode);
     }
 
+not_supported:
     ex_inode_free(inode);
 
-not_supported:
+invalid_path:
+    ex_super_unlock();
+    ex_path_free(path);
+
+    return rv;
+}
+
+int ex_getxattr(const char* pathname, const char* name, void* value, size_t valuesize) {
+
+    int rv = 0;
+
+    struct ex_path *path = ex_path_make(pathname);
+    struct ex_inode *inode = ex_inode_find(path);
+
+    if (!inode) {
+        rv = -ENOENT;
+        goto invalid_path;
+    }
+
+    struct ex_span namespan = { .data = name, .datalen = strlen(name) };
+    struct ex_inode_attribute attr;
+
+    rv = ex_inode_getxattr(inode, &namespan, &attr);
+
+    if (rv < 0) {
+        goto error;
+    }
+
+    if (valuesize < attr.valuelen) {
+        rv = -ERANGE;
+        goto error;
+    }
+
+    memcpy(value, attr.value, attr.valuelen);
+
+error:
+    ex_inode_free(inode);
+
 invalid_path:
     ex_super_unlock();
     ex_path_free(path);

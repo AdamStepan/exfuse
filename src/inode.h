@@ -250,6 +250,9 @@ int ex_inode_has_perm(struct ex_inode *ino, ex_permission perm, gid_t gid,
 /** Set extended attribute. */
 int ex_inode_setxattr(struct ex_inode *, const struct ex_span *name, const struct ex_span *value);
 
+/** Get extended attribute. */
+int ex_inode_getxattr(struct ex_inode *, const struct ex_span *name, struct ex_inode_attribute *);
+
 struct ex_block_iterator {
     struct ex_inode_block last_block;
     size_t block_number;

@@ -5,6 +5,7 @@
 #include "inode.h"
 #include <errno.h>
 #include <stdlib.h>
+#include <attr/xattr.h>
 
 const uint16_t EX_INODE_MAGIC1 = 0xabcc;
 const uint8_t EX_DIR_MAGIC1 = 0xde;
@@ -842,4 +843,30 @@ int ex_inode_setxattr(struct ex_inode *inode, const struct ex_span *name, const 
     }
 
     return 0;
+}
+
+int ex_inode_getxattr(struct ex_inode *inode, const struct ex_span *name, struct ex_inode_attribute *result) {
+
+    debug("trying to get attribute: %.*s", name->datalen, name->data);
+
+    for (uint8_t i = 0; i < EX_INODE_MAX_ATTRIBUTES; i++) {
+
+        struct ex_inode_attribute *attr =
+            (struct ex_inode_attribute *)(inode->attributes + (i * EX_INODE_ATTRIBUTE_SIZE));
+        const uint8_t len = attr->namelen > name->datalen ? attr->namelen : name->datalen;
+
+        if (attr->in_use && !strncmp(name->data, attr->name, len)) {
+            result->valuelen = attr->valuelen;
+            memcpy(result->value, attr->value, len);
+
+            result->namelen = attr->namelen;
+            memcpy(result->name, attr->name, attr->namelen);
+
+            result->in_use = attr->in_use;
+
+            return attr->valuelen;
+        }
+    }
+
+    return -ENOATTR;
 }

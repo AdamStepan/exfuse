@@ -174,12 +174,14 @@ static int do_opendir(const char *path, struct fuse_file_info *info) {
     return ex_opendir(path, mode, ctx->gid, ctx->uid);
 }
 
-
 static int do_setxattr(const char* path, const char* name, const char* value,
                       size_t valuesize, int flags) {
     return ex_setxattr(path, name, value, valuesize, flags);
 }
 
+static int do_getxattr(const char *path, const char *name, char *value, size_t size) {
+    return ex_getxattr(path, name, value, size);
+}
 
 static struct fuse_operations operations = {
     .getattr = do_getattr,
@@ -205,6 +207,7 @@ static struct fuse_operations operations = {
     .chown = do_chown,
     .opendir = do_opendir,
     .setxattr = do_setxattr,
+    .getxattr = do_getxattr,
 };
 
 static void ex_args_init(struct ex_args *args) {
