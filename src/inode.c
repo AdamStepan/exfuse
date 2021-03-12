@@ -798,7 +798,7 @@ int ex_inode_setxattr(struct ex_inode *inode, const struct ex_span *name, const 
         return -ENOSPC;
     }
 
-    debug("trying to set attribute: %.*s", name->datalen, name->data);
+    debug("trying to set attribute: %.*s", (int)name->datalen, name->data);
 
     char *attrs = inode->attributes;
     struct ex_inode_attribute *freeattr = NULL;
@@ -825,8 +825,9 @@ int ex_inode_setxattr(struct ex_inode *inode, const struct ex_span *name, const 
     // now we know that name is not duplicit and we should have found a space
     // for a new attribute
     if (freeattr) {
-        debug("new attr `%.*s:%.*s` for %u",
-             name->datalen, name->data, value->datalen, value->data, inode->address);
+        debug("new attr `%.*s:%.*s` for %lu",
+             (int)name->datalen, name->data,
+             (int)value->datalen, value->data, inode->address);
 
         freeattr->in_use = 1;
         freeattr->namelen = name->datalen;
@@ -847,7 +848,7 @@ int ex_inode_setxattr(struct ex_inode *inode, const struct ex_span *name, const 
 
 int ex_inode_getxattr(struct ex_inode *inode, const struct ex_span *name, struct ex_inode_attribute *result) {
 
-    debug("trying to get attribute: %.*s", name->datalen, name->data);
+    debug("trying to get attribute: %.*s", (int)name->datalen, name->data);
 
     for (uint8_t i = 0; i < EX_INODE_MAX_ATTRIBUTES; i++) {
 
@@ -872,7 +873,7 @@ int ex_inode_getxattr(struct ex_inode *inode, const struct ex_span *name, struct
 }
 
 int ex_inode_removexattr(struct ex_inode *inode, const struct ex_span *name) {
-    debug("trying to remove attribute: %.*s", name->datalen, name->data);
+    debug("trying to remove attribute: %.*s", (int)name->datalen, name->data);
 
     for (uint8_t i = 0; i < EX_INODE_MAX_ATTRIBUTES; i++) {
 

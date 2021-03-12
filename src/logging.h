@@ -34,7 +34,7 @@ extern int use_syslog;
 void ex_set_log_level(enum loglevel new_level);
 int ex_logging_init(const char *loglevel, int foreground);
 void ex_logging_deinit(int foreground);
-void ex_log(enum loglevel lvl, const char *format, ...);
+void ex_log(enum loglevel lvl, const char *format, ...) __attribute__((format(printf, 2, 3)));
 
 enum loglevel ex_get_log_level(void);
 enum loglevel ex_parse_log_level(const char *name);

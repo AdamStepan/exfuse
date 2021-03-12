@@ -30,7 +30,7 @@ ex_status ex_device_open(const char *device_name) {
     device_fd = open(device_name, O_RDWR);
 
     if (device_fd == -1) {
-        error("unable to open device: %s, errno: %d", device_name,
+        error("unable to open device: %s, errno: %s", device_name,
               strerror(errno));
         return DEVICE_CANNOT_BE_OPENED;
     }
