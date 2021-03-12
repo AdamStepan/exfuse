@@ -289,10 +289,20 @@ int ex_read(const char *pathname, char *buffer, size_t amount, off_t offset) {
 
     ssize_t readed = -1;
 
-    if (ex_inode_read(&readed, inode, offset, buffer, amount) != OK) {
-        rv = EOF;
-    } else {
-        rv = readed;
+    switch (ex_inode_read(&readed, inode, offset, buffer, amount)) {
+        case READ_OFFSET_PAST_EOF:
+            rv = 0;
+            break;
+        case OK:
+            rv = readed;
+            break;
+        case OFFSET_SEEK_FAILED:
+            rv = -EIO;
+            break;
+        case INVALID_OFFSET:
+        default:
+            rv = EOF;
+            break;
     }
 
     // update inode access time
@@ -303,7 +313,7 @@ free_inode:
     ex_inode_free(inode);
     ex_path_free(path);
 
-    info("read rv=%i", rv);
+    debug("read rv=%i", rv);
 
     ex_super_unlock();
 

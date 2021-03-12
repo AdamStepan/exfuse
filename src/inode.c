@@ -639,13 +639,13 @@ ex_status ex_inode_read(ssize_t *readed, struct ex_inode *ino, size_t off,
     size_t start_block_off = off % EX_BLOCK_SIZE;
 
     if (start_block_idx >= ex_inode_max_blocks()) {
-        return READ_OUTSIDE_OF_BLOCK_RANGE;
+        return READ_OFFSET_PAST_EOF;
     }
 
     if ((off + amount) > ino->size) {
 
         if (off >= ino->size) {
-            return READ_OUTSIDE_OF_BLOCK_RANGE;
+            return READ_OFFSET_PAST_EOF;
         }
 
         size_t available = ino->size - off;
