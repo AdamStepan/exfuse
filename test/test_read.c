@@ -33,6 +33,8 @@ void test_partial_read(void)  {
     int offset = 4;
     rv = ex_read("/file", buffer, 2 * sizeof(buffer), offset);
     g_assert_cmpint(rv, ==, sizeof(buffer) - offset);
+
+    ex_deinit();
 }
 
 void test_simple_read(void) {

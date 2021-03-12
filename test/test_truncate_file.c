@@ -70,4 +70,6 @@ void test_truncate_invalid_arguments(void) {
 
     rv = ex_truncate("/fname", 2 * EX_BLOCK_SIZE * ex_inode_max_blocks());
     g_assert_cmpint(rv, ==, -EFBIG);
+
+    ex_deinit();
 }
