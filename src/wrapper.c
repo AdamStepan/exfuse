@@ -183,6 +183,10 @@ static int do_getxattr(const char *path, const char *name, char *value, size_t s
     return ex_getxattr(path, name, value, size);
 }
 
+static int do_removexattr(const char *path, const char *name) {
+    return ex_removexattr(path, name);
+}
+
 static struct fuse_operations operations = {
     .getattr = do_getattr,
     .readdir = do_readdir,
@@ -208,6 +212,7 @@ static struct fuse_operations operations = {
     .opendir = do_opendir,
     .setxattr = do_setxattr,
     .getxattr = do_getxattr,
+    .removexattr = do_removexattr,
 };
 
 static void ex_args_init(struct ex_args *args) {

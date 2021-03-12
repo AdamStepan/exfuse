@@ -253,6 +253,9 @@ int ex_inode_setxattr(struct ex_inode *, const struct ex_span *name, const struc
 /** Get extended attribute. */
 int ex_inode_getxattr(struct ex_inode *, const struct ex_span *name, struct ex_inode_attribute *);
 
+/** Remove extended attribute. */
+int ex_inode_removexattr(struct ex_inode *, const struct ex_span *name);
+
 struct ex_block_iterator {
     struct ex_inode_block last_block;
     size_t block_number;

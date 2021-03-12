@@ -986,3 +986,30 @@ invalid_path:
 
     return rv;
 }
+
+int ex_removexattr(const char *pathname, const char *attr) {
+    int rv = 0;
+
+    struct ex_path *path = ex_path_make(pathname);
+    struct ex_inode *inode = ex_inode_find(path);
+
+    if (!inode) {
+        rv = -ENOENT;
+        goto invalid_path;
+    }
+
+    struct ex_span namespan = { .data = attr, .datalen = strlen(attr) };
+    rv = ex_inode_removexattr(inode, &namespan);
+
+    if (!rv) {
+        ex_inode_flush(inode);
+    }
+
+    ex_inode_free(inode);
+
+invalid_path:
+    ex_super_unlock();
+    ex_path_free(path);
+
+    return rv;
+}

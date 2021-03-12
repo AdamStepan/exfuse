@@ -857,7 +857,7 @@ int ex_inode_getxattr(struct ex_inode *inode, const struct ex_span *name, struct
 
         if (attr->in_use && !strncmp(name->data, attr->name, len)) {
             result->valuelen = attr->valuelen;
-            memcpy(result->value, attr->value, len);
+            memcpy(result->value, attr->value, attr->valuelen);
 
             result->namelen = attr->namelen;
             memcpy(result->name, attr->name, attr->namelen);
@@ -865,6 +865,24 @@ int ex_inode_getxattr(struct ex_inode *inode, const struct ex_span *name, struct
             result->in_use = attr->in_use;
 
             return attr->valuelen;
+        }
+    }
+
+    return -ENOATTR;
+}
+
+int ex_inode_removexattr(struct ex_inode *inode, const struct ex_span *name) {
+    debug("trying to remove attribute: %.*s", name->datalen, name->data);
+
+    for (uint8_t i = 0; i < EX_INODE_MAX_ATTRIBUTES; i++) {
+
+        struct ex_inode_attribute *attr =
+            (struct ex_inode_attribute *)(inode->attributes + (i * EX_INODE_ATTRIBUTE_SIZE));
+        const uint8_t len = attr->namelen > name->datalen ? attr->namelen : name->datalen;
+
+        if (attr->in_use && !strncmp(name->data, attr->name, len)) {
+            attr->in_use = 0;
+            return 0;
         }
     }
 
