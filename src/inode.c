@@ -5,7 +5,8 @@
 #include "inode.h"
 #include <errno.h>
 #include <stdlib.h>
-#include <attr/xattr.h>
+#include <sys/types.h>
+#include <sys/xattr.h>
 
 const uint16_t EX_INODE_MAGIC1 = 0xabcc;
 const uint8_t EX_DIR_MAGIC1 = 0xde;
@@ -869,7 +870,7 @@ int ex_inode_getxattr(struct ex_inode *inode, const struct ex_span *name, struct
         }
     }
 
-    return -ENOATTR;
+    return -ENODATA;
 }
 
 int ex_inode_removexattr(struct ex_inode *inode, const struct ex_span *name) {
@@ -887,5 +888,5 @@ int ex_inode_removexattr(struct ex_inode *inode, const struct ex_span *name) {
         }
     }
 
-    return -ENOATTR;
+    return -ENODATA;
 }
